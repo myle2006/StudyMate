@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyMate AI - Trợ lý học tập cá nhân hóa</title>
+    <meta
+      name="description"
+      content="StudyMate AI giúp cá nhân hóa lộ trình học, tóm tắt tài liệu, tạo quiz, flashcard và theo dõi tiến độ học tập."
+    />
+    <script>
+      tailwind = {
+        config: {
+          darkMode: "class",
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+              },
+              boxShadow: {
+                glow: "0 24px 80px rgba(67, 97, 238, 0.18)",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+
+      .hero-grid {
+        background-image:
+          linear-gradient(rgba(37, 99, 235, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(37, 99, 235, 0.045) 1px, transparent 1px);
+        background-size: 48px 48px;
+      }
+
+      .dashboard-float {
+        animation: dashboardFloat 7s ease-in-out infinite;
+      }
+
+      .fade-up {
+        animation: fadeUp 0.8s ease both;
+      }
+
+      @keyframes dashboardFloat {
+        0%,
+        100% {
+          transform: translate3d(0, 0, 0) rotate(0.001deg);
+        }
+        50% {
+          transform: translate3d(0, -10px, 0) rotate(0.001deg);
+        }
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-white text-slate-950 antialiased dark:bg-slate-950 dark:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useEffect, useState } = React;
+      const appBaseUrl =
+        window.location.protocol === "file:"
+          ? "http://localhost/StudyMate"
+          : window.location.pathname.startsWith("/StudyMate")
+          ? "/StudyMate"
+          : "";
+
+      function appUrl(path) {
+        return `${appBaseUrl}${path}`;
+      }
+
+      const navItems = [
+        { label: "Tính năng", href: "#features" },
+        { label: "Cách hoạt động", href: "#process" },
+        { label: "Lợi ích", href: "#benefits" },
+        { label: "Liên hệ", href: "#contact" },
+      ];
+
+      const features = [
+        {
+          title: "AI Study Assistant",
+          text: "Hỏi đáp theo ngữ cảnh, giải thích từng bước và gợi ý cách học phù hợp với mục tiêu.",
+          icon: "✦",
+          tone: "from-blue-500 to-indigo-500",
+        },
+        {
+          title: "Learning Roadmap",
+          text: "Tự động chia nhỏ mục tiêu thành lộ trình học theo tuần, theo môn và theo năng lực hiện tại.",
+          icon: "⌁",
+          tone: "from-violet-500 to-fuchsia-500",
+        },
+        {
+          title: "Document Summary",
+          text: "Tóm tắt PDF, slide và ghi chú dài thành ý chính, thuật ngữ cần nhớ và checklist ôn tập.",
+          icon: "≡",
+          tone: "from-cyan-500 to-blue-500",
+        },
+        {
+          title: "Quiz & Flashcard",
+          text: "Biến tài liệu học thành câu hỏi luyện tập, flashcard và bài kiểm tra ngắn sau mỗi chủ đề.",
+          icon: "◇",
+          tone: "from-emerald-500 to-teal-500",
+        },
+        {
+          title: "Progress Dashboard",
+          text: "Theo dõi tiến độ, thời lượng học, điểm mạnh/yếu và các mốc quan trọng trong một dashboard gọn.",
+          icon: "▣",
+          tone: "from-sky-500 to-indigo-500",
+        },
+        {
+          title: "Review Recommendation",
+          text: "Nhắc ôn đúng lúc dựa trên lịch sử học, mức độ quên và các phần cần củng cố trước kỳ kiểm tra.",
+          icon: "↻",
+          tone: "from-amber-400 to-pink-500",
+        },
+      ];
+
+      const steps = [
+        {
+          title: "Tạo hồ sơ học tập",
+          text: "Chọn môn học, trình độ, lịch rảnh và mục tiêu cần đạt.",
+        },
+        {
+          title: "Upload tài liệu/chọn mục tiêu",
+          text: "Thêm PDF, ghi chú, slide hoặc chọn kỹ năng muốn cải thiện.",
+        },
+        {
+          title: "AI tạo lộ trình",
+          text: "StudyMate AI đề xuất nội dung, quiz và phiên ôn tập theo nhịp học của bạn.",
+        },
+        {
+          title: "Theo dõi tiến độ",
+          text: "Xem dashboard, nhận gợi ý ôn lại và điều chỉnh kế hoạch khi cần.",
+        },
+      ];
+
+      const stats = [
+        ["AI Tutor", "24/7"],
+        ["Cá nhân hóa", "100%"],
+        ["Theo dõi", "tiến độ"],
+      ];
+
+      function IconButton({ children, label, onClick }) {
+        return (
+          <button
+            type="button"
+            aria-label={label}
+            title={label}
+            onClick={onClick}
+            className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-blue-400/50"
+          >
+            {children}
+          </button>
+        );
+      }
+
+      function Header() {
+        const [dark, setDark] = useState(false);
+        const [open, setOpen] = useState(false);
+
+        useEffect(() => {
+          document.documentElement.classList.toggle("dark", dark);
+        }, [dark]);
+
+        return (
+          <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/86 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/78">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8">
+              <a href={appUrl("/")} className="flex items-center gap-3" aria-label="StudyMate AI">
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-lg font-extrabold text-white shadow-glow">
+                  S
+                </span>
+                <span>
+                  <span className="block text-base font-extrabold leading-5">StudyMate AI</span>
+                  <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Personal AI Learning
+                  </span>
+                </span>
+              </a>
+
+              <nav className="hidden items-center gap-8 lg:flex">
+                {navItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="text-sm font-semibold text-slate-600 transition hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+
+              <div className="hidden items-center gap-3 md:flex">
+                <IconButton label="Đổi theme" onClick={() => setDark((value) => !value)}>
+                  {dark ? (
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 3v2.2M12 18.8V21M4.5 4.5 6 6M18 18l1.5 1.5M3 12h2.2M18.8 12H21M4.5 19.5 6 18M18 6l1.5-1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                  ) : (
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M20 14.2A7.5 7.5 0 0 1 9.8 4a8.6 8.6 0 1 0 10.2 10.2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </IconButton>
+                <a
+                  href={appUrl("/register")}
+                  className="rounded-full bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-600 hover:shadow-glow dark:bg-white dark:text-slate-950 dark:hover:bg-blue-100"
+                >
+                  Bắt đầu học
+                </a>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Mở menu"
+                onClick={() => setOpen((value) => !value)}
+                className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-800 md:hidden dark:border-white/10 dark:bg-white/5 dark:text-white"
+              >
+                <span className="text-xl">{open ? "×" : "☰"}</span>
+              </button>
+            </div>
+
+            {open && (
+              <div className="border-t border-slate-200 bg-white px-5 py-4 md:hidden dark:border-white/10 dark:bg-slate-950">
+                <div className="mx-auto flex max-w-7xl flex-col gap-3">
+                  {navItems.map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                  <div className="flex items-center gap-3 pt-2">
+                    <IconButton label="Đổi theme" onClick={() => setDark((value) => !value)}>
+                      <span className="text-base">{dark ? "☀" : "◐"}</span>
+                    </IconButton>
+                    <a
+                      href={appUrl("/register")}
+                      onClick={() => setOpen(false)}
+                      className="flex-1 rounded-full bg-blue-600 px-5 py-3 text-center text-sm font-bold text-white"
+                    >
+                      Bắt đầu học
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+          </header>
+        );
+      }
+
+      function HeroVisual() {
+        return (
+          <div className="relative mx-auto w-full max-w-[560px]">
+            <div className="absolute -inset-6 rounded-[42px] bg-blue-500/10 blur-3xl dark:bg-blue-400/10"></div>
+            <div className="dashboard-float relative overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_34px_90px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-slate-900">
+              <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4 dark:border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 text-sm font-extrabold text-white">
+                    S
+                  </div>
+                  <div>
+                    <p className="text-sm font-extrabold text-slate-950 dark:text-white">StudyMate Workspace</p>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Hôm nay · 4 phiên học</p>
+                  </div>
+                </div>
+                <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+                  On track
+                </div>
+              </div>
+
+              <div className="grid gap-4 p-4 sm:grid-cols-[1fr_0.86fr]">
+                <div className="space-y-4">
+                  <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-extrabold uppercase text-blue-600 dark:text-blue-300">AI Tutor</p>
+                        <h3 className="mt-2 text-xl font-extrabold text-slate-950 dark:text-white">
+                          Lộ trình Toán rời rạc
+                        </h3>
+                      </div>
+                      <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">92%</span>
+                    </div>
+                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+                      <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-blue-600 to-violet-600"></div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                      {[
+                        ["Quiz", "12"],
+                        ["Card", "48"],
+                        ["Focus", "2h"],
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-[8px] bg-white p-3 shadow-sm dark:bg-slate-950/70">
+                          <p className="text-lg font-extrabold text-slate-950 dark:text-white">{value}</p>
+                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[8px] border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <div className="flex items-center justify-between">
+                      <p className="font-extrabold text-slate-950 dark:text-white">Tóm tắt tài liệu</p>
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-300">PDF</span>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-white/10"></div>
+                      <div className="h-2 w-10/12 rounded-full bg-slate-200 dark:bg-white/10"></div>
+                      <div className="h-2 w-7/12 rounded-full bg-slate-200 dark:bg-white/10"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-[8px] bg-slate-950 p-4 text-white dark:bg-white dark:text-slate-950">
+                    <p className="text-xs font-bold text-blue-200 dark:text-blue-700">Review Recommendation</p>
+                    <p className="mt-3 text-2xl font-extrabold">20 phút</p>
+                    <p className="mt-1 text-sm text-slate-300 dark:text-slate-600">Ôn lại Graph Theory</p>
+                  </div>
+
+                  <div className="rounded-[8px] border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                    <p className="font-extrabold text-slate-950 dark:text-white">Learning Roadmap</p>
+                    <div className="mt-4 space-y-3">
+                      {[
+                        ["Cây khung", "done"],
+                        ["Dijkstra", "active"],
+                        ["Bài tập tổng hợp", "next"],
+                      ].map(([label, state]) => (
+                        <div key={label} className="flex items-center gap-3">
+                          <span
+                            className={`h-3 w-3 rounded-full ${
+                              state === "done"
+                                ? "bg-emerald-400"
+                                : state === "active"
+                                ? "bg-blue-600"
+                                : "bg-slate-300 dark:bg-slate-600"
+                            }`}
+                          ></span>
+                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[8px] border border-blue-100 bg-blue-50 p-4 dark:border-blue-400/20 dark:bg-blue-400/10">
+                    <p className="text-sm font-extrabold text-blue-700 dark:text-blue-200">Flashcard tiếp theo</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      Định nghĩa đường đi Euler trong đồ thị?
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function Hero() {
+        return (
+          <section className="hero-grid overflow-hidden bg-slate-50/70 dark:bg-slate-950">
+            <div className="mx-auto grid min-h-[calc(100vh-78px)] max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.02fr_0.98fr] lg:px-8 lg:py-20">
+              <div className="fade-up max-w-3xl">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-bold text-blue-700 shadow-sm dark:border-blue-400/20 dark:bg-white/5 dark:text-blue-200">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                  Trợ lý học tập cá nhân hóa
+                </div>
+                <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.06] text-slate-950 sm:text-6xl lg:text-7xl dark:text-white">
+                  Học thông minh hơn với trợ lý AI cá nhân
+                </h1>
+                <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:mt-7 sm:text-xl dark:text-slate-300">
+                  StudyMate AI xây dựng lộ trình học riêng, tóm tắt tài liệu, tạo quiz,
+                  flashcard và dashboard tiến độ để mỗi buổi học đều có mục tiêu rõ ràng.
+                </p>
+                <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row">
+                  <a
+                    href={appUrl("/register")}
+                    className="group inline-flex items-center justify-center gap-3 rounded-full bg-blue-600 px-7 py-4 text-base font-bold text-white shadow-glow transition hover:-translate-y-1 hover:bg-blue-700"
+                  >
+                    Bắt đầu ngay
+                    <span className="transition group-hover:translate-x-1">→</span>
+                  </a>
+                  <a
+                    href={appUrl("/login")}
+                    className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-7 py-4 text-base font-bold text-slate-800 shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-blue-400/50"
+                  >
+                    Xem tính năng
+                  </a>
+                </div>
+                <div className="mt-12 hidden max-w-2xl grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
+                  {stats.map(([label, value]) => (
+                    <div key={label} className="border-l-2 border-blue-500/50 pl-4">
+                      <p className="text-2xl font-extrabold text-slate-950 dark:text-white">{value}</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fade-up lg:justify-self-end" style={{ animationDelay: "0.12s" }}>
+                <HeroVisual />
+                <div className="mt-8 grid grid-cols-1 gap-4 sm:hidden">
+                  {stats.map(([label, value]) => (
+                    <div key={label} className="border-l-2 border-blue-500/50 pl-4">
+                      <p className="text-2xl font-extrabold text-slate-950 dark:text-white">{value}</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      function Features() {
+        return (
+          <section id="features" className="bg-white py-20 sm:py-24 dark:bg-slate-950">
+            <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+              <div className="max-w-3xl">
+                <p className="text-sm font-extrabold uppercase text-blue-600 dark:text-blue-300">Tính năng</p>
+                <h2 className="mt-4 text-4xl font-extrabold leading-tight text-slate-950 sm:text-5xl dark:text-white">
+                  Một không gian học tập được AI cá nhân hóa từ đầu đến cuối
+                </h2>
+              </div>
+              <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {features.map((feature) => (
+                  <article
+                    key={feature.title}
+                    className="group rounded-[8px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-xl dark:border-white/10 dark:bg-white/[0.035] dark:hover:border-blue-400/40"
+                  >
+                    <div className={`mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${feature.tone} text-xl font-extrabold text-white shadow-lg`}>
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-extrabold text-slate-950 dark:text-white">{feature.title}</h3>
+                    <p className="mt-3 leading-7 text-slate-600 dark:text-slate-300">{feature.text}</p>
+                    <div className="mt-6 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 to-violet-500 transition group-hover:w-20"></div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      function Process() {
+        return (
+          <section id="process" className="bg-slate-50 py-20 sm:py-24 dark:bg-slate-900/60">
+            <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+              <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+                <div>
+                  <p className="text-sm font-extrabold uppercase text-blue-600 dark:text-blue-300">Cách hoạt động</p>
+                  <h2 className="mt-4 text-4xl font-extrabold leading-tight text-slate-950 sm:text-5xl dark:text-white">
+                    Từ mục tiêu đến kế hoạch học chỉ trong vài phút
+                  </h2>
+                  <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
+                    Quy trình đơn giản giúp StudyMate AI hiểu bạn đang học gì, cần đạt điều gì
+                    và nên ôn phần nào vào đúng thời điểm.
+                  </p>
+                </div>
+                <div className="grid gap-4">
+                  {steps.map((step, index) => (
+                    <article
+                      key={step.title}
+                      className="group grid gap-5 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:grid-cols-[72px_1fr] dark:border-white/10 dark:bg-slate-950/70"
+                    >
+                      <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-950 text-lg font-extrabold text-white transition group-hover:bg-blue-600 dark:bg-white dark:text-slate-950">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-extrabold text-slate-950 dark:text-white">{step.title}</h3>
+                        <p className="mt-2 leading-7 text-slate-600 dark:text-slate-300">{step.text}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      function Benefits() {
+        const items = [
+          "Tiết kiệm thời gian tự lên kế hoạch học.",
+          "Ghi nhớ tốt hơn nhờ quiz, flashcard và lịch ôn thông minh.",
+          "Hiểu rõ tiến độ thay vì học theo cảm giác mơ hồ.",
+        ];
+
+        return (
+          <section id="benefits" className="bg-white py-20 sm:py-24 dark:bg-slate-950">
+            <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-6 lg:grid-cols-2 lg:px-8 lg:items-center">
+              <div>
+                <p className="text-sm font-extrabold uppercase text-blue-600 dark:text-blue-300">Lợi ích</p>
+                <h2 className="mt-4 text-4xl font-extrabold leading-tight text-slate-950 sm:text-5xl dark:text-white">
+                  Học có chiến lược, ôn có dữ liệu, tiến bộ nhìn thấy rõ
+                </h2>
+              </div>
+              <div className="grid gap-4">
+                {items.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-start gap-4 rounded-[8px] border border-slate-200 bg-slate-50 p-5 transition hover:border-blue-200 hover:bg-white hover:shadow-md dark:border-white/10 dark:bg-white/[0.035] dark:hover:bg-white/[0.06]"
+                  >
+                    <span className="mt-1 grid h-7 w-7 flex-none place-items-center rounded-full bg-emerald-100 text-sm font-extrabold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+                      ✓
+                    </span>
+                    <p className="text-lg font-semibold leading-8 text-slate-700 dark:text-slate-200">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      function CTA() {
+        return (
+          <section id="contact" className="bg-slate-950 py-20 text-white">
+            <div className="mx-auto max-w-5xl px-5 text-center sm:px-6 lg:px-8">
+              <p className="text-sm font-extrabold uppercase text-blue-300">Sẵn sàng học khác đi?</p>
+              <h2 className="mt-4 text-4xl font-extrabold leading-tight sm:text-5xl">
+                Bắt đầu xây dựng lộ trình học cá nhân cùng StudyMate AI
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+                Tập trung vào điều cần học tiếp theo, để AI hỗ trợ phần tổ chức, tóm tắt,
+                luyện tập và theo dõi tiến độ.
+              </p>
+              <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+                <a
+                  href={appUrl("/register")}
+                  className="inline-flex items-center justify-center rounded-full bg-white px-7 py-4 text-base font-bold text-slate-950 transition hover:-translate-y-1 hover:bg-blue-100"
+                >
+                  Bắt đầu học
+                </a>
+                <a
+                  href={appUrl("/subjects")}
+                  className="inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-4 text-base font-bold text-white transition hover:-translate-y-1 hover:border-blue-300 hover:bg-white/10"
+                >
+                  Khám phá tính năng
+                </a>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      function Footer() {
+        return (
+          <footer className="border-t border-slate-200 bg-white py-8 dark:border-white/10 dark:bg-slate-950">
+            <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 text-sm text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8 dark:text-slate-400">
+              <p className="font-semibold text-slate-700 dark:text-slate-200">StudyMate AI</p>
+              <p>© 2026 StudyMate AI. Trợ lý học tập cá nhân hóa tích hợp AI.</p>
+            </div>
+          </footer>
+        );
+      }
+
+      function App() {
+        return (
+          <>
+            <Header />
+            <main>
+              <Hero />
+              <Features />
+              <Process />
+              <Benefits />
+              <CTA />
+            </main>
+            <Footer />
+          </>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
