@@ -94,24 +94,37 @@ jobs:
           test -n "$FTP_PASSWORD"
           test -n "$FTP_SERVER_DIR"
 
-      - name: Upload files by FTPS
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: ./
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github/**
-            **/node_modules/**
-            **/.env
-            **/.env.*
-            **/config/*.local.php
-            **/public/uploads/**
-            **/npm-debug.log*
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload files by explicit FTPS
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+        run: |
+          lftp <<EOF
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate no
+          set net:max-retries 3
+          set net:timeout 30
+          open -u "$FTP_USERNAME","$FTP_PASSWORD" -p 21 "$FTP_SERVER"
+          mkdir -p "$FTP_SERVER_DIR"
+          mirror --reverse --verbose --only-newer --parallel=4 \
+            --exclude-glob .git/ \
+            --exclude-glob .git/** \
+            --exclude-glob .github/ \
+            --exclude-glob .github/** \
+            --exclude-glob node_modules/ \
+            --exclude-glob node_modules/** \
+            --exclude-glob .env \
+            --exclude-glob .env.* \
+            --exclude-glob config/*.local.php \
+            --exclude-glob public/uploads/ \
+            --exclude-glob public/uploads/** \
+            --exclude-glob npm-debug.log* \
+            ./ "$FTP_SERVER_DIR"
+          bye
+          EOF
