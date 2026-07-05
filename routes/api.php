@@ -25,7 +25,9 @@ $router->put('/api/admin/students/{id}/reset-password', [StudentController::clas
 
 $router->get('/api/subjects', [SubjectController::class, 'index'], $auth);
 $router->get('/api/subjects/{id}', [SubjectController::class, 'show'], $auth);
-$router->post('/api/subjects', [SubjectController::class, 'store'], $auth);
-$router->post('/api/subjects/{id}', [SubjectController::class, 'update'], $auth);
-$router->put('/api/subjects/{id}', [SubjectController::class, 'update'], $auth);
-$router->delete('/api/subjects/{id}', [SubjectController::class, 'destroy'], $auth);
+$router->post('/api/subjects', [SubjectController::class, 'store'], $admin);
+$router->post('/api/subjects/{id}', [SubjectController::class, 'update'], $admin);
+$router->put('/api/subjects/{id}', [SubjectController::class, 'update'], $admin);
+$router->delete('/api/subjects/{id}', [SubjectController::class, 'destroy'], $admin);
+
+require BASE_PATH . '/routes/study_schedules.php';

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Sparkles } from "lucide-react";
+import { Alert, Button, Card, Field, Input } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
 
 function validate(form) {
@@ -22,7 +24,7 @@ function redirectByRole(user, fallback) {
   if (user?.role === "admin") return "/admin";
   if (user?.role === "student") return "/dashboard";
 
-  return fallback || "/subjects";
+  return fallback || "/login";
 }
 
 export default function Login() {
@@ -68,68 +70,53 @@ export default function Login() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-50 px-5 py-10 dark:bg-slate-950">
-      <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-        <div className="mb-6">
-          <p className="text-sm font-extrabold uppercase text-blue-600 dark:text-blue-300">
-            StudyMate AI
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold text-slate-950 dark:text-white">
-            Đăng nhập
-          </h1>
+    <main className="grid min-h-[calc(100vh-88px)] place-items-center px-5 py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">Đăng nhập StudyMate AI</h1>
+          <p className="mt-2 text-sm font-semibold text-slate-500">Tiếp tục vào không gian học tập cá nhân hóa của bạn.</p>
         </div>
 
-        {message && (
-          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+        <Card className="p-6">
+          <Alert tone={message.includes("thất bại") ? "error" : "info"} className="mb-4">
             {message}
-          </div>
-        )}
+          </Alert>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Email
-            </span>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
-            />
-            {errors.email && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.email}</p>}
-          </label>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Field label="Email" error={errors.email}>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(event) => updateField("email", event.target.value)}
+                placeholder="student@example.com"
+              />
+            </Field>
 
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Mật khẩu
-            </span>
-            <input
-              type="password"
-              value={form.password}
-              onChange={(event) => updateField("password", event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
-            />
-            {errors.password && (
-              <p className="mt-2 text-sm font-semibold text-rose-600">{errors.password}</p>
-            )}
-          </label>
+            <Field label="Mật khẩu" error={errors.password}>
+              <Input
+                type="password"
+                value={form.password}
+                onChange={(event) => updateField("password", event.target.value)}
+                placeholder="Nhập mật khẩu"
+              />
+            </Field>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
-        </form>
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </Button>
+          </form>
 
-        <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
-          Chưa có tài khoản?{" "}
-          <Link to="/register" className="font-bold text-blue-600 hover:text-blue-700">
-            Đăng ký
-          </Link>
-        </p>
-      </section>
+          <p className="mt-5 text-center text-sm text-slate-600">
+            Chưa có tài khoản?{" "}
+            <Link to="/register" className="font-extrabold text-blue-600 hover:text-blue-700">
+              Đăng ký sinh viên
+            </Link>
+          </p>
+        </Card>
+      </div>
     </main>
   );
 }

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Save } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Alert, Button, Card, Field, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
 import { createStudent, getStudentById, updateStudent } from "../../../services/studentService";
 
 const initialForm = {
@@ -52,6 +54,7 @@ function validate(form, isEdit) {
 export default function StudentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const isEdit = Boolean(id);
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -104,8 +107,10 @@ export default function StudentForm() {
       if (isEdit) {
         const { password, ...payload } = form;
         await updateStudent(id, payload);
+        toast.success("Đã cập nhật thông tin sinh viên.");
       } else {
         await createStudent(form);
+        toast.success("Đã thêm sinh viên mới.");
       }
       navigate("/admin/students");
     } catch (err) {
@@ -116,128 +121,74 @@ export default function StudentForm() {
     }
   }
 
-  return (
-    <main className="min-h-full bg-slate-50 px-4 py-6 dark:bg-slate-950 sm:px-6 lg:px-8">
-      <div className="w-full">
-        <div className="mb-6">
-          <Link to="/admin/students" className="text-sm font-bold text-blue-600 hover:text-blue-700">
-            Quay lại danh sách
-          </Link>
-          <h1 className="mt-3 text-3xl font-extrabold text-slate-950 dark:text-white">
-            {isEdit ? "Cập nhật sinh viên" : "Thêm sinh viên"}
-          </h1>
-        </div>
+  if (loading && isEdit && !form.email) {
+    return <LoadingState label="Đang tải thông tin sinh viên..." />;
+  }
 
-        <form
-          onSubmit={handleSubmit}
-          className="w-full rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
-        >
-          {message && (
-            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-              {message}
-            </div>
-          )}
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Quản lý sinh viên"
+        title={isEdit ? "Cập nhật sinh viên" : "Thêm sinh viên"}
+        description={isEdit ? "Chỉnh sửa thông tin tài khoản sinh viên." : "Tạo tài khoản sinh viên mới với role student."}
+        actions={
+          <Button to="/admin/students" variant="secondary">
+            <ArrowLeft size={16} /> Quay lại
+          </Button>
+        }
+      />
+
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Alert tone="error">{message}</Alert>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Họ tên
-              </span>
-              <input
-                value={form.full_name}
-                onChange={(event) => updateField("full_name", event.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
-              />
-              {errors.full_name && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.full_name}</p>}
-            </label>
+            <Field label="Họ tên" error={errors.full_name}>
+              <Input value={form.full_name} onChange={(event) => updateField("full_name", event.target.value)} />
+            </Field>
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Email
-              </span>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(event) => updateField("email", event.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
-              />
-              {errors.email && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.email}</p>}
-            </label>
+            <Field label="Email" error={errors.email}>
+              <Input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} />
+            </Field>
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Mã sinh viên
-              </span>
-              <input
-                value={form.student_code}
-                onChange={(event) => updateField("student_code", event.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
-              />
-              {errors.student_code && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.student_code}</p>}
-            </label>
+            <Field label="Mã sinh viên" error={errors.student_code}>
+              <Input value={form.student_code} onChange={(event) => updateField("student_code", event.target.value)} />
+            </Field>
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Số điện thoại
-              </span>
-              <input
-                value={form.phone}
-                onChange={(event) => updateField("phone", event.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
-              />
-              {errors.phone && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.phone}</p>}
-            </label>
+            <Field label="Số điện thoại" error={errors.phone}>
+              <Input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} />
+            </Field>
 
             {!isEdit && (
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                  Mật khẩu
-                </span>
-                <input
+              <Field label="Mật khẩu" error={errors.password}>
+                <Input
                   type="password"
                   value={form.password}
                   onChange={(event) => updateField("password", event.target.value)}
                   placeholder="Để trống để dùng mã sinh viên"
-                  className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
                 />
-                {errors.password && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.password}</p>}
-              </label>
+              </Field>
             )}
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Trạng thái
-              </span>
-              <select
-                value={form.status}
-                onChange={(event) => updateField("status", event.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:text-white"
-              >
+            <Field label="Trạng thái" error={errors.status}>
+              <Select value={form.status} onChange={(event) => updateField("status", event.target.value)}>
                 <option value="active">Đang hoạt động</option>
                 <option value="inactive">Vô hiệu hóa</option>
                 <option value="locked">Bị khóa</option>
-              </select>
-              {errors.status && <p className="mt-2 text-sm font-semibold text-rose-600">{errors.status}</p>}
-            </label>
+              </Select>
+            </Field>
           </div>
 
-          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Link
-              to="/admin/students"
-              className="inline-flex justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700 hover:border-blue-500 hover:text-blue-600 dark:border-white/10 dark:text-slate-200"
-            >
+          <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
+            <Button type="button" to="/admin/students" variant="secondary">
               Hủy
-            </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex justify-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Đang lưu..." : isEdit ? "Cập nhật" : "Thêm sinh viên"}
-            </button>
+            </Button>
+            <Button type="submit" disabled={loading}>
+              <Save size={16} /> {loading ? "Đang lưu..." : isEdit ? "Cập nhật" : "Thêm sinh viên"}
+            </Button>
           </div>
         </form>
-      </div>
-    </main>
+      </Card>
+    </div>
   );
 }

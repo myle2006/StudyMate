@@ -188,7 +188,7 @@ class Student extends Model
     public function hasRelatedData(int $studentId): bool
     {
         $relations = [
-            'subjects' => ['user_id'],
+            'subjects' => ['created_by'],
             'study_plans' => ['user_id', 'student_id'],
             'tasks' => ['user_id', 'student_id'],
             'notes' => ['user_id', 'student_id'],

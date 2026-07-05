@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Download, UploadCloud } from "lucide-react";
 import ImportResult from "../../../components/students/ImportResult";
+import { Alert, Button, Card, PageHeader, useToast } from "../../../components/ui";
 import { downloadImportTemplate, importStudents } from "../../../services/studentService";
 
 const allowedExtensions = ["csv", "xls", "xlsx"];
 
 export default function StudentImport() {
+  const toast = useToast();
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   function handleFileChange(event) {
@@ -23,6 +24,7 @@ export default function StudentImport() {
     setError("");
     try {
       await downloadImportTemplate();
+      toast.success("Đã tải file mẫu import.");
     } catch (err) {
       setError(err.message || "Không thể tải file mẫu.");
     }
@@ -31,7 +33,6 @@ export default function StudentImport() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
-    setMessage("");
     setResult(null);
 
     if (!file) {
@@ -53,8 +54,8 @@ export default function StudentImport() {
     setLoading(true);
     try {
       const response = await importStudents(file);
-      setMessage(response.message || "Import danh sách sinh viên hoàn tất.");
       setResult(response);
+      toast.success(response.message || "Import danh sách sinh viên hoàn tất.");
     } catch (err) {
       setError(err.errors?.file || err.message || "Import thất bại.");
     } finally {
@@ -63,94 +64,66 @@ export default function StudentImport() {
   }
 
   return (
-    <main className="min-h-full bg-slate-50 px-4 py-6 dark:bg-slate-950 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Link to="/admin/students" className="text-sm font-bold text-blue-600 hover:text-blue-700">
-            Quay lại danh sách
-          </Link>
-          <h1 className="mt-3 text-3xl font-extrabold text-slate-950 dark:text-white">
-            Import sinh viên
-          </h1>
-        </div>
-        <button
-          type="button"
-          onClick={handleDownloadTemplate}
-          className="rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:border-blue-500 hover:text-blue-600"
-        >
-          Tải file mẫu CSV
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Quản lý sinh viên"
+        title="Import sinh viên"
+        description="Tải lên CSV hoặc Excel để tạo nhiều tài khoản sinh viên cùng lúc."
+        actions={
+          <div className="flex flex-wrap gap-3">
+            <Button to="/admin/students" variant="secondary">
+              <ArrowLeft size={16} /> Quay lại
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleDownloadTemplate}>
+              <Download size={16} /> File mẫu
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
-        >
-          <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">
-            Chọn file import
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-            Hỗ trợ CSV chắc chắn trên cPanel. XLSX chỉ hoạt động nếu PHP server có ZipArchive;
-            XLS cần cài PhpSpreadsheet.
-          </p>
-
-          <label className="mt-5 block">
-            <input
-              type="file"
-              accept=".csv,.xls,.xlsx"
-              onChange={handleFileChange}
-              className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white dark:border-white/10 dark:bg-slate-950 dark:text-white"
-            />
-          </label>
-
-          {file && (
-            <p className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Đã chọn: {file.name}
-            </p>
-          )}
-          {error && (
-            <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-              {error}
+        <Card className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <h2 className="text-lg font-black text-slate-950">Chọn file import</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                CSV chạy ổn định nhất trên cPanel. XLSX cần PHP có ZipArchive; XLS cần PhpSpreadsheet.
+              </p>
             </div>
-          )}
-          {message && (
-            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-              {message}
-            </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-6 rounded-lg bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Đang import..." : "Import sinh viên"}
-          </button>
-        </form>
+            <label className="flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center transition hover:border-blue-300 hover:bg-blue-50">
+              <UploadCloud className="text-blue-600" size={34} />
+              <span className="mt-3 text-sm font-black text-slate-950">
+                {file ? file.name : "Bấm để chọn file CSV, XLS hoặc XLSX"}
+              </span>
+              <span className="mt-1 text-xs font-semibold text-slate-500">Dung lượng tối đa 5MB</span>
+              <input type="file" accept=".csv,.xls,.xlsx" onChange={handleFileChange} className="sr-only" />
+            </label>
 
-        <aside className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-          <h2 className="text-lg font-extrabold text-slate-950 dark:text-white">
-            Định dạng file
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-            Dòng đầu tiên phải là header. Các cột bắt buộc gồm:
-          </p>
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-slate-950 p-4 text-sm text-white">
+            <Alert tone="error">{error}</Alert>
+
+            <Button type="submit" disabled={loading}>
+              <UploadCloud size={16} /> {loading ? "Đang import..." : "Import sinh viên"}
+            </Button>
+          </form>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="text-lg font-black text-slate-950">Định dạng file</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Dòng đầu tiên phải là header với các cột sau:</p>
+          <pre className="mt-4 overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs font-semibold text-white">
 full_name,email,phone,student_code,password,status
           </pre>
-          <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+          <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
             <li>full_name, email, student_code là bắt buộc.</li>
             <li>password có thể trống, hệ thống sẽ dùng student_code.</li>
             <li>status nhận active, inactive hoặc locked.</li>
-            <li>File tối đa 5MB.</li>
+            <li>File tối đa 5MB và không thực thi nội dung upload.</li>
           </ul>
-        </aside>
+        </Card>
       </div>
 
-      <div className="mt-6">
-        <ImportResult result={result} />
-      </div>
-    </main>
+      <ImportResult result={result} />
+    </div>
   );
 }

@@ -10,14 +10,14 @@ class AuthMiddleware
         $token = $this->bearerToken();
 
         if ($token === null) {
-            $this->unauthorized('Bạn cần đăng nhập để thực hiện chức năng này.');
+            $this->unauthorized('Bạn cần đăng nhập để thực hiện chức năng này.', 401);
             return false;
         }
 
         $payload = Jwt::verify($token);
 
         if ($payload === null || empty($payload['user_id'])) {
-            $this->unauthorized('Token không hợp lệ hoặc đã hết hạn.');
+            $this->unauthorized('Token không hợp lệ hoặc đã hết hạn.', 403);
             return false;
         }
 
@@ -25,7 +25,7 @@ class AuthMiddleware
         $user = $userModel->getUserWithRole((int) $payload['user_id']);
 
         if ($user === null || $user['status'] !== 'active') {
-            $this->unauthorized('Token không hợp lệ hoặc đã hết hạn.');
+            $this->unauthorized('Token không hợp lệ hoặc đã hết hạn.', 403);
             return false;
         }
 
@@ -62,9 +62,9 @@ class AuthMiddleware
         return trim($matches[1]);
     }
 
-    private function unauthorized(string $message): void
+    private function unauthorized(string $message, int $statusCode): void
     {
-        http_response_code(401);
+        http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode([
             'success' => false,

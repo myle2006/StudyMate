@@ -7,6 +7,7 @@
     <meta name="description" content="<?= e($description ?? 'StudyMate AI') ?>">
     <script>
       window.STUDYMATE_BASE_PATH = <?= json_encode(base_url_path(), JSON_UNESCAPED_SLASHES) ?>;
+      window.STUDYMATE_PUBLIC_BASE_URL = <?= json_encode(public_url_path(), JSON_UNESCAPED_SLASHES) ?>;
       window.STUDYMATE_API_BASE_URL = <?= json_encode(base_url_path() . '/api', JSON_UNESCAPED_SLASHES) ?>;
       tailwind = {
         config: {

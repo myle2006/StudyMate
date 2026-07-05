@@ -59,19 +59,23 @@ class Router
             return;
         }
 
-        foreach ($matchedRoute['middlewares'] as $middlewareDefinition) {
-            [$middlewareClass, $arguments] = $this->parseMiddleware($middlewareDefinition);
-            $middleware = new $middlewareClass();
+        try {
+            foreach ($matchedRoute['middlewares'] as $middlewareDefinition) {
+                [$middlewareClass, $arguments] = $this->parseMiddleware($middlewareDefinition);
+                $middleware = new $middlewareClass();
 
-            if ($middleware->handle(...$arguments) === false) {
-                return;
+                if ($middleware->handle(...$arguments) === false) {
+                    return;
+                }
             }
-        }
 
-        $action = $matchedRoute['action'];
-        [$controllerClass, $methodName] = $action;
-        $controller = new $controllerClass();
-        $controller->{$methodName}(...$matchedRoute['params']);
+            $action = $matchedRoute['action'];
+            [$controllerClass, $methodName] = $action;
+            $controller = new $controllerClass();
+            $controller->{$methodName}(...$matchedRoute['params']);
+        } catch (Throwable $exception) {
+            $this->handleException($exception, $path);
+        }
     }
 
     private function normalize(string $uri): string
@@ -124,5 +128,36 @@ class Router
         }
 
         return [$class, $arguments];
+    }
+
+    private function handleException(Throwable $exception, string $path): void
+    {
+        error_log($exception);
+        http_response_code(500);
+
+        if (str_starts_with($path, '/api/')) {
+            header('Content-Type: application/json; charset=utf-8');
+
+            $payload = [
+                'success' => false,
+                'message' => 'Máy chủ gặp lỗi khi xử lý yêu cầu.',
+            ];
+
+            if (app_config('debug', false)) {
+                $payload['debug'] = [
+                    'type' => $exception::class,
+                    'message' => $exception->getMessage(),
+                    'file' => basename($exception->getFile()),
+                    'line' => $exception->getLine(),
+                ];
+            }
+
+            echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        echo app_config('debug', false)
+            ? 'Server error: ' . e($exception->getMessage())
+            : '500 - Server error';
     }
 }

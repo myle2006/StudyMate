@@ -2,66 +2,41 @@
 
 class Subject extends Model
 {
-    public function getAll(array $user, array $filters): array
+    public function getAll(array $filters = []): array
     {
-        $page = max(1, (int) ($filters['page'] ?? 1));
-        $limit = min(100, max(1, (int) ($filters['limit'] ?? 10)));
-        $offset = ($page - 1) * $limit;
         $params = [];
-        $where = [];
+        $where = ['deleted_at IS NULL'];
 
-        if (! $this->isAdmin($user)) {
-            $where[] = 'user_id = :user_id';
-            $params['user_id'] = (int) $user['id'];
+        $keyword = trim((string) ($filters['keyword'] ?? ''));
+        if ($keyword !== '') {
+            $where[] = '(subject_name LIKE :keyword OR subject_code LIKE :keyword)';
+            $params['keyword'] = '%' . $keyword . '%';
         }
 
-        if (! empty($filters['keyword'])) {
-            $where[] = '(name LIKE :keyword OR code LIKE :keyword)';
-            $params['keyword'] = '%' . trim((string) $filters['keyword']) . '%';
-        }
-
-        if (! empty($filters['status']) && in_array($filters['status'], ['active', 'archived'], true)) {
+        $status = trim((string) ($filters['status'] ?? ''));
+        if (in_array($status, ['studying', 'paused', 'completed'], true)) {
             $where[] = 'status = :status';
-            $params['status'] = $filters['status'];
+            $params['status'] = $status;
         }
 
-        $whereSql = $where === [] ? '' : ' WHERE ' . implode(' AND ', $where);
-
-        $countStatement = $this->db()->prepare('SELECT COUNT(*) FROM subjects' . $whereSql);
-        $countStatement->execute($params);
-        $total = (int) $countStatement->fetchColumn();
-
-        $sql = 'SELECT id, user_id, name, code, description, color, icon, status, created_at, updated_at'
-            . ' FROM subjects'
+        $whereSql = ' WHERE ' . implode(' AND ', $where);
+        $sql = 'SELECT id, subject_code, subject_name, description, credits, status, color, image, created_by, created_at, updated_at
+                FROM subjects'
             . $whereSql
-            . ' ORDER BY created_at DESC, id DESC'
-            . ' LIMIT :limit OFFSET :offset';
+            . ' ORDER BY created_at DESC, id DESC';
 
         $statement = $this->db()->prepare($sql);
-        foreach ($params as $key => $value) {
-            $statement->bindValue(':' . $key, $value);
-        }
-        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $statement->execute();
+        $statement->execute($params);
 
-        return [
-            'data' => $statement->fetchAll(),
-            'pagination' => [
-                'page' => $page,
-                'limit' => $limit,
-                'total' => $total,
-                'total_pages' => (int) ceil($total / $limit),
-            ],
-        ];
+        return $statement->fetchAll();
     }
 
-    public function findById(int $id): ?array
+    public function getById(int $id): ?array
     {
         $statement = $this->db()->prepare(
-            'SELECT id, user_id, name, code, description, color, icon, status, created_at, updated_at
+            'SELECT id, subject_code, subject_name, description, credits, status, color, image, created_by, created_at, updated_at
              FROM subjects
-             WHERE id = :id
+             WHERE id = :id AND deleted_at IS NULL
              LIMIT 1'
         );
         $statement->execute(['id' => $id]);
@@ -70,20 +45,26 @@ class Subject extends Model
         return $subject ?: null;
     }
 
+    public function findById(int $id): ?array
+    {
+        return $this->getById($id);
+    }
+
     public function create(array $data): int
     {
         $statement = $this->db()->prepare(
-            'INSERT INTO subjects (user_id, name, code, description, color, icon, status)
-             VALUES (:user_id, :name, :code, :description, :color, :icon, :status)'
+            'INSERT INTO subjects (subject_code, subject_name, description, credits, status, color, image, created_by)
+             VALUES (:subject_code, :subject_name, :description, :credits, :status, :color, :image, :created_by)'
         );
         $statement->execute([
-            'user_id' => (int) $data['user_id'],
-            'name' => $data['name'],
-            'code' => $data['code'] ?: null,
-            'description' => $data['description'] ?: null,
-            'color' => $data['color'] ?: null,
-            'icon' => $data['icon'] ?: null,
-            'status' => $data['status'] ?: 'active',
+            'subject_code' => $data['subject_code'],
+            'subject_name' => $data['subject_name'],
+            'description' => $data['description'] !== '' ? $data['description'] : null,
+            'credits' => (int) ($data['credits'] ?? 3),
+            'status' => $data['status'] ?: 'studying',
+            'color' => $data['color'] ?: '#2563EB',
+            'image' => $data['image'] ?: null,
+            'created_by' => $data['created_by'] ?: null,
         ]);
 
         return (int) $this->db()->lastInsertId();
@@ -91,70 +72,47 @@ class Subject extends Model
 
     public function update(int $id, array $data): bool
     {
+        $fields = [
+            'subject_name = :subject_name',
+            'description = :description',
+            'credits = :credits',
+            'status = :status',
+            'color = :color',
+        ];
+        $params = [
+            'id' => $id,
+            'subject_name' => $data['subject_name'],
+            'description' => $data['description'] !== '' ? $data['description'] : null,
+            'credits' => (int) ($data['credits'] ?? 3),
+            'status' => $data['status'] ?: 'studying',
+            'color' => $data['color'] ?: '#2563EB',
+        ];
+
+        if (array_key_exists('image', $data)) {
+            $fields[] = 'image = :image';
+            $params['image'] = $data['image'] ?: null;
+        }
+
         $statement = $this->db()->prepare(
-            'UPDATE subjects
-             SET name = :name,
-                 code = :code,
-                 description = :description,
-                 color = :color,
-                 icon = :icon,
-                 status = :status
-             WHERE id = :id'
+            'UPDATE subjects SET ' . implode(', ', $fields) . ' WHERE id = :id AND deleted_at IS NULL'
         );
 
-        return $statement->execute([
-            'id' => $id,
-            'name' => $data['name'],
-            'code' => $data['code'] ?: null,
-            'description' => $data['description'] ?: null,
-            'color' => $data['color'] ?: null,
-            'icon' => $data['icon'] ?: null,
-            'status' => $data['status'] ?: 'active',
-        ]);
+        return $statement->execute($params);
     }
 
     public function delete(int $id): bool
     {
-        $statement = $this->db()->prepare('DELETE FROM subjects WHERE id = :id');
+        $statement = $this->db()->prepare(
+            'UPDATE subjects SET deleted_at = NOW() WHERE id = :id AND deleted_at IS NULL'
+        );
 
         return $statement->execute(['id' => $id]);
     }
 
-    public function archive(int $id): bool
+    public function existsByCode(string $subjectCode, ?int $excludeId = null): bool
     {
-        $statement = $this->db()->prepare('UPDATE subjects SET status = :status WHERE id = :id');
-
-        return $statement->execute([
-            'id' => $id,
-            'status' => 'archived',
-        ]);
-    }
-
-    public function isOwner(int $subjectId, int $userId): bool
-    {
-        $statement = $this->db()->prepare(
-            'SELECT COUNT(*) FROM subjects WHERE id = :subject_id AND user_id = :user_id'
-        );
-        $statement->execute([
-            'subject_id' => $subjectId,
-            'user_id' => $userId,
-        ]);
-
-        return (int) $statement->fetchColumn() > 0;
-    }
-
-    public function isCodeExists(?string $code, int $userId, ?int $excludeId = null): bool
-    {
-        $code = trim((string) $code);
-        if ($code === '') {
-            return false;
-        }
-
-        $params = [
-            'code' => strtolower($code),
-            'user_id' => $userId,
-        ];
-        $sql = 'SELECT COUNT(*) FROM subjects WHERE LOWER(code) = :code AND user_id = :user_id';
+        $params = ['subject_code' => strtolower(trim($subjectCode))];
+        $sql = 'SELECT COUNT(*) FROM subjects WHERE LOWER(subject_code) = :subject_code AND deleted_at IS NULL';
 
         if ($excludeId !== null) {
             $sql .= ' AND id <> :exclude_id';
@@ -165,40 +123,5 @@ class Subject extends Model
         $statement->execute($params);
 
         return (int) $statement->fetchColumn() > 0;
-    }
-
-    public function hasRelatedData(int $subjectId): bool
-    {
-        foreach (['lessons', 'tasks', 'notes', 'quizzes'] as $table) {
-            if (! $this->tableHasColumn($table, 'subject_id')) {
-                continue;
-            }
-
-            $statement = $this->db()->prepare("SELECT COUNT(*) FROM {$table} WHERE subject_id = :subject_id");
-            $statement->execute(['subject_id' => $subjectId]);
-
-            if ((int) $statement->fetchColumn() > 0) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function tableHasColumn(string $table, string $column): bool
-    {
-        try {
-            $statement = $this->db()->prepare("SHOW COLUMNS FROM {$table} LIKE :column_name");
-            $statement->execute(['column_name' => $column]);
-
-            return (bool) $statement->fetch();
-        } catch (PDOException) {
-            return false;
-        }
-    }
-
-    private function isAdmin(array $user): bool
-    {
-        return strtolower((string) ($user['role'] ?? '')) === 'admin';
     }
 }
