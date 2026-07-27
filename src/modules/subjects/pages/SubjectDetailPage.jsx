@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Edit3 } from "lucide-react";
+import { ArrowLeft, Edit3, Users } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Badge, Button, Card, LoadingState, PageHeader } from "../../../components/ui";
 import { getSubjectById } from "../services/subjectService";
@@ -100,9 +100,14 @@ export default function SubjectDetailPage({ studentView = false }) {
               <ArrowLeft size={16} /> Quay lại
             </Button>
             {!studentView && (
-              <Button to={`/admin/subjects/${subject.id}/edit`}>
-                <Edit3 size={16} /> Sửa môn học
-              </Button>
+              <>
+                <Button to={`/admin/subjects/${subject.id}/students`} variant="secondary">
+                  <Users size={16} /> Quản lý sinh viên
+                </Button>
+                <Button to={`/admin/subjects/${subject.id}/edit`}>
+                  <Edit3 size={16} /> Sửa môn học
+                </Button>
+              </>
             )}
           </div>
         }

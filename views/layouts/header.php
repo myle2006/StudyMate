@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><?= e($title ?? app_config('name')) ?></title>
     <meta name="description" content="<?= e($description ?? '') ?>" />
+    <link rel="icon" type="image/png" href="<?= asset('images/plt-mark.png') ?>" />
     <script>
       tailwind = {
         config: {

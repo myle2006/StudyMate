@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS study_schedules (
     location VARCHAR(255) NULL,
     schedule_type ENUM('class', 'self_study', 'review', 'assignment', 'exam') DEFAULT 'self_study',
     status ENUM('upcoming', 'completed', 'cancelled') DEFAULT 'upcoming',
+    roadmap_id INT NULL,
+    roadmap_item_id INT NULL,
+    reminder_minutes_before INT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL,
@@ -21,3 +24,4 @@ CREATE INDEX idx_study_schedules_user_date ON study_schedules (user_id, study_da
 CREATE INDEX idx_study_schedules_subject ON study_schedules (subject_id);
 CREATE INDEX idx_study_schedules_status ON study_schedules (status);
 CREATE INDEX idx_study_schedules_type ON study_schedules (schedule_type);
+CREATE INDEX idx_study_schedules_roadmap ON study_schedules (roadmap_id, roadmap_item_id);

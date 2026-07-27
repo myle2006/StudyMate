@@ -6,6 +6,8 @@ $student = [AuthMiddleware::class, [RoleMiddleware::class, 'student']];
 
 $router->post('/api/register', [AuthController::class, 'register']);
 $router->post('/api/login', [AuthController::class, 'login']);
+$router->get('/api/apple-detection/health', [AppleDetectionController::class, 'health']);
+$router->post('/api/apple-detection/predict', [AppleDetectionController::class, 'predict']);
 $router->get('/api/me', [AuthController::class, 'me'], $auth);
 $router->post('/api/logout', [AuthController::class, 'logout'], $auth);
 $router->get('/api/admin/dashboard', [AuthController::class, 'adminDashboard'], $admin);
@@ -30,4 +32,9 @@ $router->post('/api/subjects/{id}', [SubjectController::class, 'update'], $admin
 $router->put('/api/subjects/{id}', [SubjectController::class, 'update'], $admin);
 $router->delete('/api/subjects/{id}', [SubjectController::class, 'destroy'], $admin);
 
+require BASE_PATH . '/routes/student_subjects.php';
+require BASE_PATH . '/routes/assignments.php';
+require BASE_PATH . '/routes/assignment_submissions.php';
+require BASE_PATH . '/routes/learning_goals.php';
+require BASE_PATH . '/routes/learning_roadmaps.php';
 require BASE_PATH . '/routes/study_schedules.php';

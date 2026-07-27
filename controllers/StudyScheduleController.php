@@ -133,6 +133,9 @@ class StudyScheduleController extends Controller
             'location' => trim((string) ($input['location'] ?? $current['location'] ?? '')),
             'schedule_type' => trim((string) ($input['schedule_type'] ?? $current['schedule_type'] ?? 'self_study')),
             'status' => trim((string) ($input['status'] ?? $current['status'] ?? 'upcoming')),
+            'roadmap_id' => trim((string) ($input['roadmap_id'] ?? $current['roadmap_id'] ?? '')),
+            'roadmap_item_id' => trim((string) ($input['roadmap_item_id'] ?? $current['roadmap_item_id'] ?? '')),
+            'reminder_minutes_before' => trim((string) ($input['reminder_minutes_before'] ?? $current['reminder_minutes_before'] ?? '')),
         ];
     }
 

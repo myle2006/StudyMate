@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($title ?? 'StudyMate AI') ?></title>
     <meta name="description" content="<?= e($description ?? 'StudyMate AI') ?>">
+    <link rel="icon" type="image/png" href="<?= public_url_path() ?>/assets/images/plt-mark.png">
     <script>
       window.STUDYMATE_BASE_PATH = <?= json_encode(base_url_path(), JSON_UNESCAPED_SLASHES) ?>;
       window.STUDYMATE_PUBLIC_BASE_URL = <?= json_encode(public_url_path(), JSON_UNESCAPED_SLASHES) ?>;

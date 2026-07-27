@@ -9,6 +9,7 @@ function appUrl(path) {
       const navItems = initialData.navItems || [
         { label: "Tính năng", href: "#features" },
         { label: "Cách hoạt động", href: "#process" },
+        { label: "Nhận diện táo", href: appUrl("/apple-detection") },
         { label: "Lợi ích", href: "#benefits" },
         { label: "Liên hệ", href: "#contact" },
       ];
@@ -97,6 +98,22 @@ function appUrl(path) {
         );
       }
 
+      function BrandLogo({ subtitle = "StudyMate AI" }) {
+        return (
+          <>
+            <span className="grid h-9 w-11 shrink-0 place-items-center rounded-[8px] bg-white">
+              <span className="text-lg font-black leading-none tracking-normal text-[#444496]">PLT</span>
+            </span>
+            <span>
+              <span className="block text-base font-extrabold leading-5 text-slate-950 dark:text-white">PLT Solutions</span>
+              <span className="block text-xs font-semibold leading-5 text-slate-500 dark:text-slate-400">
+                {subtitle}
+              </span>
+            </span>
+          </>
+        );
+      }
+
       function Header() {
         const [dark, setDark] = useState(false);
         const [open, setOpen] = useState(false);
@@ -108,16 +125,8 @@ function appUrl(path) {
         return (
           <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/86 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/78">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8">
-              <a href={appUrl("/")} className="flex items-center gap-3" aria-label="StudyMate AI">
-                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-lg font-extrabold text-white shadow-glow">
-                  S
-                </span>
-                <span>
-                  <span className="block text-base font-extrabold leading-5">StudyMate AI</span>
-                  <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Personal AI Learning
-                  </span>
-                </span>
+              <a href={appUrl("/")} className="flex items-center gap-3" aria-label="PLT Solutions">
+                <BrandLogo />
               </a>
 
               <nav className="hidden items-center gap-8 lg:flex">
@@ -202,9 +211,7 @@ function appUrl(path) {
             <div className="dashboard-float relative overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_34px_90px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-slate-900">
               <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4 dark:border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 text-sm font-extrabold text-white">
-                    S
-                  </div>
+                  <BrandLogo subtitle="Workspace học tập" />
                   <div>
                     <p className="text-sm font-extrabold text-slate-950 dark:text-white">StudyMate Workspace</p>
                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Hôm nay · 4 phiên học</p>

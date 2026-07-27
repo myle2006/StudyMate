@@ -33,7 +33,8 @@ class StudySchedule extends Model
             'SELECT ss.id, ss.user_id, ss.subject_id, ss.title, ss.description, ss.study_date,
                     TIME_FORMAT(ss.start_time, "%H:%i") AS start_time,
                     TIME_FORMAT(ss.end_time, "%H:%i") AS end_time,
-                    ss.location, ss.schedule_type, ss.status, ss.created_at, ss.updated_at,
+                    ss.location, ss.schedule_type, ss.status, ss.roadmap_id, ss.roadmap_item_id,
+                    ss.reminder_minutes_before, ss.created_at, ss.updated_at,
                     s.subject_code, s.subject_name, s.color, s.image, s.credits
              FROM study_schedules ss
              INNER JOIN subjects s ON s.id = ss.subject_id
@@ -51,7 +52,8 @@ class StudySchedule extends Model
             'SELECT ss.id, ss.user_id, ss.subject_id, ss.title, ss.description, ss.study_date,
                     TIME_FORMAT(ss.start_time, "%H:%i") AS start_time,
                     TIME_FORMAT(ss.end_time, "%H:%i") AS end_time,
-                    ss.location, ss.schedule_type, ss.status, ss.created_at, ss.updated_at,
+                    ss.location, ss.schedule_type, ss.status, ss.roadmap_id, ss.roadmap_item_id,
+                    ss.reminder_minutes_before, ss.created_at, ss.updated_at,
                     s.subject_code, s.subject_name, s.color, s.image, s.credits
              FROM study_schedules ss
              INNER JOIN subjects s ON s.id = ss.subject_id
@@ -79,9 +81,11 @@ class StudySchedule extends Model
     {
         $statement = $this->db()->prepare(
             'INSERT INTO study_schedules
-                (user_id, subject_id, title, description, study_date, start_time, end_time, location, schedule_type, status)
+                (user_id, subject_id, title, description, study_date, start_time, end_time, location,
+                 schedule_type, status, roadmap_id, roadmap_item_id, reminder_minutes_before)
              VALUES
-                (:user_id, :subject_id, :title, :description, :study_date, :start_time, :end_time, :location, :schedule_type, :status)'
+                (:user_id, :subject_id, :title, :description, :study_date, :start_time, :end_time, :location,
+                 :schedule_type, :status, :roadmap_id, :roadmap_item_id, :reminder_minutes_before)'
         );
         $statement->execute([
             'user_id' => (int) $data['user_id'],
@@ -94,6 +98,11 @@ class StudySchedule extends Model
             'location' => $data['location'] !== '' ? $data['location'] : null,
             'schedule_type' => $data['schedule_type'] ?: 'self_study',
             'status' => $data['status'] ?: 'upcoming',
+            'roadmap_id' => ! empty($data['roadmap_id']) ? (int) $data['roadmap_id'] : null,
+            'roadmap_item_id' => ! empty($data['roadmap_item_id']) ? (int) $data['roadmap_item_id'] : null,
+            'reminder_minutes_before' => isset($data['reminder_minutes_before']) && $data['reminder_minutes_before'] !== ''
+                ? max(0, (int) $data['reminder_minutes_before'])
+                : null,
         ]);
 
         return (int) $this->db()->lastInsertId();
@@ -111,7 +120,10 @@ class StudySchedule extends Model
                  end_time = :end_time,
                  location = :location,
                  schedule_type = :schedule_type,
-                 status = :status
+                 status = :status,
+                 roadmap_id = :roadmap_id,
+                 roadmap_item_id = :roadmap_item_id,
+                 reminder_minutes_before = :reminder_minutes_before
              WHERE id = :id AND user_id = :user_id AND deleted_at IS NULL'
         );
 
@@ -127,6 +139,11 @@ class StudySchedule extends Model
             'location' => $data['location'] !== '' ? $data['location'] : null,
             'schedule_type' => $data['schedule_type'] ?: 'self_study',
             'status' => $data['status'] ?: 'upcoming',
+            'roadmap_id' => ! empty($data['roadmap_id']) ? (int) $data['roadmap_id'] : null,
+            'roadmap_item_id' => ! empty($data['roadmap_item_id']) ? (int) $data['roadmap_item_id'] : null,
+            'reminder_minutes_before' => isset($data['reminder_minutes_before']) && $data['reminder_minutes_before'] !== ''
+                ? max(0, (int) $data['reminder_minutes_before'])
+                : null,
         ]);
     }
 
@@ -144,7 +161,30 @@ class StudySchedule extends Model
         ]);
     }
 
-    public function hasTimeConflict(int $userId, string $studyDate, string $startTime, string $endTime, ?int $excludeId = null): bool
+    public function deleteRoadmapSchedules(int $roadmapId, int $userId): bool
+    {
+        $statement = $this->db()->prepare(
+            'UPDATE study_schedules
+             SET deleted_at = NOW()
+             WHERE roadmap_id = :roadmap_id
+               AND user_id = :user_id
+               AND deleted_at IS NULL'
+        );
+
+        return $statement->execute([
+            'roadmap_id' => $roadmapId,
+            'user_id' => $userId,
+        ]);
+    }
+
+    public function hasTimeConflict(
+        int $userId,
+        string $studyDate,
+        string $startTime,
+        string $endTime,
+        ?int $excludeId = null,
+        ?int $excludeRoadmapId = null
+    ): bool
     {
         $params = [
             'user_id' => $userId,
@@ -165,10 +205,49 @@ class StudySchedule extends Model
             $params['exclude_id'] = $excludeId;
         }
 
+        if ($excludeRoadmapId !== null) {
+            $sql .= ' AND (roadmap_id IS NULL OR roadmap_id <> :exclude_roadmap_id)';
+            $params['exclude_roadmap_id'] = $excludeRoadmapId;
+        }
+
         $statement = $this->db()->prepare($sql);
         $statement->execute($params);
 
         return (int) $statement->fetchColumn() > 0;
+    }
+
+    public function suggestAvailableSlots(
+        int $userId,
+        string $studyDate,
+        int $durationMinutes,
+        string $preferredStartTime = '08:00',
+        ?int $excludeId = null,
+        ?int $excludeRoadmapId = null,
+        int $limit = 3
+    ): array {
+        $durationMinutes = max(15, $durationMinutes);
+        $startMinute = $this->timeToMinutes($preferredStartTime);
+        $startMinute = min(max(6 * 60, $startMinute), 21 * 60);
+        $candidates = [];
+
+        for ($minute = $startMinute; $minute + $durationMinutes <= 22 * 60; $minute += 30) {
+            $startTime = $this->minutesToTime($minute);
+            $endTime = $this->minutesToTime($minute + $durationMinutes);
+            if (! $this->hasTimeConflict($userId, $studyDate, $startTime, $endTime, $excludeId, $excludeRoadmapId)) {
+                $candidates[] = [
+                    'study_date' => $studyDate,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'duration_minutes' => $durationMinutes,
+                ];
+            }
+
+            if (count($candidates) >= $limit) {
+                break;
+            }
+        }
+
+        return $candidates;
     }
 
     private function dateRange(array $filters): array
@@ -203,5 +282,19 @@ class StudySchedule extends Model
         }
 
         return [$date->format('Y-m-d'), $date->format('Y-m-d')];
+    }
+
+    private function timeToMinutes(string $value): int
+    {
+        [$hour, $minute] = array_map('intval', array_slice(explode(':', $value), 0, 2));
+
+        return ($hour * 60) + $minute;
+    }
+
+    private function minutesToTime(int $minutes): string
+    {
+        $minutes = max(0, min(23 * 60 + 59, $minutes));
+
+        return sprintf('%02d:%02d', intdiv($minutes, 60), $minutes % 60);
     }
 }

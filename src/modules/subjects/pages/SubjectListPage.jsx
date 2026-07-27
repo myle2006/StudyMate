@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
 import { deleteSubject, getSubjects } from "../services/subjectService";
@@ -158,6 +159,9 @@ export default function SubjectListPage() {
                       <td className="px-4 py-4">
                         <div className="flex justify-end gap-2">
                           <Button to={`/admin/subjects/${subject.id}`} variant="secondary" size="sm">Xem</Button>
+                          <Button to={`/admin/subjects/${subject.id}/students`} variant="secondary" size="sm">
+                            <Users size={15} /> Quản lý sinh viên
+                          </Button>
                           <Button to={`/admin/subjects/${subject.id}/edit`} variant="secondary" size="sm">Sửa</Button>
                           <Button type="button" variant="danger" size="sm" onClick={() => setSelectedSubject(subject)}>Xóa</Button>
                         </div>

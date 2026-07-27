@@ -17,3 +17,7 @@ pnpm-debug.log*
 Thumbs.db
 
 *.log
+storage/ai_provider_lock.json
+docs/build_cicd_report.py
+docs/report_assets/
+docs/report_render/
