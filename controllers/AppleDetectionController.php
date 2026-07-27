@@ -20,7 +20,7 @@ class AppleDetectionController extends Controller
         } catch (Throwable $exception) {
             $this->json([
                 'success' => false,
-                'message' => 'Chưa kết nối được AI service. Hãy chạy FastAPI ở http://127.0.0.1:8000.',
+                'message' => 'Chưa kết nối được AI service nhận diện táo.',
                 'errors' => [
                     'service' => $exception->getMessage(),
                 ],
@@ -53,7 +53,7 @@ class AppleDetectionController extends Controller
         } catch (Throwable $exception) {
             $this->json([
                 'success' => false,
-                'message' => 'Không thể nhận diện ảnh. Hãy kiểm tra FastAPI model đã chạy chưa.',
+                'message' => 'Không thể nhận diện ảnh vì AI service chưa sẵn sàng.',
                 'errors' => [
                     'service' => $exception->getMessage(),
                 ],

@@ -85,6 +85,10 @@ function App() {
     return { label: "Cần chạy AI service", ready: false };
   }, [health]);
 
+  const unavailableMessage = config.isLocalEnvironment
+    ? "FastAPI model chưa sẵn sàng. Hãy chạy AI service local trước khi nhận diện."
+    : "AI service nhận diện táo chưa được triển khai hoặc chưa được cấu hình trên hosting.";
+
   async function loadHealth() {
     try {
       const response = await fetch(config.healthUrl);
@@ -120,6 +124,11 @@ function App() {
 
     if (!file) {
       setError("Vui lòng chọn một ảnh táo trước khi nhận diện.");
+      return;
+    }
+
+    if (!healthState.ready) {
+      setError(unavailableMessage);
       return;
     }
 
@@ -221,11 +230,17 @@ function App() {
 
           {!healthState.ready && (
             <div className="rounded-[8px] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
-              <p className="font-extrabold">FastAPI model chưa sẵn sàng.</p>
-              <p className="mt-2">Chạy lệnh sau trước khi nhận diện:</p>
-              <code className="mt-3 block break-words rounded-[8px] bg-white p-3 text-xs font-bold text-slate-800 dark:bg-slate-950 dark:text-slate-100">
-                {config.fastApiHelp}
-              </code>
+              <p className="font-extrabold">{unavailableMessage}</p>
+              {config.isLocalEnvironment ? (
+                <>
+                  <p className="mt-2">Chạy lệnh sau trước khi nhận diện:</p>
+                  <code className="mt-3 block break-words rounded-[8px] bg-white p-3 text-xs font-bold text-slate-800 dark:bg-slate-950 dark:text-slate-100">
+                    {config.fastApiHelp}
+                  </code>
+                </>
+              ) : (
+                <p className="mt-2">{config.productionHelp}</p>
+              )}
             </div>
           )}
 
@@ -244,10 +259,10 @@ function App() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !healthState.ready}
               className="mt-5 w-full rounded-full bg-emerald-600 px-6 py-4 text-base font-extrabold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Đang nhận diện..." : "Nhận diện táo"}
+              {loading ? "Đang nhận diện..." : healthState.ready ? "Nhận diện táo" : "AI service chưa sẵn sàng"}
             </button>
 
             {error && (
