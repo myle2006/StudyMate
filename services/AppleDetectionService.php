@@ -142,8 +142,11 @@ class AppleDetectionService
             CURLOPT_POSTFIELDS => base64_encode($imageBytes),
             CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 120,
+            CURLOPT_CONNECTTIMEOUT => (int) $this->envValue('ROBOFLOW_CONNECT_TIMEOUT', '20'),
+            CURLOPT_DNS_CACHE_TIMEOUT => 300,
+            CURLOPT_TIMEOUT => (int) $this->envValue('ROBOFLOW_TIMEOUT', '60'),
         ]);
+        $this->applyRoboflowCurlCompatibilityOptions($curl);
 
         $data = $this->executeJsonRequest($curl, 'Roboflow prediction failed');
 
@@ -191,6 +194,21 @@ class AppleDetectionService
         }
 
         return $data;
+    }
+
+    private function applyRoboflowCurlCompatibilityOptions(CurlHandle $curl): void
+    {
+        if (
+            $this->envValue('ROBOFLOW_FORCE_IPV4', '1') === '1'
+            && defined('CURLOPT_IPRESOLVE')
+            && defined('CURL_IPRESOLVE_V4')
+        ) {
+            curl_setopt($curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        }
+
+        if (defined('CURLOPT_HTTP_VERSION') && defined('CURL_HTTP_VERSION_1_1')) {
+            curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        }
     }
 
     private function roboflowHealth(): array
