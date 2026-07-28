@@ -8,7 +8,6 @@ class HomeModel extends Model
             'navItems' => [
                 ['label' => 'Tính năng', 'href' => '#features'],
                 ['label' => 'Cách hoạt động', 'href' => '#process'],
-                ['label' => 'Nhận diện táo', 'href' => url('/apple-detection')],
                 ['label' => 'Lợi ích', 'href' => '#benefits'],
                 ['label' => 'Liên hệ', 'href' => '#contact'],
             ],

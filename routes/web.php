@@ -3,7 +3,6 @@
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/login', [HomeController::class, 'login']);
 $router->get('/register', [HomeController::class, 'register']);
-$router->get('/apple-detection', [HomeController::class, 'appleDetection']);
 $router->get('/dashboard', [HomeController::class, 'dashboard']);
 $router->get('/student/dashboard', [HomeController::class, 'dashboard']);
 $router->get('/admin', [HomeController::class, 'admin']);

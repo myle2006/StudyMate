@@ -9,7 +9,6 @@ function appUrl(path) {
       const navItems = initialData.navItems || [
         { label: "Tính năng", href: "#features" },
         { label: "Cách hoạt động", href: "#process" },
-        { label: "Nhận diện táo", href: appUrl("/apple-detection") },
         { label: "Lợi ích", href: "#benefits" },
         { label: "Liên hệ", href: "#contact" },
       ];

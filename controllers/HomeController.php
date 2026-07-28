@@ -23,14 +23,6 @@ class HomeController extends Controller
         $this->reactApp('Đăng ký - StudyMate AI');
     }
 
-    public function appleDetection(): void
-    {
-        $this->view('pages.apple-detection', [
-            'title' => 'Nhận diện táo - StudyMate AI',
-            'description' => 'Upload ảnh để AI nhận diện táo, đánh giá chất lượng và hiển thị bounding box.',
-        ]);
-    }
-
     public function dashboard(): void
     {
         $this->reactApp('Dashboard - StudyMate AI');
