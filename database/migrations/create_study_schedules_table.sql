@@ -18,10 +18,10 @@ CREATE TABLE IF NOT EXISTS study_schedules (
     deleted_at DATETIME NULL,
     CONSTRAINT fk_schedule_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_schedule_subject FOREIGN KEY (subject_id) REFERENCES subjects(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX idx_study_schedules_user_date ON study_schedules (user_id, study_date);
-CREATE INDEX idx_study_schedules_subject ON study_schedules (subject_id);
-CREATE INDEX idx_study_schedules_status ON study_schedules (status);
-CREATE INDEX idx_study_schedules_type ON study_schedules (schedule_type);
-CREATE INDEX idx_study_schedules_roadmap ON study_schedules (roadmap_id, roadmap_item_id);
+CREATE INDEX IF NOT EXISTS idx_study_schedules_user_date ON study_schedules (user_id, study_date);
+CREATE INDEX IF NOT EXISTS idx_study_schedules_subject ON study_schedules (subject_id);
+CREATE INDEX IF NOT EXISTS idx_study_schedules_status ON study_schedules (status);
+CREATE INDEX IF NOT EXISTS idx_study_schedules_type ON study_schedules (schedule_type);
+CREATE INDEX IF NOT EXISTS idx_study_schedules_roadmap ON study_schedules (roadmap_id, roadmap_item_id);

@@ -307,8 +307,8 @@ class StudentController extends Controller
 
         if ($data['email'] === '') {
             $errors['email'] = 'Email là bắt buộc.';
-        } elseif (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Email không đúng định dạng.';
+        } elseif (! $this->isStrictEmail($data['email'])) {
+            $errors['email'] = 'Email không hợp lệ.';
         }
 
         if ($data['phone'] !== '' && ! preg_match('/^(0|\+84)?[0-9]{8,11}$/', $data['phone'])) {
@@ -319,6 +319,10 @@ class StudentController extends Controller
             $errors['student_code'] = 'Mã sinh viên là bắt buộc.';
         } elseif ($this->textLength($data['student_code']) > 50) {
             $errors['student_code'] = 'Mã sinh viên không được vượt quá 50 ký tự.';
+        } elseif (! preg_match('/^[A-Za-z0-9]+$/', $data['student_code'])) {
+            $errors['student_code'] = $this->containsEmoji($data['student_code'])
+                ? 'Mã sinh viên không được chứa emoji.'
+                : 'Mã sinh viên chỉ được chứa chữ cái và số.';
         }
 
         if ($isCreate && $data['password'] !== '' && strlen($data['password']) < 6) {
@@ -375,5 +379,22 @@ class StudentController extends Controller
     private function textLength(string $value): int
     {
         return function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
+    }
+
+    private function isStrictEmail(string $email): bool
+    {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL) || str_contains($email, '..')) {
+            return false;
+        }
+
+        return (bool) preg_match(
+            '/^[A-Za-z0-9._%+\-]+@(?:[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/',
+            $email
+        );
+    }
+
+    private function containsEmoji(string $value): bool
+    {
+        return (bool) preg_match('/\p{Extended_Pictographic}/u', $value);
     }
 }

@@ -78,6 +78,9 @@ const weekdayOptions = [
 
 export default function RoadmapPreviewEditor({
   initialData,
+  subjects = [],
+  learningGoals = [],
+  allowSubjectSelect = false,
   submitting = false,
   apiErrors = {},
   submitLabel = "Chấp nhận lộ trình",
@@ -86,14 +89,54 @@ export default function RoadmapPreviewEditor({
   const [form, setForm] = useState(normalizeInitial(initialData));
   const [clientErrors, setClientErrors] = useState({});
   const errors = useMemo(() => ({ ...clientErrors, ...apiErrors }), [clientErrors, apiErrors]);
+  const selectedSubject = subjects.find((subject) => String(subject.id) === String(form.subject_id));
 
   useEffect(() => {
     setForm(normalizeInitial(initialData));
     setClientErrors({});
   }, [initialData?.id]);
 
+  useEffect(() => {
+    if (allowSubjectSelect && !form.subject_id && subjects.length === 1) {
+      const subject = subjects[0];
+      setForm((current) => ({
+        ...current,
+        subject_id: String(subject.id),
+        subject_code: subject.subject_code || "",
+        subject_name: subject.subject_name || "",
+      }));
+    }
+  }, [allowSubjectSelect, subjects, form.subject_id]);
+
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateSubject(value) {
+    const subject = subjects.find((item) => String(item.id) === String(value));
+    setForm((current) => ({
+      ...current,
+      subject_id: value,
+      subject_code: subject?.subject_code || "",
+      subject_name: subject?.subject_name || "",
+      learning_goal_id: "",
+    }));
+  }
+
+  function updateLearningGoal(value) {
+    const goal = learningGoals.find((item) => String(item.id) === String(value));
+    setForm((current) => ({
+      ...current,
+      learning_goal_id: value,
+      subject_id: goal ? String(goal.subject_id) : current.subject_id,
+      subject_code: goal?.subject_code || current.subject_code,
+      subject_name: goal?.subject_name || current.subject_name,
+      goal: goal?.goal_description || current.goal,
+      current_level: goal?.current_level || current.current_level,
+      study_time_per_day: goal ? String(goal.study_time_per_day) : current.study_time_per_day,
+      start_date: goal?.start_date || current.start_date,
+      end_date: goal?.end_date || current.end_date,
+    }));
   }
 
   function toggleWeekday(day) {
@@ -151,6 +194,9 @@ export default function RoadmapPreviewEditor({
   function handleSubmit(event) {
     event.preventDefault();
     const nextErrors = validate(form);
+    if (!form.subject_id) {
+      nextErrors.subject_id = "Môn học là bắt buộc.";
+    }
     setClientErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -179,8 +225,31 @@ export default function RoadmapPreviewEditor({
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card className="grid gap-5 p-5 lg:grid-cols-[1fr_320px]">
         <div className="grid gap-5 md:grid-cols-2">
-          <Field label="Môn học">
-            <Input value={`${form.subject_code} - ${form.subject_name}`} disabled />
+          {allowSubjectSelect && learningGoals.length > 0 && (
+            <Field label="Mục tiêu đã lưu" error={errors.learning_goal_id} className="md:col-span-2">
+              <Select value={form.learning_goal_id || ""} onChange={(event) => updateLearningGoal(event.target.value)}>
+                <option value="">Không dùng mục tiêu đã lưu</option>
+                {learningGoals.map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.title} - {goal.subject_code}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+          <Field label="Môn học" error={errors.subject_id}>
+            {allowSubjectSelect ? (
+              <Select value={form.subject_id || ""} onChange={(event) => updateSubject(event.target.value)}>
+                <option value="">Chọn môn học được gán</option>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.subject_code} - {subject.subject_name}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <Input value={`${form.subject_code} - ${form.subject_name}`} disabled />
+            )}
           </Field>
           <Field label="Trạng thái" error={errors.status}>
             <Select value={form.status} onChange={(event) => updateField("status", event.target.value)}>
@@ -246,7 +315,9 @@ export default function RoadmapPreviewEditor({
         <div className="space-y-4 rounded-xl bg-slate-50 p-4">
           <RoadmapProgressBar value={form.progress_percent} />
           <p className="text-sm leading-6 text-slate-600">
-            Bạn có thể chỉnh sửa lộ trình AI gợi ý trước khi lưu. Sau khi lưu, tiến độ sẽ được tính theo trạng thái từng bước học.
+            {allowSubjectSelect
+              ? `Bạn đang tự tạo lộ trình cho ${selectedSubject ? `${selectedSubject.subject_code} - ${selectedSubject.subject_name}` : "môn học được gán"}. Sau khi lưu, các bước có ngày và giờ học sẽ được thêm vào lịch cá nhân.`
+              : "Bạn có thể chỉnh sửa lộ trình AI gợi ý trước khi lưu. Sau khi lưu, tiến độ sẽ được tính theo trạng thái từng bước học."}
           </p>
           <Button type="submit" size="lg" className="w-full" disabled={submitting}>
             {submitting ? "Đang lưu..." : submitLabel}

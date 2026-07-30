@@ -57,9 +57,9 @@ CREATE TABLE IF NOT EXISTS learning_roadmap_items (
     CONSTRAINT fk_learning_roadmap_items_roadmap FOREIGN KEY (roadmap_id) REFERENCES learning_roadmaps(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX idx_learning_roadmaps_user_status ON learning_roadmaps (user_id, status);
-CREATE INDEX idx_learning_roadmaps_subject ON learning_roadmaps (subject_id);
-CREATE INDEX idx_learning_roadmaps_goal ON learning_roadmaps (learning_goal_id);
-CREATE INDEX idx_learning_roadmaps_deleted_at ON learning_roadmaps (deleted_at);
-CREATE INDEX idx_learning_roadmap_items_roadmap_order ON learning_roadmap_items (roadmap_id, week_number, order_number);
-CREATE INDEX idx_learning_roadmap_items_status ON learning_roadmap_items (status);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmaps_user_status ON learning_roadmaps (user_id, status);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmaps_subject ON learning_roadmaps (subject_id);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmaps_goal ON learning_roadmaps (learning_goal_id);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmaps_deleted_at ON learning_roadmaps (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_roadmap_order ON learning_roadmap_items (roadmap_id, week_number, order_number);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_status ON learning_roadmap_items (status);

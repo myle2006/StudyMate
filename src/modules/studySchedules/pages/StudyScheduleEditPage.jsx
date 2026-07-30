@@ -48,6 +48,7 @@ export default function StudyScheduleEditPage() {
     } catch (err) {
       setApiErrors(err.errors || {});
       setError(err.message || "Không thể cập nhật lịch học.");
+      toast.error(err.message || "Không thể cập nhật lịch học.");
     } finally {
       setSubmitting(false);
     }

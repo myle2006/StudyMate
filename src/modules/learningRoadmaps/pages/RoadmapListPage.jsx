@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Eye, Plus, Search, Trash2 } from "lucide-react";
+import { Bot, Eye, Plus, Search, Trash2 } from "lucide-react";
 import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
 import RoadmapProgressBar from "../components/RoadmapProgressBar";
 import { deleteRoadmap, getRoadmaps } from "../services/learningRoadmapService";
@@ -78,11 +78,16 @@ export default function RoadmapListPage() {
         <PageHeader
           eyebrow="StudyMate AI"
           title="Lộ trình học"
-          description={roadmaps.length ? summary : "Tạo và theo dõi lộ trình học cá nhân hóa từ AI."}
+          description={roadmaps.length ? summary : "Tự tạo lộ trình hoặc dùng AI gợi ý rồi chỉnh sửa trước khi lưu."}
           actions={
-            <Button to="/student/roadmaps/generate">
-              <Plus size={16} /> Tạo lộ trình AI
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button to="/student/roadmaps/create">
+                <Plus size={16} /> Tự tạo lộ trình
+              </Button>
+              <Button to="/student/roadmaps/generate" variant="secondary">
+                <Bot size={16} /> Tạo bằng AI
+              </Button>
+            </div>
           }
         />
 
@@ -116,9 +121,9 @@ export default function RoadmapListPage() {
         ) : roadmaps.length === 0 ? (
           <EmptyState
             title="Chưa có lộ trình học"
-            description="Tạo lộ trình AI đầu tiên, xem lại, chỉnh sửa và lưu để bắt đầu theo dõi tiến độ."
-            actionLabel="Tạo lộ trình AI"
-            actionTo="/student/roadmaps/generate"
+            description="Tự tạo lộ trình từ đầu hoặc dùng AI gợi ý rồi chỉnh sửa trước khi lưu."
+            actionLabel="Tự tạo lộ trình"
+            actionTo="/student/roadmaps/create"
           />
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

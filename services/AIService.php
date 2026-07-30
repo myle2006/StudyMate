@@ -268,7 +268,6 @@ Yêu cầu:
 - Mỗi nhiệm vụ phải có ngày học, giờ bắt đầu, thời lượng dự kiến và mức độ ưu tiên.
 - Mỗi bước học phải thực tế với thời gian học mỗi ngày.
 - Ưu tiên nội dung có thể đo lường được.
-- Không nhắc đến AI nhận dạng trái cây.
 - Chỉ trả về JSON hợp lệ, không markdown, không code fence, không giải thích ngoài JSON.
 
 JSON output bắt buộc theo format:

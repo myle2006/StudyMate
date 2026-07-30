@@ -2,6 +2,9 @@ node_modules/
 dist/
 build/
 public/build/react/
+output/
+tmp/
+public/uploads/
 
 .env
 .env.*
@@ -21,3 +24,4 @@ storage/ai_provider_lock.json
 docs/build_cicd_report.py
 docs/report_assets/
 docs/report_render/
+docs/srs-testing/generated/

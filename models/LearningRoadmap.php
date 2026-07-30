@@ -174,19 +174,35 @@ class LearningRoadmap extends Model
 
     public function delete(int $id, int $userId): bool
     {
-        $statement = $this->db()->prepare(
-            'UPDATE learning_roadmaps
-             SET deleted_at = NOW()
-             WHERE id = :id
-               AND user_id = :user_id
-               AND deleted_at IS NULL'
-        );
-        $statement->execute([
-            'id' => $id,
-            'user_id' => $userId,
-        ]);
+        $db = $this->db();
+        $db->beginTransaction();
 
-        return $statement->rowCount() > 0;
+        try {
+            (new StudySchedule())->deleteRoadmapSchedules($id, $userId);
+
+            $statement = $db->prepare(
+                'UPDATE learning_roadmaps
+                 SET deleted_at = NOW()
+                 WHERE id = :id
+                   AND user_id = :user_id
+                   AND deleted_at IS NULL'
+            );
+            $statement->execute([
+                'id' => $id,
+                'user_id' => $userId,
+            ]);
+            $deleted = $statement->rowCount() > 0;
+
+            $db->commit();
+
+            return $deleted;
+        } catch (Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            throw $exception;
+        }
     }
 
     public function recalculateProgress(int $roadmapId): float

@@ -8,8 +8,8 @@ $router->post('/api/register', [AuthController::class, 'register']);
 $router->post('/api/login', [AuthController::class, 'login']);
 $router->get('/api/me', [AuthController::class, 'me'], $auth);
 $router->post('/api/logout', [AuthController::class, 'logout'], $auth);
-$router->get('/api/admin/dashboard', [AuthController::class, 'adminDashboard'], $admin);
-$router->get('/api/student/dashboard', [AuthController::class, 'studentDashboard'], $student);
+$router->get('/api/admin/dashboard', [AdminDashboardController::class, 'index'], $admin);
+$router->get('/api/student/dashboard', [StudentDashboardController::class, 'index'], $student);
 
 $router->get('/api/admin/students/import/template', [StudentController::class, 'downloadTemplate'], $admin);
 $router->post('/api/admin/students/import', [StudentController::class, 'import'], $admin);
@@ -36,3 +36,6 @@ require BASE_PATH . '/routes/assignment_submissions.php';
 require BASE_PATH . '/routes/learning_goals.php';
 require BASE_PATH . '/routes/learning_roadmaps.php';
 require BASE_PATH . '/routes/study_schedules.php';
+require BASE_PATH . '/routes/reports.php';
+require BASE_PATH . '/routes/notifications.php';
+require BASE_PATH . '/routes/lessons.php';

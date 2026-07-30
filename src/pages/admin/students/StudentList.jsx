@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import StudentFilter from "../../../components/students/StudentFilter";
 import StudentTable from "../../../components/students/StudentTable";
 import { Button, Card, ConfirmDialog, EmptyState, Field, Input, LoadingState, Modal, PageHeader, useToast } from "../../../components/ui";
@@ -126,6 +127,11 @@ export default function StudentList() {
     loadStudents(nextFilters);
   }
 
+  function handleRefresh() {
+    setMessage("");
+    loadStudents(filters);
+  }
+
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <PageHeader
@@ -134,6 +140,9 @@ export default function StudentList() {
         description="Tìm kiếm, lọc, khóa/mở khóa và quản lý tài khoản sinh viên trong hệ thống."
         actions={
           <>
+            <Button type="button" variant="secondary" onClick={handleRefresh} disabled={loading}>
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Làm mới
+            </Button>
             <Button to="/admin/students/import" variant="secondary">Import CSV/Excel</Button>
             <Button to="/admin/students/create">Thêm sinh viên</Button>
           </>

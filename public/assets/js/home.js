@@ -1,520 +1,275 @@
-const { useEffect, useState } = React;
-const initialData = window.STUDYMATE_DATA || {};
 const basePath = window.STUDYMATE_BASE_PATH || "";
+const logoImage = `${basePath}/public/assets/images/plt-solutions-logo.png`;
 
 function appUrl(path) {
   return `${basePath}${path}`;
 }
 
-      const navItems = initialData.navItems || [
-        { label: "Tính năng", href: "#features" },
-        { label: "Cách hoạt động", href: "#process" },
-        { label: "Lợi ích", href: "#benefits" },
-        { label: "Liên hệ", href: "#contact" },
-      ];
+const features = [
+  ["Dashboard cá nhân", "Tóm tắt môn học, lịch học, deadline, bài chưa nộp, điểm mới và tiến độ lộ trình.", "▦", "bg-blue-50 text-blue-700 border-blue-100"],
+  ["Thông báo deadline", "Nhắc bài sắp hết hạn, lịch học hôm nay và roadmap bị trễ, kèm badge chưa đọc.", "!", "bg-rose-50 text-rose-700 border-rose-100"],
+  ["Bài học & tài liệu", "Admin tạo bài học theo môn, upload tài liệu, thêm video/link để sinh viên học theo tiến độ.", "□", "bg-emerald-50 text-emerald-700 border-emerald-100"],
+  ["Bài tập & bài nộp", "Giao bài, nhận file, kiểm tra trạng thái nộp muộn, chấm điểm và phản hồi.", "✓", "bg-amber-50 text-amber-700 border-amber-100"],
+  ["Lịch học & lộ trình", "Sinh viên theo dõi lịch học, mục tiêu và từng bước trong roadmap học tập.", "↗", "bg-cyan-50 text-cyan-700 border-cyan-100"],
+  ["Báo cáo CSV", "Admin xuất dữ liệu sinh viên, môn học, bài nộp, điểm số và tiến độ học tập.", "↓", "bg-violet-50 text-violet-700 border-violet-100"],
+];
 
-      const features = initialData.features || [
-        {
-          title: "AI Study Assistant",
-          text: "Hỏi đáp theo ngữ cảnh, giải thích từng bước và gợi ý cách học phù hợp với mục tiêu.",
-          icon: "✦",
-          tone: "from-blue-500 to-indigo-500",
-        },
-        {
-          title: "Learning Roadmap",
-          text: "Tự động chia nhỏ mục tiêu thành lộ trình học theo tuần, theo môn và theo năng lực hiện tại.",
-          icon: "⌁",
-          tone: "from-violet-500 to-fuchsia-500",
-        },
-        {
-          title: "Document Summary",
-          text: "Tóm tắt PDF, slide và ghi chú dài thành ý chính, thuật ngữ cần nhớ và checklist ôn tập.",
-          icon: "≡",
-          tone: "from-cyan-500 to-blue-500",
-        },
-        {
-          title: "Quiz & Flashcard",
-          text: "Biến tài liệu học thành câu hỏi luyện tập, flashcard và bài kiểm tra ngắn sau mỗi chủ đề.",
-          icon: "◇",
-          tone: "from-emerald-500 to-teal-500",
-        },
-        {
-          title: "Progress Dashboard",
-          text: "Theo dõi tiến độ, thời lượng học, điểm mạnh/yếu và các mốc quan trọng trong một dashboard gọn.",
-          icon: "▣",
-          tone: "from-sky-500 to-indigo-500",
-        },
-        {
-          title: "Review Recommendation",
-          text: "Nhắc ôn đúng lúc dựa trên lịch sử học, mức độ quên và các phần cần củng cố trước kỳ kiểm tra.",
-          icon: "↻",
-          tone: "from-amber-400 to-pink-500",
-        },
-      ];
+const workflow = [
+  ["01", "Admin tạo dữ liệu", "Tạo môn học, gán sinh viên, tạo bài học và giao bài tập."],
+  ["02", "Sinh viên học theo ngày", "Xem dashboard, lịch học, deadline, tài liệu và lộ trình."],
+  ["03", "Theo dõi tiến độ", "Nộp bài, nhận feedback, đánh dấu bài học và cập nhật roadmap."],
+  ["04", "Xuất báo cáo", "Admin xem tổng quan, chấm điểm và xuất CSV khi cần."],
+];
 
-      const steps = initialData.steps || [
-        {
-          title: "Tạo hồ sơ học tập",
-          text: "Chọn môn học, trình độ, lịch rảnh và mục tiêu cần đạt.",
-        },
-        {
-          title: "Upload tài liệu/chọn mục tiêu",
-          text: "Thêm PDF, ghi chú, slide hoặc chọn kỹ năng muốn cải thiện.",
-        },
-        {
-          title: "AI tạo lộ trình",
-          text: "StudyMate AI đề xuất nội dung, quiz và phiên ôn tập theo nhịp học của bạn.",
-        },
-        {
-          title: "Theo dõi tiến độ",
-          text: "Xem dashboard, nhận gợi ý ôn lại và điều chỉnh kế hoạch khi cần.",
-        },
-      ];
+function Header() {
+  return (
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8">
+        <a href={appUrl("/")} className="flex items-center gap-3">
+          <span className="flex h-12 w-24 shrink-0 items-center rounded-lg bg-white">
+            <img src={logoImage} alt="" className="max-h-12 w-full object-contain" />
+          </span>
+          <span>
+            <span className="block text-base font-black leading-5">StudyMate</span>
+            <span className="block text-xs font-semibold leading-5 text-slate-500">Không gian học tập cá nhân</span>
+          </span>
+        </a>
 
-      const stats = initialData.stats || [
-        ["AI Tutor", "24/7"],
-        ["Cá nhân hóa", "100%"],
-        ["Theo dõi", "tiến độ"],
-      ];
+        <nav className="hidden items-center gap-7 md:flex">
+          <a href="#features" className="text-sm font-bold text-slate-600 transition hover:text-blue-700">Tính năng</a>
+          <a href="#workflow" className="text-sm font-bold text-slate-600 transition hover:text-blue-700">Quy trình</a>
+          <a href="#roles" className="text-sm font-bold text-slate-600 transition hover:text-blue-700">Vai trò</a>
+        </nav>
 
-      const benefits = initialData.benefits || [
-        "Tiết kiệm thời gian tự lên kế hoạch học.",
-        "Ghi nhớ tốt hơn nhờ quiz, flashcard và lịch ôn thông minh.",
-        "Hiểu rõ tiến độ thay vì học theo cảm giác mơ hồ.",
-      ];
+        <a href={appUrl("/login")} className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700">
+          Đăng nhập
+        </a>
+      </div>
+    </header>
+  );
+}
 
-      function IconButton({ children, label, onClick }) {
-        return (
-          <button
-            type="button"
-            aria-label={label}
-            title={label}
-            onClick={onClick}
-            className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-blue-400/50"
-          >
-            {children}
-          </button>
-        );
-      }
+function DashboardMockup() {
+  return (
+    <div className="dashboard-float relative rounded-lg border border-slate-200 bg-white p-4 shadow-[0_28px_90px_rgba(15,23,42,0.14)]">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div>
+          <p className="text-sm font-black text-slate-950">Trang cá nhân</p>
+          <p className="text-xs font-bold text-slate-500">Hôm nay, 30/07</p>
+        </div>
+        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-700">3 thông báo</span>
+      </div>
 
-      function BrandLogo({ subtitle = "StudyMate AI" }) {
-        return (
-          <>
-            <span className="grid h-9 w-11 shrink-0 place-items-center rounded-[8px] bg-white">
-              <span className="text-lg font-black leading-none tracking-normal text-[#444496]">PLT</span>
-            </span>
-            <span>
-              <span className="block text-base font-extrabold leading-5 text-slate-950 dark:text-white">PLT Solutions</span>
-              <span className="block text-xs font-semibold leading-5 text-slate-500 dark:text-slate-400">
-                {subtitle}
-              </span>
-            </span>
-          </>
-        );
-      }
-
-      function Header() {
-        const [dark, setDark] = useState(false);
-        const [open, setOpen] = useState(false);
-
-        useEffect(() => {
-          document.documentElement.classList.toggle("dark", dark);
-        }, [dark]);
-
-        return (
-          <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/86 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/78">
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8">
-              <a href={appUrl("/")} className="flex items-center gap-3" aria-label="PLT Solutions">
-                <BrandLogo />
-              </a>
-
-              <nav className="hidden items-center gap-8 lg:flex">
-                {navItems.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    className="text-sm font-semibold text-slate-600 transition hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-300"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </nav>
-
-              <div className="hidden items-center gap-3 md:flex">
-                <IconButton label="Đổi theme" onClick={() => setDark((value) => !value)}>
-                  {dark ? (
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M12 3v2.2M12 18.8V21M4.5 4.5 6 6M18 18l1.5 1.5M3 12h2.2M18.8 12H21M4.5 19.5 6 18M18 6l1.5-1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                  ) : (
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M20 14.2A7.5 7.5 0 0 1 9.8 4a8.6 8.6 0 1 0 10.2 10.2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </IconButton>
-                <a
-                  href={appUrl("/register")}
-                  className="rounded-full bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-600 hover:shadow-glow dark:bg-white dark:text-slate-950 dark:hover:bg-blue-100"
-                >
-                  Bắt đầu học
-                </a>
-              </div>
-
-              <button
-                type="button"
-                aria-label="Mở menu"
-                onClick={() => setOpen((value) => !value)}
-                className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-800 md:hidden dark:border-white/10 dark:bg-white/5 dark:text-white"
-              >
-                <span className="text-xl">{open ? "×" : "☰"}</span>
-              </button>
-            </div>
-
-            {open && (
-              <div className="border-t border-slate-200 bg-white px-5 py-4 md:hidden dark:border-white/10 dark:bg-slate-950">
-                <div className="mx-auto flex max-w-7xl flex-col gap-3">
-                  {navItems.map((item) => (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className="rounded-2xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                  <div className="flex items-center gap-3 pt-2">
-                    <IconButton label="Đổi theme" onClick={() => setDark((value) => !value)}>
-                      <span className="text-base">{dark ? "☀" : "◐"}</span>
-                    </IconButton>
-                    <a
-                      href={appUrl("/register")}
-                      onClick={() => setOpen(false)}
-                      className="flex-1 rounded-full bg-blue-600 px-5 py-3 text-center text-sm font-bold text-white"
-                    >
-                      Bắt đầu học
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-          </header>
-        );
-      }
-
-      function HeroVisual() {
-        return (
-          <div className="relative mx-auto w-full max-w-[560px]">
-            <div className="absolute -inset-6 rounded-[42px] bg-blue-500/10 blur-3xl dark:bg-blue-400/10"></div>
-            <div className="dashboard-float relative overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_34px_90px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-slate-900">
-              <div className="flex items-center justify-between border-b border-slate-200/80 px-5 py-4 dark:border-white/10">
-                <div className="flex items-center gap-3">
-                  <BrandLogo subtitle="Workspace học tập" />
-                  <div>
-                    <p className="text-sm font-extrabold text-slate-950 dark:text-white">StudyMate Workspace</p>
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Hôm nay · 4 phiên học</p>
-                  </div>
-                </div>
-                <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
-                  On track
-                </div>
-              </div>
-
-              <div className="grid gap-4 p-4 sm:grid-cols-[1fr_0.86fr]">
-                <div className="space-y-4">
-                  <div className="rounded-[8px] border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-extrabold uppercase text-blue-600 dark:text-blue-300">AI Tutor</p>
-                        <h3 className="mt-2 text-xl font-extrabold text-slate-950 dark:text-white">
-                          Lộ trình Toán rời rạc
-                        </h3>
-                      </div>
-                      <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">92%</span>
-                    </div>
-                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
-                      <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-blue-600 to-violet-600"></div>
-                    </div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                      {[
-                        ["Quiz", "12"],
-                        ["Card", "48"],
-                        ["Focus", "2h"],
-                      ].map(([label, value]) => (
-                        <div key={label} className="rounded-[8px] bg-white p-3 shadow-sm dark:bg-slate-950/70">
-                          <p className="text-lg font-extrabold text-slate-950 dark:text-white">{value}</p>
-                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[8px] border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <div className="flex items-center justify-between">
-                      <p className="font-extrabold text-slate-950 dark:text-white">Tóm tắt tài liệu</p>
-                      <span className="text-xs font-bold text-blue-600 dark:text-blue-300">PDF</span>
-                    </div>
-                    <div className="mt-4 space-y-3">
-                      <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-white/10"></div>
-                      <div className="h-2 w-10/12 rounded-full bg-slate-200 dark:bg-white/10"></div>
-                      <div className="h-2 w-7/12 rounded-full bg-slate-200 dark:bg-white/10"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="rounded-[8px] bg-slate-950 p-4 text-white dark:bg-white dark:text-slate-950">
-                    <p className="text-xs font-bold text-blue-200 dark:text-blue-700">Review Recommendation</p>
-                    <p className="mt-3 text-2xl font-extrabold">20 phút</p>
-                    <p className="mt-1 text-sm text-slate-300 dark:text-slate-600">Ôn lại Graph Theory</p>
-                  </div>
-
-                  <div className="rounded-[8px] border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="font-extrabold text-slate-950 dark:text-white">Learning Roadmap</p>
-                    <div className="mt-4 space-y-3">
-                      {[
-                        ["Cây khung", "done"],
-                        ["Dijkstra", "active"],
-                        ["Bài tập tổng hợp", "next"],
-                      ].map(([label, state]) => (
-                        <div key={label} className="flex items-center gap-3">
-                          <span
-                            className={`h-3 w-3 rounded-full ${
-                              state === "done"
-                                ? "bg-emerald-400"
-                                : state === "active"
-                                ? "bg-blue-600"
-                                : "bg-slate-300 dark:bg-slate-600"
-                            }`}
-                          ></span>
-                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[8px] border border-blue-100 bg-blue-50 p-4 dark:border-blue-400/20 dark:bg-blue-400/10">
-                    <p className="text-sm font-extrabold text-blue-700 dark:text-blue-200">Flashcard tiếp theo</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                      Định nghĩa đường đi Euler trong đồ thị?
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        {[
+          ["Môn học", "5", "text-blue-700"],
+          ["Bài sắp hạn", "2", "text-amber-700"],
+          ["Đã nộp", "12", "text-emerald-700"],
+        ].map(([label, value, tone]) => (
+          <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-black uppercase text-slate-500">{label}</p>
+            <p className={`mt-2 text-3xl font-black ${tone}`}>{value}</p>
           </div>
-        );
-      }
+        ))}
+      </div>
 
-      function Hero() {
-        return (
-          <section className="hero-grid overflow-hidden bg-slate-50/70 dark:bg-slate-950">
-            <div className="mx-auto grid min-h-[calc(100vh-78px)] max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.02fr_0.98fr] lg:px-8 lg:py-20">
-              <div className="fade-up max-w-3xl">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-bold text-blue-700 shadow-sm dark:border-blue-400/20 dark:bg-white/5 dark:text-blue-200">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                  Trợ lý học tập cá nhân hóa
-                </div>
-                <h1 className="max-w-4xl text-4xl font-extrabold leading-[1.06] text-slate-950 sm:text-6xl lg:text-7xl dark:text-white">
-                  Học thông minh hơn với trợ lý AI cá nhân
-                </h1>
-                <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:mt-7 sm:text-xl dark:text-slate-300">
-                  StudyMate AI xây dựng lộ trình học riêng, tóm tắt tài liệu, tạo quiz,
-                  flashcard và dashboard tiến độ để mỗi buổi học đều có mục tiêu rõ ràng.
-                </p>
-                <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row">
-                  <a
-                    href={appUrl("/register")}
-                    className="group inline-flex items-center justify-center gap-3 rounded-full bg-blue-600 px-7 py-4 text-base font-bold text-white shadow-glow transition hover:-translate-y-1 hover:bg-blue-700"
-                  >
-                    Bắt đầu ngay
-                    <span className="transition group-hover:translate-x-1">→</span>
-                  </a>
-                  <a
-                    href={appUrl("/login")}
-                    className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-7 py-4 text-base font-bold text-slate-800 shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:text-blue-700 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-blue-400/50"
-                  >
-                    Xem tính năng
-                  </a>
-                </div>
-                <div className="mt-12 hidden max-w-2xl grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
-                  {stats.map(([label, value]) => (
-                    <div key={label} className="border-l-2 border-blue-500/50 pl-4">
-                      <p className="text-2xl font-extrabold text-slate-950 dark:text-white">{value}</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">{label}</p>
-                    </div>
-                  ))}
-                </div>
+      <div className="mt-3 grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-lg border border-slate-200 p-4">
+          <div className="flex items-center justify-between">
+            <p className="font-black text-slate-950">Tiến độ lộ trình</p>
+            <span className="text-sm font-black text-blue-700">68%</span>
+          </div>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full w-[68%] rounded-full bg-blue-600"></div>
+          </div>
+          <div className="mt-4 grid gap-2">
+            {["Ôn chương 2", "Làm bài kiểm thử", "Đọc tài liệu Unit Test"].map((item, index) => (
+              <div key={item} className="flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
+                <span className={`grid h-4 w-4 place-items-center rounded-full text-[10px] font-black ${index === 0 ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-400"}`}>✓</span>
+                <span className="text-sm font-bold text-slate-700">{item}</span>
               </div>
+            ))}
+          </div>
+        </div>
 
-              <div className="fade-up lg:justify-self-end" style={{ animationDelay: "0.12s" }}>
-                <HeroVisual />
-                <div className="mt-8 grid grid-cols-1 gap-4 sm:hidden">
-                  {stats.map(([label, value]) => (
-                    <div key={label} className="border-l-2 border-blue-500/50 pl-4">
-                      <p className="text-2xl font-extrabold text-slate-950 dark:text-white">{value}</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">{label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      }
+        <div className="grid gap-3">
+          <div className="rounded-lg bg-slate-950 p-4 text-white">
+            <p className="text-xs font-black uppercase text-blue-200">Lịch học hôm nay</p>
+            <p className="mt-2 text-lg font-black">Kiểm thử phần mềm</p>
+            <p className="mt-1 text-sm font-semibold text-slate-300">08:00 - 10:00</p>
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-black uppercase text-amber-700">Deadline gần nhất</p>
+            <p className="mt-2 text-sm font-black text-slate-950">Nộp báo cáo trước 23:59</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      function Features() {
-        return (
-          <section id="features" className="bg-white py-20 sm:py-24 dark:bg-slate-950">
-            <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-              <div className="max-w-3xl">
-                <p className="text-sm font-extrabold uppercase text-blue-600 dark:text-blue-300">Tính năng</p>
-                <h2 className="mt-4 text-4xl font-extrabold leading-tight text-slate-950 sm:text-5xl dark:text-white">
-                  Một không gian học tập được AI cá nhân hóa từ đầu đến cuối
-                </h2>
+function Hero() {
+  return (
+    <section className="hero-grid bg-slate-50">
+      <div className="mx-auto grid min-h-[calc(100svh-74px)] max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 lg:grid-cols-[0.88fr_1.12fr] lg:px-8">
+        <div>
+          <p className="inline-flex rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-black text-blue-700 shadow-sm">
+            Dashboard học tập cá nhân cho sinh viên
+          </p>
+          <h1 className="mt-6 text-4xl font-black leading-[1.05] text-slate-950 sm:text-6xl">
+            Học có kế hoạch, nộp bài đúng hạn.
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+            StudyMate gom môn học, lịch học, bài tập, tài liệu, thông báo deadline, điểm số và lộ trình vào một dashboard dễ dùng cho sinh viên và admin.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href={appUrl("/register")} className="rounded-lg bg-blue-600 px-6 py-4 text-center text-base font-black text-white shadow-[0_18px_44px_rgba(37,99,235,0.24)] transition hover:bg-blue-700">
+              Tạo tài khoản
+            </a>
+            <a href={appUrl("/login")} className="rounded-lg border border-slate-300 bg-white px-6 py-4 text-center text-base font-black text-slate-800 transition hover:border-blue-400 hover:text-blue-700">
+              Vào hệ thống
+            </a>
+          </div>
+          <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
+            {[["2", "vai trò"], ["CSV", "báo cáo"], ["JWT", "bảo vệ API"]].map(([value, label]) => (
+              <div key={label} className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p className="text-2xl font-black text-slate-950">{value}</p>
+                <p className="mt-1 text-xs font-bold uppercase text-slate-500">{label}</p>
               </div>
-              <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {features.map((feature) => (
-                  <article
-                    key={feature.title}
-                    className="group rounded-[8px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-xl dark:border-white/10 dark:bg-white/[0.035] dark:hover:border-blue-400/40"
-                  >
-                    <div className={`mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${feature.tone} text-xl font-extrabold text-white shadow-lg`}>
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-xl font-extrabold text-slate-950 dark:text-white">{feature.title}</h3>
-                    <p className="mt-3 leading-7 text-slate-600 dark:text-slate-300">{feature.text}</p>
-                    <div className="mt-6 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 to-violet-500 transition group-hover:w-20"></div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      }
+            ))}
+          </div>
+        </div>
 
-      function Process() {
-        return (
-          <section id="process" className="bg-slate-50 py-20 sm:py-24 dark:bg-slate-900/60">
-            <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-              <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <DashboardMockup />
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  return (
+    <section id="features" className="mx-auto max-w-7xl px-5 py-18 sm:px-6 sm:py-20 lg:px-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-sm font-black uppercase text-blue-600">Tính năng</p>
+          <h2 className="mt-3 max-w-2xl text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
+            Đầy đủ hơn bản tối giản, nhưng vẫn dễ scan
+          </h2>
+        </div>
+        <p className="max-w-md leading-7 text-slate-600">
+          Mỗi khối đều trỏ về chức năng thật trong hệ thống, không còn module rỗng.
+        </p>
+      </div>
+
+      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {features.map(([title, text, icon, tone]) => (
+          <article key={title} className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
+            <span className={`grid h-12 w-12 place-items-center rounded-lg border text-lg font-black ${tone}`}>{icon}</span>
+            <h3 className="mt-5 text-xl font-black text-slate-950">{title}</h3>
+            <p className="mt-3 leading-7 text-slate-600">{text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Workflow() {
+  return (
+    <section id="workflow" className="bg-slate-50 py-18 sm:py-20">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr]">
+          <div>
+            <p className="text-sm font-black uppercase text-blue-600">Quy trình</p>
+            <h2 className="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
+              Một luồng làm việc rõ ràng từ admin đến sinh viên
+            </h2>
+          </div>
+          <div className="grid gap-4">
+            {workflow.map(([number, title, text]) => (
+              <article key={number} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-[56px_1fr]">
+                <span className="grid h-12 w-12 place-items-center rounded-lg bg-slate-950 text-sm font-black text-white">{number}</span>
                 <div>
-                  <p className="text-sm font-extrabold uppercase text-blue-600 dark:text-blue-300">Cách hoạt động</p>
-                  <h2 className="mt-4 text-4xl font-extrabold leading-tight text-slate-950 sm:text-5xl dark:text-white">
-                    Từ mục tiêu đến kế hoạch học chỉ trong vài phút
-                  </h2>
-                  <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">
-                    Quy trình đơn giản giúp StudyMate AI hiểu bạn đang học gì, cần đạt điều gì
-                    và nên ôn phần nào vào đúng thời điểm.
-                  </p>
+                  <h3 className="text-lg font-black text-slate-950">{title}</h3>
+                  <p className="mt-2 leading-7 text-slate-600">{text}</p>
                 </div>
-                <div className="grid gap-4">
-                  {steps.map((step, index) => (
-                    <article
-                      key={step.title}
-                      className="group grid gap-5 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:grid-cols-[72px_1fr] dark:border-white/10 dark:bg-slate-950/70"
-                    >
-                      <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-950 text-lg font-extrabold text-white transition group-hover:bg-blue-600 dark:bg-white dark:text-slate-950">
-                        {String(index + 1).padStart(2, "0")}
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-extrabold text-slate-950 dark:text-white">{step.title}</h3>
-                        <p className="mt-2 leading-7 text-slate-600 dark:text-slate-300">{step.text}</p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Roles() {
+  return (
+    <section id="roles" className="mx-auto max-w-7xl px-5 py-18 sm:px-6 sm:py-20 lg:px-8">
+      <div className="grid gap-5 lg:grid-cols-2">
+        {[
+          ["Sinh viên", "Theo dõi lịch học, bài tập, bài học, điểm số và tiến độ cá nhân.", ["Trang cá nhân", "Môn học của tôi", "Bài tập", "Bài học", "Lộ trình"]],
+          ["Admin", "Quản lý dữ liệu lớp học, giao bài, chấm điểm và xuất báo cáo.", ["Sinh viên", "Môn học", "Bài tập", "Bài nộp", "Báo cáo"]],
+        ].map(([title, text, items]) => (
+          <article key={title} className="rounded-lg border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_20px_70px_rgba(15,23,42,0.14)]">
+            <h3 className="text-2xl font-black">{title}</h3>
+            <p className="mt-3 leading-7 text-slate-300">{text}</p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {items.map((item) => (
+                <span key={item} className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-sm font-bold text-slate-100">
+                  {item}
+                </span>
+              ))}
             </div>
-          </section>
-        );
-      }
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-      function Benefits() {
-        return (
-          <section id="benefits" className="bg-white py-20 sm:py-24 dark:bg-slate-950">
-            <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-6 lg:grid-cols-2 lg:px-8 lg:items-center">
-              <div>
-                <p className="text-sm font-extrabold uppercase text-blue-600 dark:text-blue-300">Lợi ích</p>
-                <h2 className="mt-4 text-4xl font-extrabold leading-tight text-slate-950 sm:text-5xl dark:text-white">
-                  Học có chiến lược, ôn có dữ liệu, tiến bộ nhìn thấy rõ
-                </h2>
-              </div>
-              <div className="grid gap-4">
-                {benefits.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-start gap-4 rounded-[8px] border border-slate-200 bg-slate-50 p-5 transition hover:border-blue-200 hover:bg-white hover:shadow-md dark:border-white/10 dark:bg-white/[0.035] dark:hover:bg-white/[0.06]"
-                  >
-                    <span className="mt-1 grid h-7 w-7 flex-none place-items-center rounded-full bg-emerald-100 text-sm font-extrabold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
-                      ✓
-                    </span>
-                    <p className="text-lg font-semibold leading-8 text-slate-700 dark:text-slate-200">{item}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      }
+function CTA() {
+  return (
+    <section className="mx-auto max-w-7xl px-5 pb-18 sm:px-6 sm:pb-20 lg:px-8">
+      <div className="grid gap-6 rounded-lg border border-slate-200 bg-blue-600 p-7 text-white shadow-[0_24px_70px_rgba(37,99,235,0.18)] sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div>
+          <p className="text-sm font-black uppercase text-blue-100">Bắt đầu</p>
+          <h2 className="mt-3 text-3xl font-black leading-tight sm:text-4xl">Mở StudyMate và quản lý việc học ngay</h2>
+          <p className="mt-4 max-w-2xl leading-7 text-blue-50">
+            Giao diện có đủ thông tin để ra quyết định nhanh, nhưng vẫn giữ thao tác chính thật rõ ràng.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+          <a href={appUrl("/login")} className="rounded-lg bg-white px-6 py-4 text-center font-black text-blue-700 transition hover:bg-blue-50">Đăng nhập</a>
+          <a href={appUrl("/register")} className="rounded-lg border border-white/30 px-6 py-4 text-center font-black text-white transition hover:bg-white/10">Tạo tài khoản</a>
+        </div>
+      </div>
+    </section>
+  );
+}
 
-      function CTA() {
-        return (
-          <section id="contact" className="bg-slate-950 py-20 text-white">
-            <div className="mx-auto max-w-5xl px-5 text-center sm:px-6 lg:px-8">
-              <p className="text-sm font-extrabold uppercase text-blue-300">Sẵn sàng học khác đi?</p>
-              <h2 className="mt-4 text-4xl font-extrabold leading-tight sm:text-5xl">
-                Bắt đầu xây dựng lộ trình học cá nhân cùng StudyMate AI
-              </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-                Tập trung vào điều cần học tiếp theo, để AI hỗ trợ phần tổ chức, tóm tắt,
-                luyện tập và theo dõi tiến độ.
-              </p>
-              <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-                <a
-                  href={appUrl("/register")}
-                  className="inline-flex items-center justify-center rounded-full bg-white px-7 py-4 text-base font-bold text-slate-950 transition hover:-translate-y-1 hover:bg-blue-100"
-                >
-                  Bắt đầu học
-                </a>
-                <a
-                  href={appUrl("/subjects")}
-                  className="inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-4 text-base font-bold text-white transition hover:-translate-y-1 hover:border-blue-300 hover:bg-white/10"
-                >
-                  Khám phá tính năng
-                </a>
-              </div>
-            </div>
-          </section>
-        );
-      }
+function Footer() {
+  return (
+    <footer className="border-t border-slate-200 py-7">
+      <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 text-sm font-semibold text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+        <p className="text-slate-800">StudyMate</p>
+        <p>PLT Solutions - Nền tảng quản lý học tập cá nhân cho sinh viên.</p>
+      </div>
+    </footer>
+  );
+}
 
-      function Footer() {
-        return (
-          <footer className="border-t border-slate-200 bg-white py-8 dark:border-white/10 dark:bg-slate-950">
-            <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 text-sm text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8 dark:text-slate-400">
-              <p className="font-semibold text-slate-700 dark:text-slate-200">StudyMate AI</p>
-              <p>© 2026 StudyMate AI. Trợ lý học tập cá nhân hóa tích hợp AI.</p>
-            </div>
-          </footer>
-        );
-      }
+function App() {
+  return (
+    <main className="min-h-screen bg-white text-slate-950">
+      <Header />
+      <Hero />
+      <Features />
+      <Workflow />
+      <Roles />
+      <CTA />
+      <Footer />
+    </main>
+  );
+}
 
-      function App() {
-        return (
-          <>
-            <Header />
-            <main>
-              <Hero />
-              <Features />
-              <Process />
-              <Benefits />
-              <CTA />
-            </main>
-            <Footer />
-          </>
-        );
-      }
-
-      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);

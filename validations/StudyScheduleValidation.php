@@ -63,6 +63,15 @@ class StudyScheduleValidation
             $errors['status'] = 'Trạng thái lịch học không hợp lệ.';
         }
 
+        if ($status === 'completed' && self::isValidDate($studyDate)) {
+            $today = new DateTimeImmutable('today');
+            $studyDay = DateTimeImmutable::createFromFormat('Y-m-d', $studyDate);
+
+            if ($studyDay instanceof DateTimeImmutable && $studyDay > $today) {
+                $errors['status'] = 'Không thể đánh dấu đã hoàn thành cho lịch học trong tương lai.';
+            }
+        }
+
         if ($status === 'upcoming' && self::isValidDate($studyDate) && self::isValidTime($startTime)) {
             $scheduledAt = strtotime($studyDate . ' ' . $startTime);
             if ($scheduledAt !== false && $scheduledAt < time()) {

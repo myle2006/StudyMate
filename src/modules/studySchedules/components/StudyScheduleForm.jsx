@@ -34,6 +34,16 @@ function validateForm(form) {
     errors.end_time = "Giờ kết thúc phải lớn hơn giờ bắt đầu.";
   }
 
+  if (form.status === "completed" && form.study_date) {
+    const studyDay = new Date(`${form.study_date}T00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (studyDay.getTime() > today.getTime()) {
+      errors.status = "Không thể đánh dấu đã hoàn thành cho lịch học trong tương lai.";
+    }
+  }
+
   if (form.status === "upcoming" && form.study_date && form.start_time) {
     const scheduledAt = new Date(`${form.study_date}T${form.start_time}`);
     if (scheduledAt.getTime() < Date.now()) {
@@ -132,7 +142,7 @@ export default function StudyScheduleForm({
                 <option value="exam">Thi/kiểm tra</option>
               </Select>
             </Field>
-            <Field label="Trạng thái">
+            <Field label="Trạng thái" error={errors.status}>
               <Select name="status" value={form.status} onChange={handleChange}>
                 <option value="upcoming">Sắp diễn ra</option>
                 <option value="completed">Đã hoàn thành</option>
@@ -147,6 +157,11 @@ export default function StudyScheduleForm({
         </Field>
 
         {errors.time && <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{errors.time}</div>}
+        {submitting && (
+          <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700" role="status" aria-live="polite">
+            Đang xử lý, vui lòng chờ...
+          </div>
+        )}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Button type="submit" size="lg" disabled={submitting}>

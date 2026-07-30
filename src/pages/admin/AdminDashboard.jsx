@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, BarChart3, Users } from "lucide-react";
+import { BookOpen, FileDown, Users } from "lucide-react";
 import { Button, Card, PageHeader } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
 
@@ -21,10 +21,10 @@ export default function AdminDashboard() {
       tone: "from-cyan-500 to-blue-500",
     },
     {
-      title: "Thống kê",
-      text: "Theo dõi hoạt động học tập, số liệu người dùng và dữ liệu hệ thống.",
-      to: "/admin/statistics",
-      icon: BarChart3,
+      title: "Báo cáo",
+      text: "Xuất dữ liệu sinh viên, môn học, bài tập, bài nộp, điểm số và tiến độ học tập.",
+      to: "/admin/reports",
+      icon: FileDown,
       tone: "from-violet-500 to-blue-500",
     },
   ];

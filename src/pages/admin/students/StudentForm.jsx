@@ -13,6 +13,18 @@ const initialForm = {
   status: "active",
 };
 
+function hasEmoji(value) {
+  try {
+    return /\p{Extended_Pictographic}/u.test(value);
+  } catch {
+    return false;
+  }
+}
+
+function isValidStudentEmail(value) {
+  return /^[A-Za-z0-9._%+-]+@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/.test(value) && !value.includes("..");
+}
+
 function validate(form, isEdit) {
   const errors = {};
 
@@ -26,8 +38,8 @@ function validate(form, isEdit) {
 
   if (!form.email.trim()) {
     errors.email = "Email là bắt buộc.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = "Email không đúng định dạng.";
+  } else if (!isValidStudentEmail(form.email.trim())) {
+    errors.email = "Email không hợp lệ.";
   }
 
   if (form.phone && !/^(0|\+84)?[0-9]{8,11}$/.test(form.phone)) {
@@ -38,6 +50,10 @@ function validate(form, isEdit) {
     errors.student_code = "Mã sinh viên là bắt buộc.";
   } else if (form.student_code.trim().length > 50) {
     errors.student_code = "Mã sinh viên không được vượt quá 50 ký tự.";
+  } else if (!/^[A-Za-z0-9]+$/.test(form.student_code.trim())) {
+    errors.student_code = hasEmoji(form.student_code)
+      ? "Mã sinh viên không được chứa emoji."
+      : "Mã sinh viên chỉ được chứa chữ cái và số.";
   }
 
   if (!isEdit && form.password && form.password.length < 6) {

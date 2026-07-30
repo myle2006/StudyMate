@@ -161,6 +161,11 @@ export default function AssignmentForm({
         )}
 
         <div className="mt-6 flex flex-col gap-3">
+          {submitting && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700" role="status" aria-live="polite">
+              Đang xử lý, vui lòng chờ...
+            </div>
+          )}
           <Button type="submit" size="lg" disabled={submitting}>
             {submitting ? "Đang lưu..." : mode === "edit" ? "Cập nhật bài tập" : "Tạo bài tập"}
           </Button>

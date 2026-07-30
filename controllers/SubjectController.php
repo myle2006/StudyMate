@@ -55,7 +55,12 @@ class SubjectController extends Controller
         }
 
         if ($imageFile !== null) {
-            $data['image'] = $this->storeSubjectImage($imageFile);
+            try {
+                $data['image'] = $this->storeSubjectImage($imageFile);
+            } catch (RuntimeException $exception) {
+                $this->validationFailed(['image' => $exception->getMessage()]);
+                return;
+            }
         }
 
         $user = $this->currentUser();
@@ -96,7 +101,12 @@ class SubjectController extends Controller
         }
 
         if ($imageFile !== null) {
-            $data['image'] = $this->storeSubjectImage($imageFile);
+            try {
+                $data['image'] = $this->storeSubjectImage($imageFile);
+            } catch (RuntimeException $exception) {
+                $this->validationFailed(['image' => $exception->getMessage()]);
+                return;
+            }
         }
 
         $this->subject->update($subjectId, $data);
@@ -155,7 +165,7 @@ class SubjectController extends Controller
 
     private function uploadedImage(): ?array
     {
-        $file = $_FILES['image'] ?? null;
+        $file = $_FILES['image'] ?? $_FILES['subject_image'] ?? null;
 
         if (! is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return null;
@@ -169,8 +179,12 @@ class SubjectController extends Controller
         $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
         $uploadDir = BASE_PATH . '/public/uploads/subjects';
 
-        if (! is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+        if (! is_dir($uploadDir) && ! mkdir($uploadDir, 0755, true)) {
+            throw new RuntimeException('Không thể tạo thư mục lưu ảnh môn học.');
+        }
+
+        if (! is_writable($uploadDir)) {
+            throw new RuntimeException('Thư mục lưu ảnh môn học không có quyền ghi.');
         }
 
         $fileName = 'subject_' . date('YmdHis') . '_' . bin2hex(random_bytes(8)) . '.' . $extension;

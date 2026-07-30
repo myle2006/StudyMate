@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS learning_goals (
     CONSTRAINT fk_learning_goals_subject FOREIGN KEY (subject_id) REFERENCES subjects(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX idx_learning_goals_user_status ON learning_goals (user_id, status);
-CREATE INDEX idx_learning_goals_subject ON learning_goals (subject_id);
-CREATE INDEX idx_learning_goals_dates ON learning_goals (start_date, end_date);
-CREATE INDEX idx_learning_goals_deleted_at ON learning_goals (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_learning_goals_user_status ON learning_goals (user_id, status);
+CREATE INDEX IF NOT EXISTS idx_learning_goals_subject ON learning_goals (subject_id);
+CREATE INDEX IF NOT EXISTS idx_learning_goals_dates ON learning_goals (start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_learning_goals_deleted_at ON learning_goals (deleted_at);

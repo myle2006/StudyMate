@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS student_subjects (
     CONSTRAINT uq_student_subject UNIQUE (student_id, subject_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX idx_student_subjects_subject_status ON student_subjects (subject_id, status);
-CREATE INDEX idx_student_subjects_student_status ON student_subjects (student_id, status);
+CREATE INDEX IF NOT EXISTS idx_student_subjects_subject_status ON student_subjects (subject_id, status);
+CREATE INDEX IF NOT EXISTS idx_student_subjects_student_status ON student_subjects (student_id, status);

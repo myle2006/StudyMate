@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 4173"
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "srs:agent": "node scripts/srs-testing-agent.mjs",
+    "srs:agent:generate": "node scripts/srs-testing-agent.mjs --generate",
+    "srs:diagrams": "node scripts/render-srs-diagrams.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

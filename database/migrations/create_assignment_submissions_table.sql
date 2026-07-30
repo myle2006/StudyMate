@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS assignment_submissions (
     CONSTRAINT uq_assignment_submission_student UNIQUE (assignment_id, student_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX idx_assignment_submissions_student_status ON assignment_submissions (student_id, status);
-CREATE INDEX idx_assignment_submissions_assignment_status ON assignment_submissions (assignment_id, status);
-CREATE INDEX idx_assignment_submissions_submitted_at ON assignment_submissions (submitted_at);
+CREATE INDEX IF NOT EXISTS idx_assignment_submissions_student_status ON assignment_submissions (student_id, status);
+CREATE INDEX IF NOT EXISTS idx_assignment_submissions_assignment_status ON assignment_submissions (assignment_id, status);
+CREATE INDEX IF NOT EXISTS idx_assignment_submissions_submitted_at ON assignment_submissions (submitted_at);

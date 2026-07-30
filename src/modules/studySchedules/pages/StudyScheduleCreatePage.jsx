@@ -42,6 +42,7 @@ export default function StudyScheduleCreatePage() {
     } catch (err) {
       setApiErrors(err.errors || {});
       setError(err.message || "Không thể thêm lịch học.");
+      toast.error(err.message || "Không thể thêm lịch học.");
     } finally {
       setSubmitting(false);
     }

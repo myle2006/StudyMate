@@ -250,8 +250,8 @@ class ImportStudentService
 
         if ($data['email'] === '') {
             $errors[] = 'Email là bắt buộc.';
-        } elseif (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Email không đúng định dạng.';
+        } elseif (! $this->isStrictEmail($data['email'])) {
+            $errors[] = 'Email không hợp lệ.';
         } elseif (in_array(strtolower($data['email']), $seenEmails, true)) {
             $errors[] = 'Email bị trùng trong file import.';
         } elseif ($this->student->isEmailExists($data['email'])) {
@@ -266,6 +266,10 @@ class ImportStudentService
             $errors[] = 'Mã sinh viên là bắt buộc.';
         } elseif ($this->textLength($data['student_code']) > 50) {
             $errors[] = 'Mã sinh viên không được vượt quá 50 ký tự.';
+        } elseif (! preg_match('/^[A-Za-z0-9]+$/', $data['student_code'])) {
+            $errors[] = $this->containsEmoji($data['student_code'])
+                ? 'Mã sinh viên không được chứa emoji.'
+                : 'Mã sinh viên chỉ được chứa chữ cái và số.';
         } elseif (in_array(strtolower($data['student_code']), $seenStudentCodes, true)) {
             $errors[] = 'Mã sinh viên bị trùng trong file import.';
         } elseif ($this->student->isStudentCodeExists($data['student_code'])) {
@@ -297,5 +301,22 @@ class ImportStudentService
     private function textLength(string $value): int
     {
         return function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
+    }
+
+    private function isStrictEmail(string $email): bool
+    {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL) || str_contains($email, '..')) {
+            return false;
+        }
+
+        return (bool) preg_match(
+            '/^[A-Za-z0-9._%+\-]+@(?:[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/',
+            $email
+        );
+    }
+
+    private function containsEmoji(string $value): bool
+    {
+        return (bool) preg_match('/\p{Extended_Pictographic}/u', $value);
     }
 }

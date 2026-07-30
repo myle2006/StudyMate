@@ -14,6 +14,6 @@ CREATE TABLE IF NOT EXISTS assignments (
     CONSTRAINT fk_assignments_created_by FOREIGN KEY (created_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX idx_assignments_subject_status ON assignments (subject_id, status);
-CREATE INDEX idx_assignments_deadline ON assignments (deadline);
-CREATE INDEX idx_assignments_deleted_at ON assignments (deleted_at);
+CREATE INDEX IF NOT EXISTS idx_assignments_subject_status ON assignments (subject_id, status);
+CREATE INDEX IF NOT EXISTS idx_assignments_deadline ON assignments (deadline);
+CREATE INDEX IF NOT EXISTS idx_assignments_deleted_at ON assignments (deleted_at);

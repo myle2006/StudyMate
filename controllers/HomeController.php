@@ -7,8 +7,8 @@ class HomeController extends Controller
         $model = new HomeModel();
 
         $this->view('home.index', [
-            'title' => 'StudyMate AI - Trợ lý học tập cá nhân hóa',
-            'description' => 'StudyMate AI giúp cá nhân hóa lộ trình học, tóm tắt tài liệu, tạo quiz, flashcard và theo dõi tiến độ học tập.',
+            'title' => 'StudyMate - Dashboard học tập cá nhân cho sinh viên',
+            'description' => 'StudyMate giúp quản lý môn học, bài tập, lịch học, lộ trình, thông báo deadline, bài học và báo cáo học tập.',
             'pageData' => $model->getLandingPageData(),
         ]);
     }
@@ -42,7 +42,7 @@ class HomeController extends Controller
     {
         $this->view('react.app', [
             'title' => $title,
-            'description' => 'StudyMate AI - trợ lý học tập cá nhân tích hợp AI.',
+            'description' => 'StudyMate - nền tảng quản lý học tập cá nhân cho sinh viên.',
         ], '');
     }
 

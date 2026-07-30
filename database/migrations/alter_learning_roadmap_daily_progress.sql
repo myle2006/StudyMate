@@ -26,4 +26,4 @@ ALTER TABLE study_schedules
     ADD COLUMN roadmap_item_id INT NULL AFTER roadmap_id,
     ADD COLUMN reminder_minutes_before INT NULL AFTER roadmap_item_id;
 
-CREATE INDEX idx_study_schedules_roadmap ON study_schedules (roadmap_id, roadmap_item_id);
+CREATE INDEX IF NOT EXISTS idx_study_schedules_roadmap ON study_schedules (roadmap_id, roadmap_item_id);
