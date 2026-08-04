@@ -88,11 +88,29 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY || secrets.OPENAI_API_KEY }}
         run: |
           test -n "$FTP_SERVER"
           test -n "$FTP_USERNAME"
           test -n "$FTP_PASSWORD"
           test -n "$FTP_SERVER_DIR"
+          test -n "$AI_API_KEY"
+
+      - name: Create production AI config
+        env:
+          AI_PROVIDER: ${{ secrets.AI_PROVIDER || 'openai' }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY || secrets.OPENAI_API_KEY }}
+          AI_MODEL: ${{ secrets.AI_MODEL || 'gpt-4o-mini' }}
+        run: |
+          mkdir -p config
+          php -r '
+          $config = [
+              "AI_PROVIDER" => getenv("AI_PROVIDER") ?: "openai",
+              "AI_API_KEY" => getenv("AI_API_KEY") ?: "",
+              "AI_MODEL" => getenv("AI_MODEL") ?: "gpt-4o-mini",
+          ];
+          file_put_contents("config/ai.local.php", "<?php\n\nreturn " . var_export($config, true) . ";\n");
+          '
 
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
@@ -104,6 +122,7 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
         run: |
+          REMOTE_AI_CONFIG="${FTP_SERVER_DIR%/}/config/ai.local.php"
           lftp <<EOF
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
@@ -112,6 +131,7 @@ jobs:
           set net:timeout 30
           open -u "$FTP_USERNAME","$FTP_PASSWORD" -p 21 "$FTP_SERVER"
           mkdir -p "$FTP_SERVER_DIR"
+          mkdir -p "${FTP_SERVER_DIR%/}/config"
           mirror --reverse --verbose --only-newer --parallel=4 \
             --exclude-glob .git/ \
             --exclude-glob .git/** \
@@ -126,5 +146,6 @@ jobs:
             --exclude-glob public/uploads/** \
             --exclude-glob npm-debug.log* \
             ./ "$FTP_SERVER_DIR"
+          put config/ai.local.php -o "$REMOTE_AI_CONFIG"
           bye
           EOF

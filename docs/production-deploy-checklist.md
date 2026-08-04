@@ -58,9 +58,12 @@ FTP_SERVER
 FTP_USERNAME
 FTP_PASSWORD
 FTP_SERVER_DIR
+AI_API_KEY
 ```
 
 Khong them `ftp://` vao `FTP_SERVER`.
+`AI_API_KEY` la OpenAI key production. Co the dung ten `OPENAI_API_KEY` thay cho `AI_API_KEY`.
+Workflow se tao `config/ai.local.php` tren hosting tu secret nay, khong commit key vao GitHub.
 
 ## Buoc 5: Tao file cau hinh tren hosting
 
