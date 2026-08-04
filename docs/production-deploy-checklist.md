@@ -69,6 +69,7 @@ Sau khi code duoc upload lan dau, vao FTPS va tao:
 ```text
 config/database.local.php
 config/app.local.php
+config/ai.local.php
 ```
 
 Co the dua theo mau:
@@ -79,6 +80,21 @@ config/app.local.example.php
 ```
 
 Hai file local nay chua thong tin production nen khong commit len GitHub.
+
+Neu dung tinh nang tao lo trinh bang AI tren production, tao them `config/ai.local.php`
+theo mau `config/ai.local.example.php` va dien OpenAI key:
+
+```php
+<?php
+
+return [
+    'AI_PROVIDER' => 'openai',
+    'AI_API_KEY' => 'sk-...',
+    'AI_MODEL' => 'gpt-4o-mini',
+];
+```
+
+File nay nam tren hosting nen workflow FTPS se khong ghi de va khong commit len GitHub.
 
 ## Buoc 6: Push code va chay workflow
 

@@ -47,6 +47,12 @@ function StepCard({ icon: Icon, title, description }) {
   );
 }
 
+function logAiDiagnostics(status) {
+  if (status && !status.available && status.diagnostics) {
+    console.info("StudyMate AI diagnostics", status.diagnostics);
+  }
+}
+
 function AIStatusBanner({ status, onRefresh }) {
   const current = status || fallbackAiStatus;
   const blockedUntil = formatBlockedUntil(current.blocked_until);
@@ -97,6 +103,7 @@ export default function RoadmapGeneratePage() {
     try {
       const response = await getAIRoadmapStatus();
       setAiStatus(response.data || fallbackAiStatus);
+      logAiDiagnostics(response.data);
       if (showToast) toast.success("Đã cập nhật trạng thái AI.");
     } catch (err) {
       const nextStatus = {
@@ -122,6 +129,7 @@ export default function RoadmapGeneratePage() {
         setSubjects(subjectsResponse.data || []);
         setLearningGoals(goalsResponse.data || []);
         setAiStatus(aiStatusResponse.data || fallbackAiStatus);
+        logAiDiagnostics(aiStatusResponse.data);
       } catch (err) {
         setError(err.message || "Không thể tải dữ liệu tạo lộ trình.");
       } finally {
@@ -195,6 +203,7 @@ export default function RoadmapGeneratePage() {
             aiStatus={aiStatus || fallbackAiStatus}
             submitting={submitting}
             apiErrors={apiErrors}
+            onRefreshStatus={() => refreshAiStatus(true)}
             onSubmit={handleSubmit}
           />
         )}

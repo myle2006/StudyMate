@@ -90,6 +90,7 @@ class AIService
             'available' => $configured && $lock === null,
             'message' => $message,
             'blocked_until' => $lock['blocked_until'] ?? null,
+            'diagnostics' => $this->envDiagnostics($provider),
         ];
     }
 
@@ -322,6 +323,14 @@ PROMPT;
             return (string) $value;
         }
 
+        if (isset($_ENV[$key]) && $_ENV[$key] !== '') {
+            return (string) $_ENV[$key];
+        }
+
+        if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') {
+            return (string) $_SERVER[$key];
+        }
+
         return (string) ($this->env[$key] ?? $default);
     }
 
@@ -519,12 +528,16 @@ PROMPT;
 
     private function loadEnv(): array
     {
-        $path = BASE_PATH . '/.env';
-        if (! file_exists($path)) {
-            return [];
+        $values = $this->localConfigEnvValues();
+        foreach ($values as $key => $value) {
+            $this->putEnvValue($key, $value);
         }
 
-        $values = [];
+        $path = $this->envFilePath();
+        if (! file_exists($path)) {
+            return $values;
+        }
+
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
         foreach ($lines as $line) {
             $line = trim($line);
@@ -534,13 +547,113 @@ PROMPT;
 
             [$key, $value] = explode('=', $line, 2);
             $key = trim($key);
+            $key = preg_replace('/^\xEF\xBB\xBF/', '', $key) ?? $key;
             $value = trim($value);
             $value = trim($value, "\"'");
             if ($key !== '') {
                 $values[$key] = $value;
+                $this->putEnvValue($key, $value);
             }
         }
 
         return $values;
+    }
+
+    private function putEnvValue(string $key, string $value): void
+    {
+        if ($value === '') {
+            return;
+        }
+
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
+        putenv($key . '=' . $value);
+    }
+
+    private function localConfigEnvValues(): array
+    {
+        $paths = [
+            BASE_PATH . '/config/ai.local.php',
+            BASE_PATH . '/config/app.local.php',
+        ];
+        $allowedKeys = [
+            'AI_PROVIDER',
+            'AI_API_KEY',
+            'OPENAI_API_KEY',
+            'AI_API_URL',
+            'AI_MODEL',
+            'AI_TIMEOUT',
+            'AI_CREDIT_BLOCK_MINUTES',
+            'AI_RATE_LIMIT_BLOCK_MINUTES',
+            'GEMINI_API_KEY',
+            'GOOGLE_API_KEY',
+            'GEMINI_API_URL',
+            'GEMINI_MODEL',
+        ];
+        $values = [];
+
+        foreach ($paths as $path) {
+            if (! file_exists($path)) {
+                continue;
+            }
+
+            $config = require $path;
+            if (! is_array($config)) {
+                continue;
+            }
+
+            foreach ($config as $key => $value) {
+                $envKey = strtoupper((string) $key);
+                if (! in_array($envKey, $allowedKeys, true) || is_array($value) || is_object($value)) {
+                    continue;
+                }
+
+                $values[$envKey] = trim((string) $value);
+            }
+        }
+
+        return $values;
+    }
+
+    private function envFilePath(): string
+    {
+        $candidates = [
+            BASE_PATH . '/.env',
+            dirname(BASE_PATH) . '/.env',
+            getcwd() . '/.env',
+            dirname(__DIR__) . '/.env',
+        ];
+
+        foreach (array_unique($candidates) as $candidate) {
+            if (is_string($candidate) && file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return BASE_PATH . '/.env';
+    }
+
+    private function envDiagnostics(string $provider): array
+    {
+        $provider = $this->normalizeProvider($provider);
+        $keys = $provider === 'gemini'
+            ? ['GEMINI_API_KEY', 'GOOGLE_API_KEY']
+            : ['AI_API_KEY', 'OPENAI_API_KEY'];
+
+        $configuredKeys = [];
+        foreach ($keys as $key) {
+            if ($this->envValue($key) !== '') {
+                $configuredKeys[] = $key;
+            }
+        }
+
+        $envPath = $this->envFilePath();
+
+        return [
+            'env_file' => $envPath,
+            'env_file_exists' => file_exists($envPath),
+            'configured_keys' => $configuredKeys,
+            'base_path' => BASE_PATH,
+        ];
     }
 }

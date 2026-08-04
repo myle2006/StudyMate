@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Bot, CalendarDays, Clock3, CreditCard, Sparkles, Target, WandSparkles } from "lucide-react";
+import { Bot, CalendarDays, Clock3, CreditCard, RefreshCw, Sparkles, Target, WandSparkles } from "lucide-react";
 import { Alert, Badge, Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
 
 const DEFAULT_FORM = {
@@ -77,6 +77,7 @@ export default function RoadmapGenerateForm({
   aiStatus,
   submitting = false,
   apiErrors = {},
+  onRefreshStatus,
   onSubmit,
 }) {
   const [form, setForm] = useState(DEFAULT_FORM);
@@ -294,6 +295,13 @@ export default function RoadmapGenerateForm({
           </div>
 
           {disabledReason && <Alert tone={aiUnavailable ? "error" : "warning"} className="mt-4">{disabledReason}</Alert>}
+
+          {aiUnavailable && (
+            <Button type="button" variant="secondary" className="mt-4 w-full" onClick={onRefreshStatus}>
+              <RefreshCw size={16} />
+              Cập nhật trạng thái AI
+            </Button>
+          )}
 
           <Button type="submit" size="lg" className="mt-5 w-full" disabled={submitting || subjects.length === 0 || aiUnavailable}>
             <WandSparkles size={18} />
