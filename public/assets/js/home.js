@@ -1,108 +1,100 @@
 const basePath = window.STUDYMATE_BASE_PATH || "";
 const logoImage = `${basePath}/public/assets/images/plt-solutions-logo.png`;
+const heroImage = `${basePath}/public/assets/images/studymate-hero-workspace.png`;
 
 function appUrl(path) {
   return `${basePath}${path}`;
 }
 
-const features = [
-  ["Dashboard cá nhân", "Tóm tắt môn học, lịch học, deadline, bài chưa nộp, điểm mới và tiến độ lộ trình.", "▦", "bg-blue-50 text-blue-700 border-blue-100"],
-  ["Thông báo deadline", "Nhắc bài sắp hết hạn, lịch học hôm nay và roadmap bị trễ, kèm badge chưa đọc.", "!", "bg-rose-50 text-rose-700 border-rose-100"],
-  ["Bài học & tài liệu", "Admin tạo bài học theo môn, upload tài liệu, thêm video/link để sinh viên học theo tiến độ.", "□", "bg-emerald-50 text-emerald-700 border-emerald-100"],
-  ["Bài tập & bài nộp", "Giao bài, nhận file, kiểm tra trạng thái nộp muộn, chấm điểm và phản hồi.", "✓", "bg-amber-50 text-amber-700 border-amber-100"],
-  ["Lịch học & lộ trình", "Sinh viên theo dõi lịch học, mục tiêu và từng bước trong roadmap học tập.", "↗", "bg-cyan-50 text-cyan-700 border-cyan-100"],
-  ["Báo cáo CSV", "Admin xuất dữ liệu sinh viên, môn học, bài nộp, điểm số và tiến độ học tập.", "↓", "bg-violet-50 text-violet-700 border-violet-100"],
+const featureGroups = [
+  ["Trang cá nhân", "Nhìn nhanh môn học, lịch hôm nay, bài sắp hạn và tiến độ lộ trình.", "bg-blue-50 text-blue-700 border-blue-100", "▦"],
+  ["Bài tập", "Xem deadline, nộp bài, cập nhật bài nộp và nhận phản hồi sau khi chấm.", "bg-amber-50 text-amber-700 border-amber-100", "✓"],
+  ["Bài học", "Học theo môn, mở tài liệu/video/link và đánh dấu hoàn thành từng bài.", "bg-emerald-50 text-emerald-700 border-emerald-100", "□"],
+  ["Lộ trình", "Theo dõi mục tiêu, từng bước học, trạng thái và phần tự đánh giá.", "bg-cyan-50 text-cyan-700 border-cyan-100", "↗"],
+  ["Thông báo", "Nhắc lịch học, deadline gần đến và các việc cần chú ý trong ngày.", "bg-rose-50 text-rose-700 border-rose-100", "!"],
+  ["Báo cáo", "Admin quản lý sinh viên, môn học, bài nộp, điểm và xuất dữ liệu CSV.", "bg-violet-50 text-violet-700 border-violet-100", "↓"],
 ];
 
-const workflow = [
-  ["01", "Admin tạo dữ liệu", "Tạo môn học, gán sinh viên, tạo bài học và giao bài tập."],
-  ["02", "Sinh viên học theo ngày", "Xem dashboard, lịch học, deadline, tài liệu và lộ trình."],
-  ["03", "Theo dõi tiến độ", "Nộp bài, nhận feedback, đánh dấu bài học và cập nhật roadmap."],
-  ["04", "Xuất báo cáo", "Admin xem tổng quan, chấm điểm và xuất CSV khi cần."],
+const dayFlow = [
+  ["08:00", "Vào trang cá nhân", "Xem lịch học, bài sắp hạn và thông báo mới."],
+  ["10:30", "Mở bài học", "Đọc tài liệu, xem video và đánh dấu đã học."],
+  ["19:30", "Làm theo lộ trình", "Cập nhật trạng thái từng bước, ghi chú phần còn vướng."],
+  ["23:00", "Nộp bài", "Gửi nội dung/file bài làm, chờ điểm và feedback."],
+];
+
+const roleCards = [
+  ["Sinh viên", "Một nơi gọn gàng để biết hôm nay học gì, còn bài nào, tiến độ ra sao.", ["Dashboard", "Môn học của tôi", "Bài tập", "Bài học", "Lộ trình"]],
+  ["Admin", "Quản lý lớp học, giao bài, tạo tài liệu, chấm điểm và theo dõi dữ liệu.", ["Sinh viên", "Môn học", "Bài tập", "Bài nộp", "Báo cáo"]],
 ];
 
 function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-sky-100 bg-white/92 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8">
         <a href={appUrl("/")} className="flex items-center gap-3">
           <span className="flex h-12 w-24 shrink-0 items-center rounded-lg bg-white">
             <img src={logoImage} alt="" className="max-h-12 w-full object-contain" />
           </span>
           <span>
-            <span className="block text-base font-black leading-5">StudyMate</span>
-            <span className="block text-xs font-semibold leading-5 text-slate-500">Không gian học tập cá nhân</span>
+            <span className="block text-base font-black leading-5 text-slate-950">StudyMate</span>
+            <span className="block text-xs font-semibold leading-5 text-slate-500">Góc học tập cá nhân</span>
           </span>
         </a>
 
         <nav className="hidden items-center gap-7 md:flex">
-          <a href="#features" className="text-sm font-bold text-slate-600 transition hover:text-blue-700">Tính năng</a>
-          <a href="#workflow" className="text-sm font-bold text-slate-600 transition hover:text-blue-700">Quy trình</a>
-          <a href="#roles" className="text-sm font-bold text-slate-600 transition hover:text-blue-700">Vai trò</a>
+          <a href="#day-flow" className="text-sm font-bold text-slate-600 transition hover:text-sky-700">Một ngày học</a>
+          <a href="#features" className="text-sm font-bold text-slate-600 transition hover:text-sky-700">Tính năng</a>
+          <a href="#roles" className="text-sm font-bold text-slate-600 transition hover:text-sky-700">Vai trò</a>
         </nav>
 
-        <a href={appUrl("/login")} className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700">
-          Đăng nhập
-        </a>
+        <div className="flex items-center gap-2">
+          <a href={appUrl("/preview")} className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-black text-sky-700 transition hover:bg-sky-100">
+            Dùng thử
+          </a>
+          <a href={appUrl("/login")} className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-black text-white transition hover:bg-sky-700">
+            Đăng nhập
+          </a>
+        </div>
       </div>
     </header>
   );
 }
 
-function DashboardMockup() {
+function StudyMatePreview() {
   return (
-    <div className="dashboard-float relative rounded-lg border border-slate-200 bg-white p-4 shadow-[0_28px_90px_rgba(15,23,42,0.14)]">
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-        <div>
-          <p className="text-sm font-black text-slate-950">Trang cá nhân</p>
-          <p className="text-xs font-bold text-slate-500">Hôm nay, 30/07</p>
-        </div>
-        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-700">3 thông báo</span>
+    <div className="relative">
+      <div className="overflow-hidden rounded-lg border border-sky-100 bg-white shadow-[0_28px_90px_rgba(14,116,144,0.15)]">
+        <img src={heroImage} alt="Không gian học tập StudyMate" className="h-full min-h-[380px] w-full object-cover" />
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        {[
-          ["Môn học", "5", "text-blue-700"],
-          ["Bài sắp hạn", "2", "text-amber-700"],
-          ["Đã nộp", "12", "text-emerald-700"],
-        ].map(([label, value, tone]) => (
-          <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-black uppercase text-slate-500">{label}</p>
-            <p className={`mt-2 text-3xl font-black ${tone}`}>{value}</p>
-          </div>
-        ))}
+      <div className="absolute left-4 top-4 max-w-[250px] rounded-lg border border-white/80 bg-white/95 p-4 shadow-lg shadow-sky-900/10">
+        <p className="text-xs font-black uppercase text-sky-700">Hôm nay</p>
+        <h3 className="mt-1 text-lg font-black text-slate-950">Kiểm thử phần mềm</h3>
+        <p className="mt-1 text-sm font-bold text-slate-500">08:00 - 10:00 · Phòng B204</p>
       </div>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-lg border border-slate-200 p-4">
-          <div className="flex items-center justify-between">
-            <p className="font-black text-slate-950">Tiến độ lộ trình</p>
-            <span className="text-sm font-black text-blue-700">68%</span>
-          </div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-            <div className="h-full w-[68%] rounded-full bg-blue-600"></div>
-          </div>
-          <div className="mt-4 grid gap-2">
-            {["Ôn chương 2", "Làm bài kiểm thử", "Đọc tài liệu Unit Test"].map((item, index) => (
-              <div key={item} className="flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
-                <span className={`grid h-4 w-4 place-items-center rounded-full text-[10px] font-black ${index === 0 ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-400"}`}>✓</span>
-                <span className="text-sm font-bold text-slate-700">{item}</span>
-              </div>
-            ))}
-          </div>
+      <div className="absolute bottom-4 left-4 w-[260px] rounded-lg border border-emerald-100 bg-white/95 p-4 shadow-lg shadow-emerald-900/10">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-black text-slate-950">Lộ trình học</p>
+          <span className="text-sm font-black text-emerald-700">68%</span>
         </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-full w-[68%] rounded-full bg-emerald-500"></div>
+        </div>
+        <div className="mt-3 grid gap-2">
+          {["Đọc tài liệu", "Viết 5 test case", "Tự đánh giá"].map((item, index) => (
+            <div key={item} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
+              <span className={`grid h-4 w-4 place-items-center rounded-full text-[10px] font-black ${index === 0 ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-400"}`}>✓</span>
+              <span className="text-xs font-bold text-slate-600">{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        <div className="grid gap-3">
-          <div className="rounded-lg bg-slate-950 p-4 text-white">
-            <p className="text-xs font-black uppercase text-blue-200">Lịch học hôm nay</p>
-            <p className="mt-2 text-lg font-black">Kiểm thử phần mềm</p>
-            <p className="mt-1 text-sm font-semibold text-slate-300">08:00 - 10:00</p>
-          </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <p className="text-xs font-black uppercase text-amber-700">Deadline gần nhất</p>
-            <p className="mt-2 text-sm font-black text-slate-950">Nộp báo cáo trước 23:59</p>
-          </div>
-        </div>
+      <div className="absolute bottom-4 right-4 max-w-[230px] rounded-lg border border-amber-100 bg-amber-50/95 p-4 shadow-lg shadow-amber-900/10">
+        <p className="text-xs font-black uppercase text-amber-700">Deadline gần nhất</p>
+        <h3 className="mt-1 text-sm font-black text-slate-950">Nộp bản phân tích yêu cầu</h3>
+        <p className="mt-1 text-xs font-bold text-slate-600">Trước 23:59 hôm nay</p>
       </div>
     </div>
   );
@@ -110,29 +102,32 @@ function DashboardMockup() {
 
 function Hero() {
   return (
-    <section className="hero-grid bg-slate-50">
-      <div className="mx-auto grid min-h-[calc(100svh-74px)] max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 lg:grid-cols-[0.88fr_1.12fr] lg:px-8">
+    <section className="soft-grid bg-sky-50">
+      <div className="mx-auto grid min-h-[calc(100svh-74px)] max-w-7xl items-center gap-10 px-5 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
         <div>
-          <p className="inline-flex rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-black text-blue-700 shadow-sm">
-            Dashboard học tập cá nhân cho sinh viên
+          <p className="inline-flex rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-black text-sky-700 shadow-sm">
+            Dashboard học tập thân thiện cho sinh viên
           </p>
           <h1 className="mt-6 text-4xl font-black leading-[1.05] text-slate-950 sm:text-6xl">
-            Học có kế hoạch, nộp bài đúng hạn.
+            Học gọn hơn, deadline bớt đáng sợ hơn.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            StudyMate gom môn học, lịch học, bài tập, tài liệu, thông báo deadline, điểm số và lộ trình vào một dashboard dễ dùng cho sinh viên và admin.
+            StudyMate gom môn học, lịch học, bài tập, bài học, thông báo, điểm số và lộ trình vào một không gian học tập sáng sủa, dễ theo dõi mỗi ngày.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href={appUrl("/register")} className="rounded-lg bg-blue-600 px-6 py-4 text-center text-base font-black text-white shadow-[0_18px_44px_rgba(37,99,235,0.24)] transition hover:bg-blue-700">
+            <a href={appUrl("/preview")} className="rounded-lg bg-sky-600 px-6 py-4 text-center text-base font-black text-white shadow-[0_18px_44px_rgba(14,165,233,0.24)] transition hover:bg-sky-700">
+              Dùng thử với tài khoản khách
+            </a>
+            <a href={appUrl("/register")} className="rounded-lg border border-emerald-200 bg-white px-6 py-4 text-center text-base font-black text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50">
               Tạo tài khoản
             </a>
-            <a href={appUrl("/login")} className="rounded-lg border border-slate-300 bg-white px-6 py-4 text-center text-base font-black text-slate-800 transition hover:border-blue-400 hover:text-blue-700">
+            <a href={appUrl("/login")} className="rounded-lg border border-slate-300 bg-white px-6 py-4 text-center text-base font-black text-slate-800 transition hover:border-sky-300 hover:text-sky-700">
               Vào hệ thống
             </a>
           </div>
           <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
-            {[["2", "vai trò"], ["CSV", "báo cáo"], ["JWT", "bảo vệ API"]].map(([value, label]) => (
-              <div key={label} className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            {[["1", "góc học tập"], ["Guest", "dùng thử"], ["CSV", "báo cáo"]].map(([value, label]) => (
+              <div key={label} className="rounded-lg border border-sky-100 bg-white px-4 py-3 shadow-sm">
                 <p className="text-2xl font-black text-slate-950">{value}</p>
                 <p className="mt-1 text-xs font-bold uppercase text-slate-500">{label}</p>
               </div>
@@ -140,7 +135,33 @@ function Hero() {
           </div>
         </div>
 
-        <DashboardMockup />
+        <StudyMatePreview />
+      </div>
+    </section>
+  );
+}
+
+function DayFlow() {
+  return (
+    <section id="day-flow" className="bg-white py-18 sm:py-20">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        <div className="max-w-2xl">
+          <p className="text-sm font-black uppercase text-sky-600">Một ngày học</p>
+          <h2 className="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
+            Từ mở dashboard đến nộp bài, mọi bước đều nằm cùng một chỗ
+          </h2>
+        </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {dayFlow.map(([time, title, text], index) => (
+            <article key={time} className="rounded-lg border border-sky-100 bg-sky-50/60 p-5 shadow-sm">
+              <span className={`grid h-12 w-12 place-items-center rounded-lg text-sm font-black ${index === 0 ? "bg-sky-600 text-white" : index === 1 ? "bg-emerald-500 text-white" : index === 2 ? "bg-cyan-500 text-white" : "bg-amber-500 text-white"}`}>
+                {time}
+              </span>
+              <h3 className="mt-5 text-lg font-black text-slate-950">{title}</h3>
+              <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -148,54 +169,28 @@ function Hero() {
 
 function Features() {
   return (
-    <section id="features" className="mx-auto max-w-7xl px-5 py-18 sm:px-6 sm:py-20 lg:px-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm font-black uppercase text-blue-600">Tính năng</p>
-          <h2 className="mt-3 max-w-2xl text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
-            Đầy đủ hơn bản tối giản, nhưng vẫn dễ scan
-          </h2>
-        </div>
-        <p className="max-w-md leading-7 text-slate-600">
-          Mỗi khối đều trỏ về chức năng thật trong hệ thống, không còn module rỗng.
-        </p>
-      </div>
-
-      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map(([title, text, icon, tone]) => (
-          <article key={title} className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl">
-            <span className={`grid h-12 w-12 place-items-center rounded-lg border text-lg font-black ${tone}`}>{icon}</span>
-            <h3 className="mt-5 text-xl font-black text-slate-950">{title}</h3>
-            <p className="mt-3 leading-7 text-slate-600">{text}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Workflow() {
-  return (
-    <section id="workflow" className="bg-slate-50 py-18 sm:py-20">
+    <section id="features" className="bg-slate-50 py-18 sm:py-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr]">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-sm font-black uppercase text-blue-600">Quy trình</p>
-            <h2 className="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
-              Một luồng làm việc rõ ràng từ admin đến sinh viên
+            <p className="text-sm font-black uppercase text-sky-600">Tính năng</p>
+            <h2 className="mt-3 max-w-2xl text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
+              Đủ nghiêm túc để quản lý học tập, đủ nhẹ nhàng để dùng mỗi ngày
             </h2>
           </div>
-          <div className="grid gap-4">
-            {workflow.map(([number, title, text]) => (
-              <article key={number} className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-[56px_1fr]">
-                <span className="grid h-12 w-12 place-items-center rounded-lg bg-slate-950 text-sm font-black text-white">{number}</span>
-                <div>
-                  <h3 className="text-lg font-black text-slate-950">{title}</h3>
-                  <p className="mt-2 leading-7 text-slate-600">{text}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <p className="max-w-md leading-7 text-slate-600">
+            Mỗi module đều gắn với thao tác thật trong StudyMate: xem, lọc, mở chi tiết, cập nhật trạng thái và nhận phản hồi.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {featureGroups.map(([title, text, tone, icon]) => (
+            <article key={title} className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-sky-200 hover:shadow-xl">
+              <span className={`grid h-12 w-12 place-items-center rounded-lg border text-lg font-black ${tone}`}>{icon}</span>
+              <h3 className="mt-5 text-xl font-black text-slate-950">{title}</h3>
+              <p className="mt-3 leading-7 text-slate-600">{text}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -206,16 +201,14 @@ function Roles() {
   return (
     <section id="roles" className="mx-auto max-w-7xl px-5 py-18 sm:px-6 sm:py-20 lg:px-8">
       <div className="grid gap-5 lg:grid-cols-2">
-        {[
-          ["Sinh viên", "Theo dõi lịch học, bài tập, bài học, điểm số và tiến độ cá nhân.", ["Trang cá nhân", "Môn học của tôi", "Bài tập", "Bài học", "Lộ trình"]],
-          ["Admin", "Quản lý dữ liệu lớp học, giao bài, chấm điểm và xuất báo cáo.", ["Sinh viên", "Môn học", "Bài tập", "Bài nộp", "Báo cáo"]],
-        ].map(([title, text, items]) => (
-          <article key={title} className="rounded-lg border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_20px_70px_rgba(15,23,42,0.14)]">
-            <h3 className="text-2xl font-black">{title}</h3>
-            <p className="mt-3 leading-7 text-slate-300">{text}</p>
+        {roleCards.map(([title, text, items], index) => (
+          <article key={title} className={`rounded-lg border p-6 shadow-sm ${index === 0 ? "border-sky-100 bg-sky-50" : "border-emerald-100 bg-emerald-50"}`}>
+            <p className={`text-sm font-black uppercase ${index === 0 ? "text-sky-700" : "text-emerald-700"}`}>Vai trò</p>
+            <h3 className="mt-3 text-2xl font-black text-slate-950">{title}</h3>
+            <p className="mt-3 leading-7 text-slate-600">{text}</p>
             <div className="mt-6 flex flex-wrap gap-2">
               {items.map((item) => (
-                <span key={item} className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-sm font-bold text-slate-100">
+                <span key={item} className="rounded-full border border-white bg-white px-3 py-1.5 text-sm font-bold text-slate-700 shadow-sm">
                   {item}
                 </span>
               ))}
@@ -230,17 +223,17 @@ function Roles() {
 function CTA() {
   return (
     <section className="mx-auto max-w-7xl px-5 pb-18 sm:px-6 sm:pb-20 lg:px-8">
-      <div className="grid gap-6 rounded-lg border border-slate-200 bg-blue-600 p-7 text-white shadow-[0_24px_70px_rgba(37,99,235,0.18)] sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div className="grid gap-6 rounded-lg border border-sky-200 bg-sky-600 p-7 text-white shadow-[0_24px_70px_rgba(14,165,233,0.2)] sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
         <div>
-          <p className="text-sm font-black uppercase text-blue-100">Bắt đầu</p>
-          <h2 className="mt-3 text-3xl font-black leading-tight sm:text-4xl">Mở StudyMate và quản lý việc học ngay</h2>
-          <p className="mt-4 max-w-2xl leading-7 text-blue-50">
-            Giao diện có đủ thông tin để ra quyết định nhanh, nhưng vẫn giữ thao tác chính thật rõ ràng.
+          <p className="text-sm font-black uppercase text-sky-100">Bắt đầu nhẹ nhàng</p>
+          <h2 className="mt-3 text-3xl font-black leading-tight sm:text-4xl">Mở StudyMate và xem thử một ngày học mẫu</h2>
+          <p className="mt-4 max-w-2xl leading-7 text-sky-50">
+            Tài khoản khách dùng giao diện chính, dữ liệu mẫu lưu trong trình duyệt và không ghi vào database.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-          <a href={appUrl("/login")} className="rounded-lg bg-white px-6 py-4 text-center font-black text-blue-700 transition hover:bg-blue-50">Đăng nhập</a>
-          <a href={appUrl("/register")} className="rounded-lg border border-white/30 px-6 py-4 text-center font-black text-white transition hover:bg-white/10">Tạo tài khoản</a>
+          <a href={appUrl("/preview")} className="rounded-lg bg-white px-6 py-4 text-center font-black text-sky-700 transition hover:bg-sky-50">Dùng thử ngay</a>
+          <a href={appUrl("/login")} className="rounded-lg border border-white/35 px-6 py-4 text-center font-black text-white transition hover:bg-white/10">Đăng nhập</a>
         </div>
       </div>
     </section>
@@ -249,10 +242,10 @@ function CTA() {
 
 function Footer() {
   return (
-    <footer className="border-t border-slate-200 py-7">
+    <footer className="border-t border-sky-100 py-7">
       <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 text-sm font-semibold text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <p className="text-slate-800">StudyMate</p>
-        <p>PLT Solutions - Nền tảng quản lý học tập cá nhân cho sinh viên.</p>
+        <p>PLT Solutions - Không gian quản lý học tập cá nhân cho sinh viên.</p>
       </div>
     </footer>
   );
@@ -263,8 +256,8 @@ function App() {
     <main className="min-h-screen bg-white text-slate-950">
       <Header />
       <Hero />
+      <DayFlow />
       <Features />
-      <Workflow />
       <Roles />
       <CTA />
       <Footer />

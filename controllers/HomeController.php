@@ -23,6 +23,11 @@ class HomeController extends Controller
         $this->reactApp('Đăng ký - StudyMate AI');
     }
 
+    public function preview(): void
+    {
+        $this->reactApp('Dùng thử nhanh - StudyMate AI');
+    }
+
     public function dashboard(): void
     {
         $this->reactApp('Dashboard - StudyMate AI');

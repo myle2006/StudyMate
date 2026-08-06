@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { PlayCircle, Sparkles } from "lucide-react";
 import { Alert, Button, Card, Field, Input } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
 
@@ -108,6 +108,16 @@ export default function Login() {
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </Button>
           </form>
+
+          <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <p className="text-sm font-bold leading-6 text-blue-900">
+              Chưa muốn đăng nhập? Mở bản xem nhanh với dữ liệu mẫu để thử một vài chức năng chính.
+            </p>
+            <Button to="/preview" variant="secondary" className="mt-3 w-full border-blue-200 bg-white text-blue-700 hover:bg-blue-50" size="lg">
+              <PlayCircle className="h-4 w-4" />
+              Dùng thử không cần tài khoản
+            </Button>
+          </div>
 
           <p className="mt-5 text-center text-sm text-slate-600">
             Chưa có tài khoản?{" "}

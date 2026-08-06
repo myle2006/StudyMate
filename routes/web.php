@@ -3,6 +3,7 @@
 $router->get('/', [HomeController::class, 'index']);
 $router->get('/login', [HomeController::class, 'login']);
 $router->get('/register', [HomeController::class, 'register']);
+$router->get('/preview', [HomeController::class, 'preview']);
 $router->get('/dashboard', [HomeController::class, 'dashboard']);
 $router->get('/student/dashboard', [HomeController::class, 'dashboard']);
 $router->get('/admin', [HomeController::class, 'admin']);

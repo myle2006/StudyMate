@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
-import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, FileDown, Home, LogOut, Route as RouteIcon, Target, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Route as RouteIcon, Target, Users } from "lucide-react";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import LandingPage from "./pages/LandingPage";
+import GuestPreviewPage from "./pages/preview/GuestPreviewPage";
 import AdminDashboardPage from "./modules/dashboard/pages/AdminDashboardPage";
 import AdminReportsPage from "./modules/reports/pages/AdminReportsPage";
 import NotificationListPage from "./modules/notifications/pages/NotificationListPage";
@@ -208,7 +209,7 @@ function MobileNav({ user, onLogout, unreadCount = 0 }) {
 
 function AppLayout({ children }) {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isGuestPreview, user, logout, endGuestPreview } = useAuth();
   const basePath = window.STUDYMATE_BASE_PATH || "";
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -247,6 +248,11 @@ function AppLayout({ children }) {
     navigate("/login", { replace: true });
   }
 
+  function handleEndPreview() {
+    endGuestPreview();
+    navigate("/", { replace: true });
+  }
+
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-950 antialiased">
@@ -267,8 +273,17 @@ function AppLayout({ children }) {
             <BrandLogo />
           </a>
           <nav className="flex items-center gap-2 text-sm font-bold">
+            <Link to="/preview" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-blue-700 hover:bg-blue-50">
+              <Eye className="h-4 w-4" />
+              Dùng thử
+            </Link>
             <Link to="/login" className="rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100">Đăng nhập</Link>
             <Link to="/register" className="rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-700">Đăng ký</Link>
+            {isGuestPreview && (
+              <button type="button" onClick={handleEndPreview} className="rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-100">
+                Thoát phiên
+              </button>
+            )}
           </nav>
         </div>
       </header>
@@ -302,6 +317,7 @@ export default function App() {
       <AppLayout>
         <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/preview" element={<GuestPreviewPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
