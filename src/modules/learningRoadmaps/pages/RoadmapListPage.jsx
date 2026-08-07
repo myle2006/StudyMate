@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Bot, Eye, Plus, Search, Trash2 } from "lucide-react";
 import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
+import { useAuth } from "../../../context/AuthContext";
 import RoadmapProgressBar from "../components/RoadmapProgressBar";
 import { deleteRoadmap, getRoadmaps } from "../services/learningRoadmapService";
 
@@ -25,6 +26,7 @@ function RoadmapStatusBadge({ status }) {
 
 export default function RoadmapListPage() {
   const toast = useToast();
+  const { isGuestPreview } = useAuth();
   const [roadmaps, setRoadmaps] = useState([]);
   const [filters, setFilters] = useState({ keyword: "", status: "" });
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,12 @@ export default function RoadmapListPage() {
     const activeCount = roadmaps.filter((roadmap) => roadmap.status === "active").length;
     return `${roadmaps.length} lộ trình đang hiển thị, ${activeCount} lộ trình đang học.`;
   }, [roadmaps]);
+  const guestHeaderDescriptionProps = isGuestPreview && roadmaps.length === 0
+    ? { description: "Tự tạo lộ trình học và chỉnh sửa trước khi lưu." }
+    : {};
+  const guestEmptyDescriptionProps = isGuestPreview
+    ? { description: "Tự tạo lộ trình học từ đầu rồi chỉnh sửa trước khi lưu." }
+    : {};
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
@@ -79,14 +87,17 @@ export default function RoadmapListPage() {
           eyebrow="StudyMate AI"
           title="Lộ trình học"
           description={roadmaps.length ? summary : "Tự tạo lộ trình hoặc dùng AI gợi ý rồi chỉnh sửa trước khi lưu."}
+          {...guestHeaderDescriptionProps}
           actions={
             <div className="flex flex-wrap gap-2">
               <Button to="/student/roadmaps/create">
                 <Plus size={16} /> Tự tạo lộ trình
               </Button>
-              <Button to="/student/roadmaps/generate" variant="secondary">
-                <Bot size={16} /> Tạo bằng AI
-              </Button>
+              {!isGuestPreview && (
+                <Button to="/student/roadmaps/generate" variant="secondary">
+                  <Bot size={16} /> Tạo bằng AI
+                </Button>
+              )}
             </div>
           }
         />
@@ -123,6 +134,7 @@ export default function RoadmapListPage() {
             title="Chưa có lộ trình học"
             description="Tự tạo lộ trình từ đầu hoặc dùng AI gợi ý rồi chỉnh sửa trước khi lưu."
             actionLabel="Tự tạo lộ trình"
+            {...guestEmptyDescriptionProps}
             actionTo="/student/roadmaps/create"
           />
         ) : (

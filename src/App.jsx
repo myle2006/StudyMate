@@ -311,6 +311,11 @@ function SubjectLegacyRedirect() {
   return <Navigate to={user?.role === "admin" ? "/admin/subjects" : "/student/subjects"} replace />;
 }
 
+function GuestPreviewRedirect({ children }) {
+  const { isGuestPreview } = useAuth();
+  return isGuestPreview ? <Navigate to="/student/roadmaps" replace /> : children;
+}
+
 export default function App() {
   return (
     <ToastProvider>
@@ -366,8 +371,8 @@ export default function App() {
         <Route path="/student/learning-goals/:id/edit" element={<StudentRoute><LearningGoalEditPage /></StudentRoute>} />
         <Route path="/student/roadmaps" element={<StudentRoute><RoadmapListPage /></StudentRoute>} />
         <Route path="/student/roadmaps/create" element={<StudentRoute><RoadmapCreatePage /></StudentRoute>} />
-        <Route path="/student/roadmaps/generate" element={<StudentRoute><RoadmapGeneratePage /></StudentRoute>} />
-        <Route path="/student/roadmaps/preview" element={<StudentRoute><RoadmapPreviewPage /></StudentRoute>} />
+        <Route path="/student/roadmaps/generate" element={<StudentRoute><GuestPreviewRedirect><RoadmapGeneratePage /></GuestPreviewRedirect></StudentRoute>} />
+        <Route path="/student/roadmaps/preview" element={<StudentRoute><GuestPreviewRedirect><RoadmapPreviewPage /></GuestPreviewRedirect></StudentRoute>} />
         <Route path="/student/roadmaps/:id" element={<StudentRoute><RoadmapDetailPage /></StudentRoute>} />
         <Route path="/student/roadmaps/:id/edit" element={<StudentRoute><RoadmapEditPage /></StudentRoute>} />
         <Route path="/student/schedules" element={<StudentRoute><StudyScheduleCalendarPage /></StudentRoute>} />
