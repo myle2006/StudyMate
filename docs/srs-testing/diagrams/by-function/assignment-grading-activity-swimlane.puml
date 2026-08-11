@@ -1,0 +1,45 @@
+@startuml
+!theme plain
+title Activity Swimlane - Bài tập, nộp bài và chấm điểm
+
+|User|
+start
+:Quản trị viên tạo bài tập;
+
+|System|
+if (Assignment hợp lệ?) then (Không)
+  :Hiển thị lỗi subject, title, deadline hoặc file;
+  stop
+else (Có)
+  :Lưu assignment;
+endif
+
+|User|
+:Sinh viên xem bài tập được giao;
+:Sinh viên mở form nộp bài;
+:Nhập nội dung hoặc chọn file;
+
+|System|
+if (Có content hoặc file?) then (Không)
+  :Hiển thị lỗi validation;
+  stop
+else (Có)
+  :Lưu submission;
+endif
+
+|User|
+:Quản trị viên xem danh sách bài nộp;
+:Nhập score và feedback;
+
+|System|
+if (Score từ 0 đến 10?) then (Không)
+  :Hiển thị lỗi điểm;
+  stop
+else (Có)
+  :Lưu điểm và feedback;
+endif
+
+|User|
+:Sinh viên xem kết quả và phản hồi;
+stop
+@enduml

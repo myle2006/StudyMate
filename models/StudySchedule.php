@@ -77,6 +77,28 @@ class StudySchedule extends Model
         return (int) $statement->fetchColumn() > 0;
     }
 
+    public function subjectAssignedToStudent(int $subjectId, int $studentId): bool
+    {
+        $statement = $this->db()->prepare(
+            'SELECT COUNT(*)
+             FROM student_subjects ss
+             INNER JOIN subjects s ON s.id = ss.subject_id
+             WHERE ss.student_id = :student_id
+               AND ss.subject_id = :subject_id
+               AND ss.status = :student_subject_status
+               AND s.status = :subject_status
+               AND s.deleted_at IS NULL'
+        );
+        $statement->execute([
+            'student_id' => $studentId,
+            'subject_id' => $subjectId,
+            'student_subject_status' => 'active',
+            'subject_status' => 'studying',
+        ]);
+
+        return (int) $statement->fetchColumn() > 0;
+    }
+
     public function create(array $data): int
     {
         $statement = $this->db()->prepare(

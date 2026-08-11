@@ -21,6 +21,10 @@ export function getDeadlineState(deadline, assignmentStatusValue = "open", submi
     return { key: "unknown", label: "Không rõ", tone: "slate", urgent: false, overdue: false };
   }
 
+  if (submissionStatusValue === "late") {
+    return { key: "late", label: "Nộp muộn", tone: "rose", urgent: false, overdue: false };
+  }
+
   if (submissionStatusValue === "submitted" || submissionStatusValue === "graded") {
     return { key: "done", label: "Đã xử lý", tone: "green", urgent: false, overdue: false };
   }

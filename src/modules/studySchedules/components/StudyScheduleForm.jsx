@@ -65,6 +65,7 @@ export default function StudyScheduleForm({
   const [form, setForm] = useState({ ...DEFAULT_FORM, ...initialValues });
   const [clientErrors, setClientErrors] = useState({});
   const errors = useMemo(() => ({ ...clientErrors, ...apiErrors }), [apiErrors, clientErrors]);
+  const noAvailableSubjects = subjects.length === 0;
 
   useEffect(() => {
     setForm({ ...DEFAULT_FORM, ...initialValues });
@@ -101,8 +102,8 @@ export default function StudyScheduleForm({
       <form onSubmit={handleSubmit}>
         <div className="grid gap-5 md:grid-cols-2">
           <Field label="Môn học" error={errors.subject_id}>
-            <Select name="subject_id" value={form.subject_id} onChange={handleChange}>
-              <option value="">Chọn môn học</option>
+            <Select name="subject_id" value={form.subject_id} onChange={handleChange} disabled={noAvailableSubjects}>
+              <option value="">{noAvailableSubjects ? "Chưa có môn học được gán" : "Chọn môn học đã được gán"}</option>
               {subjects.map((subject) => (
                 <option key={subject.id} value={subject.id}>
                   {subject.subject_code} - {subject.subject_name}
@@ -157,6 +158,11 @@ export default function StudyScheduleForm({
         </Field>
 
         {errors.time && <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{errors.time}</div>}
+        {noAvailableSubjects && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+            Bạn chưa được gán môn học đang hoạt động, nên chưa thể tạo lịch học mới.
+          </div>
+        )}
         {submitting && (
           <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700" role="status" aria-live="polite">
             Đang xử lý, vui lòng chờ...
@@ -164,7 +170,7 @@ export default function StudyScheduleForm({
         )}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Button type="submit" size="lg" disabled={submitting}>
+          <Button type="submit" size="lg" disabled={submitting || noAvailableSubjects}>
             {submitting ? "Đang lưu..." : mode === "edit" ? "Cập nhật lịch học" : "Thêm lịch học"}
           </Button>
           <Button to="/student/schedules" variant="secondary" size="lg">

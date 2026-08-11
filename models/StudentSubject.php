@@ -20,7 +20,7 @@ class StudentSubject extends Model
             $params['keyword'] = '%' . $keyword . '%';
         }
 
-        $status = trim((string) ($filters['status'] ?? ''));
+        $status = trim((string) ($filters['status'] ?? 'studying'));
         if (in_array($status, ['studying', 'paused', 'completed'], true)) {
             $where[] = 's.status = :subject_status';
             $params['subject_status'] = $status;
@@ -51,6 +51,7 @@ class StudentSubject extends Model
              WHERE ss.student_id = :student_id
                AND ss.subject_id = :subject_id
                AND ss.status = :assignment_status
+               AND s.status = :subject_status
                AND s.deleted_at IS NULL
              LIMIT 1'
         );
@@ -58,6 +59,7 @@ class StudentSubject extends Model
             'student_id' => $studentId,
             'subject_id' => $subjectId,
             'assignment_status' => 'active',
+            'subject_status' => 'studying',
         ]);
         $subject = $statement->fetch();
 

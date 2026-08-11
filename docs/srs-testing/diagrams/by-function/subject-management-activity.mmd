@@ -1,0 +1,17 @@
+flowchart TD
+    A[Admin đăng nhập] --> B["Mở /admin/subjects"]
+    B --> C{Chọn thao tác}
+    C -- Tạo/Sửa môn --> D[Nhập tên, mã, tín chỉ, trạng thái, ảnh]
+    D --> E{Dữ liệu hợp lệ?}
+    E -- Không --> F[Hiển thị lỗi validation]
+    E -- Có --> G[Lưu môn học]
+    C -- Gán sinh viên --> H["Mở /admin/subjects/{subjectId}/students"]
+    H --> I[Xem sinh viên khả dụng]
+    I --> J[Chọn sinh viên]
+    J --> K{Đã được gán chưa?}
+    K -- Có --> L[Trả lỗi gán trùng 409]
+    K -- Không --> M[Gán sinh viên vào môn]
+    C -- Gỡ sinh viên --> N[Chọn sinh viên đang được gán]
+    N --> O[Gỡ khỏi môn học]
+    P[Student đăng nhập] --> Q["Mở /student/my-subjects"]
+    Q --> R[Chỉ hiển thị môn đã được gán]

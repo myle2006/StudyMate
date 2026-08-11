@@ -35,7 +35,7 @@ export default function SubjectListPage() {
   const location = useLocation();
   const toast = useToast();
   const [subjects, setSubjects] = useState([]);
-  const [filters, setFilters] = useState({ keyword: "", status: "" });
+  const [filters, setFilters] = useState({ keyword: "", status: "studying" });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(location.state?.message || "");
   const [error, setError] = useState("");

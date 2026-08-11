@@ -22,6 +22,38 @@ export default function ImportResult({ result }) {
         </div>
       </div>
 
+      {result.temporary_passwords?.length > 0 && (
+        <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-black text-amber-900">Mật khẩu tạm đã sinh</p>
+          <p className="mt-1 text-xs font-semibold text-amber-800">
+            Chỉ hiển thị sau lần import này. Hãy gửi riêng cho từng sinh viên và yêu cầu đổi mật khẩu sau khi đăng nhập.
+          </p>
+          <div className="mt-4 overflow-x-auto rounded-lg border border-amber-200 bg-white">
+            <table className="min-w-full divide-y divide-amber-100 text-sm">
+              <thead className="bg-amber-50">
+                <tr>
+                  {["Dòng", "Email", "Mã sinh viên", "Mật khẩu tạm"].map((column) => (
+                    <th key={column} className="px-4 py-3 text-left font-black text-amber-900">
+                      {column}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-amber-100">
+                {result.temporary_passwords.map((item, index) => (
+                  <tr key={`${item.row}-${item.student_code}-${index}`}>
+                    <td className="px-4 py-3 font-semibold">{item.row}</td>
+                    <td className="px-4 py-3">{item.email || "-"}</td>
+                    <td className="px-4 py-3">{item.student_code || "-"}</td>
+                    <td className="px-4 py-3 font-mono font-black text-amber-900">{item.temporary_password}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {result.errors?.length > 0 && (
         <div className="mt-5 overflow-x-auto rounded-xl border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-sm">

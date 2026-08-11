@@ -74,9 +74,13 @@ class AuthController extends Controller
 
         $user = $this->user->findByEmail($data['email']);
 
-        if ($user === null || ! password_verify($data['password'], $user['password'])) {
+        if ($user === null || ! $this->passwordMatches($data['password'], (string) $user['password'])) {
             $this->invalidCredentials();
             return;
+        }
+
+        if (! $this->isPasswordHash((string) $user['password'])) {
+            $this->user->updatePasswordHash((int) $user['id'], password_hash($data['password'], PASSWORD_DEFAULT));
         }
 
         if ($user['status'] === 'locked') {
@@ -253,6 +257,26 @@ class AuthController extends Controller
         }
 
         return $errors;
+    }
+
+    private function passwordMatches(string $plainPassword, string $storedPassword): bool
+    {
+        if (password_verify($plainPassword, $storedPassword)) {
+            return true;
+        }
+
+        if ($this->isPasswordHash($storedPassword)) {
+            return false;
+        }
+
+        return hash_equals($storedPassword, $plainPassword);
+    }
+
+    private function isPasswordHash(string $storedPassword): bool
+    {
+        $algo = password_get_info($storedPassword)['algo'] ?? null;
+
+        return $algo !== null && $algo !== 0;
     }
 
     private function publicUser(?array $user): array

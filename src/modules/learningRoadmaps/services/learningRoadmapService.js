@@ -49,15 +49,8 @@ function buildQuery(params = {}) {
   return queryString ? `?${queryString}` : "";
 }
 
-export function generateAIRoadmap(data) {
-  return request("/student/roadmaps/generate-ai", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function getAIRoadmapStatus() {
-  return request("/student/roadmaps/ai-status");
+export function getRoadmapTemplates(params = {}) {
+  return request(`/student/roadmap-templates${buildQuery(params)}`);
 }
 
 export function createRoadmap(data) {

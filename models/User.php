@@ -62,6 +62,18 @@ class User extends Model
         return $statement->execute(['id' => $id]);
     }
 
+    public function updatePasswordHash(int $id, string $passwordHash): bool
+    {
+        $statement = $this->db()->prepare(
+            'UPDATE users SET password = :password, updated_at = NOW() WHERE id = :id'
+        );
+
+        return $statement->execute([
+            'id' => $id,
+            'password' => $passwordHash,
+        ]);
+    }
+
     public function getUserWithRole(int $id): ?array
     {
         $statement = $this->db()->prepare(

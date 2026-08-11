@@ -367,6 +367,10 @@ function notFound(message = "Không tìm thấy dữ liệu mẫu.") {
   return jsonResponse({ success: false, message }, 404);
 }
 
+function demoLocked(message = "Phiên dùng thử chỉ cho xem dữ liệu mẫu. Hãy đăng ký để tạo, chỉnh sửa và lưu dữ liệu học tập.") {
+  return jsonResponse({ success: false, message }, 403);
+}
+
 function calculateRoadmapProgress(roadmap) {
   const total = roadmap.items.length || 1;
   const completed = roadmap.items.filter((item) => item.status === "completed").length;
@@ -518,27 +522,7 @@ export async function handleGuestApiRequest(input, options = {}) {
   }
   const submitAssignmentMatch = matches(path, /^\/student\/assignments\/(\d+)\/submit$/);
   if (submitAssignmentMatch && method !== "GET") {
-    const assignmentId = Number(submitAssignmentMatch[1]);
-    const assignment = state.assignments.find((item) => item.id === assignmentId);
-    if (!assignment) return notFound();
-    const submission = {
-      id: Math.max(0, ...state.submissions.map((item) => item.id)) + 1,
-      assignment_id: assignmentId,
-      assignment_title: assignment.title,
-      subject_code: assignment.subject_code,
-      subject_name: assignment.subject_name,
-      status: "submitted",
-      score: null,
-      feedback: "",
-      submitted_at: dateTime(0, "21:00:00"),
-      graded_at: null,
-      content: "Bài nộp mẫu từ tài khoản khách.",
-      file_path: "",
-    };
-    state.submissions.push(submission);
-    state.assignments = state.assignments.map((item) => item.id === assignmentId ? { ...item, submission_id: submission.id, submission_status: "submitted" } : item);
-    writeState(state);
-    return ok(submission, "Nộp bài thành công.");
+    return demoLocked("Demo chỉ hiển thị bài tập mẫu. Đăng ký tài khoản để nộp bài thật.");
   }
   const submissionMatch = matches(path, /^\/student\/submissions\/(\d+)$/);
   if (submissionMatch) return ok(state.submissions.find((item) => item.id === Number(submissionMatch[1])) || null);
@@ -551,10 +535,7 @@ export async function handleGuestApiRequest(input, options = {}) {
   if (lessonMatch && method === "GET") return ok(state.lessons.find((item) => item.id === Number(lessonMatch[1])) || null);
   const lessonCompleteMatch = matches(path, /^\/student\/lessons\/(\d+)\/complete$/);
   if (lessonCompleteMatch && method !== "GET") {
-    const id = Number(lessonCompleteMatch[1]);
-    state.lessons = state.lessons.map((item) => item.id === id ? { ...item, progress_status: "completed", completed_at: dateTime(0, "21:15:00") } : item);
-    writeState(state);
-    return ok(state.lessons.find((item) => item.id === id));
+    return demoLocked("Demo chỉ cho xem bài học mẫu. Đăng ký tài khoản để lưu tiến độ học.");
   }
 
   if (path === "/student/schedules") return ok(state.schedules);
@@ -564,9 +545,7 @@ export async function handleGuestApiRequest(input, options = {}) {
   if (path === "/student/learning-goals") return ok(state.goals);
   const goalMatch = matches(path, /^\/student\/learning-goals\/(\d+)$/);
   if (goalMatch && method === "DELETE") {
-    state.goals = state.goals.filter((item) => item.id !== Number(goalMatch[1]));
-    writeState(state);
-    return ok(null, "Xóa mục tiêu học tập thành công.");
+    return demoLocked("Demo chỉ hiển thị mục tiêu mẫu. Đăng ký tài khoản để chỉnh sửa mục tiêu học tập.");
   }
   if (goalMatch) return ok(state.goals.find((item) => item.id === Number(goalMatch[1])) || null);
 
@@ -576,9 +555,7 @@ export async function handleGuestApiRequest(input, options = {}) {
     const roadmap = state.roadmaps.find((item) => item.id === Number(roadmapMatch[1]));
     if (!roadmap) return notFound();
     if (method === "DELETE") {
-      state.roadmaps = state.roadmaps.filter((item) => item.id !== roadmap.id);
-      writeState(state);
-      return ok(null, "Xóa lộ trình học thành công.");
+      return demoLocked("Demo chỉ hiển thị lộ trình mẫu. Đăng ký tài khoản để xóa hoặc lưu lộ trình riêng.");
     }
     return ok({ ...roadmap, progress_percent: calculateRoadmapProgress(roadmap) });
   }
@@ -589,75 +566,15 @@ export async function handleGuestApiRequest(input, options = {}) {
   }
   const roadmapItemStatusMatch = matches(path, /^\/student\/roadmap-items\/(\d+)\/status$/);
   if (roadmapItemStatusMatch && method !== "GET") {
-    const id = Number(roadmapItemStatusMatch[1]);
-    const body = options.body ? JSON.parse(options.body) : {};
-    let updatedRoadmap = null;
-    let updatedItem = null;
-    state.roadmaps = state.roadmaps.map((roadmap) => {
-      let changed = false;
-      const items = roadmap.items.map((item) => {
-        if (item.id !== id) return item;
-        changed = true;
-        updatedItem = { ...item, status: body.status || "in_progress", completion_percent: body.status === "completed" ? 100 : item.completion_percent };
-        return updatedItem;
-      });
-      if (changed) updatedRoadmap = { ...roadmap, items, progress_percent: calculateRoadmapProgress({ ...roadmap, items }) };
-      return updatedRoadmap && updatedRoadmap.id === roadmap.id ? updatedRoadmap : roadmap;
-    });
-    writeState(state);
-    return ok({ item: updatedItem, progress_percent: updatedRoadmap?.progress_percent || 0, summary: updatedRoadmap ? roadmapSummary(updatedRoadmap) : null });
+    return demoLocked("Demo chỉ cho xem tiến độ mẫu. Đăng ký tài khoản để cập nhật trạng thái học.");
   }
   const roadmapItemResultMatch = matches(path, /^\/student\/roadmap-items\/(\d+)\/result$/);
   if (roadmapItemResultMatch && method !== "GET") {
-    const id = Number(roadmapItemResultMatch[1]);
-    const body = options.body ? JSON.parse(options.body) : {};
-    let updatedRoadmap = null;
-    let updatedItem = null;
-    state.roadmaps = state.roadmaps.map((roadmap) => {
-      let changed = false;
-      const items = roadmap.items.map((item) => {
-        if (item.id !== id) return item;
-        changed = true;
-        updatedItem = {
-          ...item,
-          ...body,
-          status: body.status || item.status,
-          completion_percent: Number(body.completion_percent ?? item.completion_percent ?? 0),
-          actual_study_minutes: Number(body.actual_study_minutes ?? item.actual_study_minutes ?? 0),
-        };
-        return updatedItem;
-      });
-      if (changed) updatedRoadmap = { ...roadmap, items, progress_percent: calculateRoadmapProgress({ ...roadmap, items }) };
-      return updatedRoadmap && updatedRoadmap.id === roadmap.id ? updatedRoadmap : roadmap;
-    });
-    writeState(state);
-    return ok({ item: updatedItem, progress_percent: updatedRoadmap?.progress_percent || 0, summary: updatedRoadmap ? roadmapSummary(updatedRoadmap) : null });
+    return demoLocked("Demo chỉ cho xem kết quả mẫu. Đăng ký tài khoản để ghi nhận kết quả học tập.");
   }
   const roadmapItemScheduleMatch = matches(path, /^\/student\/roadmap-items\/(\d+)\/schedule$/);
   if (roadmapItemScheduleMatch && method !== "GET") {
-    const id = Number(roadmapItemScheduleMatch[1]);
-    const body = options.body ? JSON.parse(options.body) : {};
-    let updatedRoadmap = null;
-    let updatedItem = null;
-    state.roadmaps = state.roadmaps.map((roadmap) => {
-      let changed = false;
-      const items = roadmap.items.map((item) => {
-        if (item.id !== id) return item;
-        changed = true;
-        updatedItem = {
-          ...item,
-          planned_date: body.planned_date || item.planned_date,
-          start_time: body.start_time || item.start_time,
-          duration_minutes: Number(body.duration_minutes || item.duration_minutes || 60),
-          status: "rescheduled",
-        };
-        return updatedItem;
-      });
-      if (changed) updatedRoadmap = { ...roadmap, items, progress_percent: calculateRoadmapProgress({ ...roadmap, items }) };
-      return updatedRoadmap && updatedRoadmap.id === roadmap.id ? updatedRoadmap : roadmap;
-    });
-    writeState(state);
-    return ok({ item: updatedItem, summary: updatedRoadmap ? roadmapSummary(updatedRoadmap) : null });
+    return demoLocked("Demo chỉ cho xem lịch học mẫu. Đăng ký tài khoản để đổi lịch học.");
   }
 
   return ok(null);

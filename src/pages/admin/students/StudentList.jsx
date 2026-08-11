@@ -57,7 +57,10 @@ export default function StudentList() {
 
     try {
       const response = await action();
-      const nextMessage = response.message || successMessage;
+      const temporaryPassword = response.data?.temporary_password;
+      const nextMessage = temporaryPassword
+        ? `${response.message || successMessage} Mật khẩu tạm: ${temporaryPassword}`
+        : response.message || successMessage;
       setMessage(nextMessage);
       toast.success(nextMessage);
       await loadStudents(filters);
@@ -203,7 +206,7 @@ export default function StudentList() {
       <Modal
         open={Boolean(resetTarget)}
         title="Reset mật khẩu"
-        description={resetTarget ? `Nhập mật khẩu mới cho "${resetTarget.full_name}". Để trống để dùng mã sinh viên làm mật khẩu mặc định.` : ""}
+        description={resetTarget ? `Nhập mật khẩu mới cho "${resetTarget.full_name}". Để trống để hệ thống sinh mật khẩu tạm.` : ""}
         onClose={() => setResetTarget(null)}
         footer={
           <>
@@ -222,7 +225,7 @@ export default function StudentList() {
         }
       >
         <Field label="Mật khẩu mới">
-          <Input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Để trống để dùng mã sinh viên" />
+          <Input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Để trống để sinh mật khẩu tạm" />
         </Field>
       </Modal>
     </main>

@@ -1,0 +1,64 @@
+@startuml
+!theme plain
+title Activity Swimlane - Quản lý sinh viên
+
+|User|
+start
+:Quản trị viên đăng nhập;
+
+|System|
+:Mở /admin/students;
+:Hiển thị danh sách sinh viên và bộ lọc;
+
+|User|
+if (Tạo hoặc sửa sinh viên?) then (Có)
+  :Nhập thông tin sinh viên;
+  |System|
+  :Kiểm tra dữ liệu sinh viên;
+  if (Dữ liệu hợp lệ?) then (Không)
+    :Hiển thị lỗi validation;
+    stop
+  else (Có)
+    :Lưu sinh viên;
+    :Cập nhật danh sách sinh viên;
+    stop
+  endif
+else (Không)
+endif
+
+|User|
+if (Import danh sách?) then (Có)
+  :Chọn file CSV, XLS hoặc XLSX;
+  |System|
+  :Kiểm tra file nhập;
+  if (File hợp lệ?) then (Không)
+    :Hiển thị lỗi file;
+    stop
+  else (Có)
+    :Import danh sách sinh viên;
+    :Hiển thị số bản ghi thành công và lỗi;
+    stop
+  endif
+else (Không)
+endif
+
+|User|
+if (Cập nhật trạng thái?) then (Có)
+  :Chọn khóa, mở khóa, enable hoặc disable;
+  |System|
+  :Cập nhật trạng thái sinh viên;
+  :Làm mới danh sách sinh viên;
+  stop
+else (Reset mật khẩu)
+  :Nhập mật khẩu mới hoặc dùng mã sinh viên;
+  |System|
+  if (Mật khẩu hợp lệ?) then (Không)
+    :Hiển thị lỗi tối thiểu 6 ký tự;
+    stop
+  else (Có)
+    :Cập nhật mật khẩu;
+    :Thông báo đặt lại mật khẩu thành công;
+    stop
+  endif
+endif
+@enduml

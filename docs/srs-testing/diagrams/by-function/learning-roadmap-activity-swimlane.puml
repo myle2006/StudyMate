@@ -1,0 +1,48 @@
+@startuml
+!theme plain
+title Activity Swimlane - Tạo và theo dõi lộ trình học bằng AI
+
+|User|
+start
+:Sinh viên đăng nhập;
+
+|System|
+:Mở /student/roadmaps;
+
+|User|
+if (Tạo bằng AI?) then (Có)
+  :Nhập môn học, mục tiêu, trình độ và thời gian học;
+  |System|
+  if (AI Provider khả dụng?) then (Không)
+    :Hiển thị lỗi cấu hình, quota hoặc rate limit;
+    stop
+  else (Có)
+    :Gọi AI Provider sinh lộ trình học;
+  endif
+
+  if (JSON hợp lệ?) then (Không)
+    :Hiển thị lỗi phản hồi AI;
+    stop
+  else (Có)
+    :Hiển thị preview roadmap;
+  endif
+else (Không)
+  :Nhập roadmap và danh sách item;
+endif
+
+|System|
+if (Roadmap hợp lệ?) then (Không)
+  :Hiển thị lỗi validation hoặc xung đột lịch;
+  stop
+else (Có)
+  :Lưu roadmap và items;
+endif
+
+|User|
+:Cập nhật trạng thái hoặc kết quả item;
+
+|System|
+:Cập nhật tiến độ roadmap;
+:Hiển thị tiến độ mới;
+stop
+@enduml

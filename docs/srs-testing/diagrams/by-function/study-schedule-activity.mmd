@@ -1,0 +1,13 @@
+flowchart TD
+    A[Student đăng nhập] --> B["Mở /student/schedules"]
+    B --> C{Chọn thao tác}
+    C -- Tạo/Sửa --> D[Nhập môn học, tiêu đề, ngày, giờ bắt đầu, giờ kết thúc]
+    D --> E{Ngày giờ hợp lệ?}
+    E -- Không --> F[Hiển thị lỗi validation]
+    E -- Có --> G{Có xung đột lịch?}
+    G -- Có --> H[Hiển thị cảnh báo hoặc gợi ý slot khác]
+    G -- Không --> I[Lưu lịch học]
+    C -- Xóa --> J[Xác nhận xóa]
+    J --> K[Xóa lịch học]
+    I --> L[Cập nhật calendar]
+    K --> L

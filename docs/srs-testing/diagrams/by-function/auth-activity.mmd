@@ -1,0 +1,16 @@
+flowchart TD
+    A[Người dùng mở trang đăng nhập] --> B[Nhập email và password]
+    B --> C["POST /api/login"]
+    C --> D{Dữ liệu hợp lệ?}
+    D -- Không --> E[Trả lỗi validation 422]
+    D -- Có --> F{Thông tin đúng?}
+    F -- Không --> G[Trả lỗi 401]
+    F -- Có --> H{Tài khoản active?}
+    H -- Không --> I[Trả lỗi 403]
+    H -- Có --> J[Tạo JWT và trả role]
+    J --> K{Role}
+    K -- Admin --> L["Vào /admin/dashboard"]
+    K -- Student --> M["Vào /student/dashboard"]
+    L --> N["GET /api/me khi cần kiểm tra phiên"]
+    M --> N
+    N --> O[Hiển thị thông tin tài khoản]

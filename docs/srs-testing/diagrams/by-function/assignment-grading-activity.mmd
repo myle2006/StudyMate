@@ -1,0 +1,15 @@
+flowchart TD
+    A[Admin tạo bài tập] --> B{Assignment hợp lệ?}
+    B -- Không --> C[Hiển thị lỗi subject, title, deadline, file]
+    B -- Có --> D[Lưu assignment]
+    D --> E[Student xem bài tập được giao]
+    E --> F[Student mở form nộp bài]
+    F --> G{Có content hoặc file?}
+    G -- Không --> H[Trả lỗi validation]
+    G -- Có --> I[Lưu submission]
+    I --> J[Admin xem danh sách bài nộp]
+    J --> K[Admin nhập score và feedback]
+    K --> L{Score từ 0 đến 10?}
+    L -- Không --> M[Trả lỗi điểm]
+    L -- Có --> N[Lưu điểm và feedback]
+    N --> O[Student xem kết quả]

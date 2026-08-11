@@ -16,5 +16,5 @@ export default function GuestPreviewPage() {
     return <Navigate to="/student/dashboard" replace />;
   }
 
-  return <LoadingState label="Đang mở tài khoản khách..." />;
+  return <LoadingState label="Đang mở bản dùng thử StudyMate..." />;
 }

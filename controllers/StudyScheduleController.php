@@ -147,6 +147,12 @@ class StudyScheduleController extends Controller
             $errors['subject_id'] = 'Môn học không tồn tại hoặc đã bị xóa.';
         }
 
+        if (! isset($errors['subject_id'])
+            && ! $this->schedule->subjectAssignedToStudent((int) $data['subject_id'], (int) $data['user_id'])
+        ) {
+            $errors['subject_id'] = 'Môn học không thuộc danh sách môn được gán cho bạn.';
+        }
+
         return $errors;
     }
 

@@ -1,0 +1,31 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Admin
+actor Student
+
+rectangle "Subject Management" {
+  usecase "Xem danh sách môn học" as SUB01
+  usecase "Xem chi tiết môn học" as SUB02
+  usecase "Tạo môn học" as SUB03
+  usecase "Cập nhật môn học" as SUB04
+  usecase "Xóa môn học" as SUB05
+  usecase "Xem sinh viên trong môn" as SUB06
+  usecase "Gán sinh viên vào môn" as SUB07
+  usecase "Gỡ sinh viên khỏi môn" as SUB08
+  usecase "Xem môn học của tôi" as SUB09
+}
+
+Admin -- SUB01
+Admin -- SUB02
+Admin -- SUB03
+Admin -- SUB04
+Admin -- SUB05
+Admin -- SUB06
+Admin -- SUB07
+Admin -- SUB08
+Student -- SUB01
+Student -- SUB02
+Student -- SUB09
+@enduml

@@ -1,0 +1,17 @@
+flowchart TD
+    A[Student đăng nhập] --> B["Mở /student/roadmaps"]
+    B --> C{Chọn cách tạo}
+    C -- Thủ công --> D[Nhập roadmap và danh sách item]
+    C -- Bằng AI --> E[Nhập môn học, mục tiêu, trình độ, thời gian học]
+    E --> F{AI Provider khả dụng?}
+    F -- Không --> G[Hiển thị lỗi cấu hình/quota/rate limit]
+    F -- Có --> H[Gọi AI Provider]
+    H --> I{JSON hợp lệ?}
+    I -- Không --> J[Hiển thị lỗi phản hồi AI]
+    I -- Có --> K[Hiển thị preview roadmap]
+    D --> L{Roadmap hợp lệ?}
+    K --> L
+    L -- Không --> M[Hiển thị lỗi validation hoặc xung đột lịch]
+    L -- Có --> N[Lưu roadmap và items]
+    N --> O[Student cập nhật trạng thái/kết quả item]
+    O --> P[Cập nhật tiến độ roadmap]

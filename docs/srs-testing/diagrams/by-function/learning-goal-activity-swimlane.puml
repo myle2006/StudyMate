@@ -1,0 +1,32 @@
+@startuml
+!theme plain
+title Activity Swimlane - Quản lý mục tiêu học tập
+
+|User|
+start
+:Sinh viên đăng nhập;
+
+|System|
+:Mở /student/learning-goals;
+:Hiển thị danh sách mục tiêu;
+
+|User|
+if (Chọn tạo hoặc sửa?) then (Có)
+  :Nhập thông tin mục tiêu;
+  |System|
+  if (Dữ liệu hợp lệ?) then (Không)
+    :Hiển thị lỗi validation;
+    stop
+  else (Có)
+    :Lưu mục tiêu;
+    :Cập nhật danh sách mục tiêu;
+    stop
+  endif
+else (Xóa)
+  :Xác nhận xóa mục tiêu;
+  |System|
+  :Xóa mục tiêu;
+  :Cập nhật danh sách mục tiêu;
+  stop
+endif
+@enduml

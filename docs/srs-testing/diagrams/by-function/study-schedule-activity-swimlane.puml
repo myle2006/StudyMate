@@ -1,0 +1,38 @@
+@startuml
+!theme plain
+title Activity Swimlane - Quản lý lịch học cá nhân
+
+|User|
+start
+:Sinh viên đăng nhập;
+
+|System|
+:Mở /student/schedules;
+:Hiển thị lịch học cá nhân;
+
+|User|
+if (Chọn tạo hoặc sửa?) then (Có)
+  :Nhập môn học, tiêu đề, ngày, giờ bắt đầu và giờ kết thúc;
+  |System|
+  if (Ngày giờ hợp lệ?) then (Không)
+    :Hiển thị lỗi validation;
+    stop
+  else (Có)
+  endif
+
+  if (Có xung đột lịch?) then (Có)
+    :Hiển thị cảnh báo hoặc gợi ý slot khác;
+    stop
+  else (Không)
+    :Lưu lịch học;
+    :Cập nhật calendar;
+    stop
+  endif
+else (Xóa)
+  :Xác nhận xóa lịch học;
+  |System|
+  :Xóa lịch học;
+  :Cập nhật calendar;
+  stop
+endif
+@enduml

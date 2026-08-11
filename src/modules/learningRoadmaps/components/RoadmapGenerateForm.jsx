@@ -1,10 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Bot, CalendarDays, Clock3, CreditCard, RefreshCw, Sparkles, Target, WandSparkles } from "lucide-react";
+import {
+  CalendarDays,
+  Clock3,
+  Layers3,
+  Sparkles,
+  Target,
+} from "lucide-react";
 import { Alert, Badge, Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
+import { getTemplateEndDate } from "../utils/roadmapTemplatePreview";
 
 const DEFAULT_FORM = {
   learning_goal_id: "",
   subject_id: "",
+  duration_months: "1",
   goal: "",
   current_level: "beginner",
   study_time_per_day: "1",
@@ -24,6 +32,48 @@ const levelLabels = {
   advanced: "Nâng cao",
 };
 
+const weekdayOptions = [
+  { value: 1, label: "T2" },
+  { value: 2, label: "T3" },
+  { value: 3, label: "T4" },
+  { value: 4, label: "T5" },
+  { value: 5, label: "T6" },
+  { value: 6, label: "T7" },
+  { value: 7, label: "CN" },
+];
+
+const durationPresets = [
+  { value: "1", label: "Lộ trình nhanh - 1 tháng" },
+  { value: "3", label: "Lộ trình tiêu chuẩn - 3 tháng" },
+  { value: "6", label: "Lộ trình chuyên sâu - 6 tháng" },
+];
+
+function findTemplate(templates, subjectId, durationMonths) {
+  return (templates || []).find((template) => (
+    String(template.subject_id) === String(subjectId)
+      && String(template.duration_months) === String(durationMonths)
+  )) || null;
+}
+
+function getDurationLabel(durationMonths) {
+  return durationPresets.find((preset) => String(preset.value) === String(durationMonths))?.label
+    || `${durationMonths} tháng`;
+}
+
+function buildTemplateFormPatch(template, startDate) {
+  if (!template) return {};
+  const dailyHours = Math.max(0.5, Number(template.study_hours_per_week || 6) / 5);
+
+  return {
+    goal: template.goal || "",
+    current_level: template.current_level || "beginner",
+    study_time_per_day: String(Number(dailyHours.toFixed(1))),
+    max_daily_minutes: String(Math.max(60, Math.round(dailyHours * 60))),
+    max_weekly_minutes: String(Math.max(120, Math.round(Number(template.study_hours_per_week || 6) * 60))),
+    end_date: startDate ? getTemplateEndDate(startDate, template.duration_months) : "",
+  };
+}
+
 function parseStudyTime(value) {
   return Number(String(value).replace(",", "."));
 }
@@ -33,6 +83,7 @@ function validateForm(form) {
   const studyTime = parseStudyTime(form.study_time_per_day);
 
   if (!form.subject_id) errors.subject_id = "Môn học là bắt buộc.";
+  if (!form.duration_months) errors.duration_months = "Vui lòng chọn mốc thời lượng.";
   if (!form.goal.trim()) errors.goal = "Mục tiêu học tập là bắt buộc.";
   if (!["beginner", "intermediate", "advanced"].includes(form.current_level)) errors.current_level = "Trình độ không hợp lệ.";
   if (!form.study_time_per_day || Number.isNaN(studyTime) || studyTime <= 0) errors.study_time_per_day = "Thời gian học phải lớn hơn 0.";
@@ -49,24 +100,35 @@ function validateForm(form) {
   return errors;
 }
 
-const weekdayOptions = [
-  { value: 1, label: "T2" },
-  { value: 2, label: "T3" },
-  { value: 3, label: "T4" },
-  { value: 4, label: "T5" },
-  { value: 5, label: "T6" },
-  { value: 6, label: "T7" },
-  { value: 7, label: "CN" },
-];
-
 function SummaryItem({ icon: Icon, label, value }) {
   return (
-    <div className="flex gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3">
+    <div className="flex min-w-0 gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
       <div className="min-w-0">
         <p className="text-xs font-extrabold uppercase text-slate-400">{label}</p>
-        <p className="mt-1 truncate text-sm font-bold text-slate-800">{value || "Chưa chọn"}</p>
+        <p className="mt-1 break-words text-sm font-bold leading-5 text-slate-800">{value || "Chưa chọn"}</p>
       </div>
+    </div>
+  );
+}
+
+function TemplatePhaseList({ phases = [] }) {
+  return (
+    <div className="space-y-3">
+      {phases.map((phase, index) => (
+        <div key={`${phase.title}-${index}`} className="grid min-w-0 gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-[34px_minmax(0,1fr)]">
+          <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-600 text-xs font-black text-white">
+            {index + 1}
+          </div>
+          <div className="min-w-0">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <p className="min-w-0 break-words text-sm font-black text-slate-900">{phase.title}</p>
+              <Badge tone="slate">{phase.duration_weeks || 1} tuần</Badge>
+            </div>
+            <p className="mt-1 break-words text-xs font-semibold leading-5 text-slate-500">{phase.outcome}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -74,10 +136,9 @@ function SummaryItem({ icon: Icon, label, value }) {
 export default function RoadmapGenerateForm({
   subjects = [],
   learningGoals = [],
-  aiStatus,
+  roadmapTemplates = [],
   submitting = false,
   apiErrors = {},
-  onRefreshStatus,
   onSubmit,
 }) {
   const [form, setForm] = useState(DEFAULT_FORM);
@@ -85,33 +146,83 @@ export default function RoadmapGenerateForm({
   const errors = useMemo(() => ({ ...clientErrors, ...apiErrors }), [clientErrors, apiErrors]);
   const selectedSubject = subjects.find((subject) => String(subject.id) === String(form.subject_id));
   const selectedGoal = learningGoals.find((goal) => String(goal.id) === String(form.learning_goal_id));
-  const aiUnavailable = Boolean(aiStatus && !aiStatus.available);
-  const disabledReason = subjects.length === 0
-    ? "Bạn chưa có môn học được gán."
-    : aiUnavailable
-      ? aiStatus?.message || "AI đang tạm ngưng."
-      : "";
+  const selectedTemplate = useMemo(
+    () => findTemplate(roadmapTemplates, selectedSubject?.id, form.duration_months),
+    [roadmapTemplates, selectedSubject?.id, form.duration_months]
+  );
+  const noSubjectsReason = subjects.length === 0 ? "Bạn chưa có môn học được gán." : "";
 
   useEffect(() => {
     if (!form.subject_id && subjects.length === 1) {
-      setForm((current) => ({ ...current, subject_id: String(subjects[0].id) }));
+      const subject = subjects[0];
+      setForm((current) => ({
+        ...current,
+        subject_id: String(subject.id),
+        ...buildTemplateFormPatch(findTemplate(roadmapTemplates, subject.id, current.duration_months), current.start_date),
+      }));
     }
-  }, [subjects]);
+  }, [subjects, roadmapTemplates, form.subject_id]);
+
+  function applyTemplate(subject, durationMonths, startDate, extra = {}) {
+    const template = findTemplate(roadmapTemplates, subject?.id, durationMonths);
+    return {
+      ...buildTemplateFormPatch(template, startDate),
+      ...extra,
+    };
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
 
     if (name === "learning_goal_id") {
       const nextGoal = learningGoals.find((goal) => String(goal.id) === value);
+      const nextSubject = subjects.find((subject) => String(subject.id) === String(nextGoal?.subject_id || form.subject_id));
+      const goalPatch = nextGoal
+        ? {
+            subject_id: String(nextGoal.subject_id),
+            goal: nextGoal.goal_description,
+            current_level: nextGoal.current_level,
+            study_time_per_day: String(nextGoal.study_time_per_day),
+            start_date: nextGoal.start_date,
+            end_date: nextGoal.end_date,
+          }
+        : {};
+
       setForm((current) => ({
         ...current,
         learning_goal_id: value,
-        subject_id: nextGoal ? String(nextGoal.subject_id) : current.subject_id,
-        goal: nextGoal ? nextGoal.goal_description : current.goal,
-        current_level: nextGoal ? nextGoal.current_level : current.current_level,
-        study_time_per_day: nextGoal ? String(nextGoal.study_time_per_day) : current.study_time_per_day,
-        start_date: nextGoal ? nextGoal.start_date : current.start_date,
-        end_date: nextGoal ? nextGoal.end_date : current.end_date,
+        ...(nextGoal ? {} : applyTemplate(selectedSubject, current.duration_months, current.start_date)),
+        ...(nextGoal ? applyTemplate(nextSubject, current.duration_months, nextGoal.start_date, goalPatch) : {}),
+      }));
+      return;
+    }
+
+    if (name === "subject_id") {
+      const nextSubject = subjects.find((subject) => String(subject.id) === value);
+      setForm((current) => ({
+        ...current,
+        subject_id: value,
+        learning_goal_id: "",
+        ...applyTemplate(nextSubject, current.duration_months, current.start_date),
+      }));
+      return;
+    }
+
+    if (name === "duration_months") {
+      setForm((current) => ({
+        ...current,
+        duration_months: value,
+        ...applyTemplate(selectedSubject, value, current.start_date),
+      }));
+      return;
+    }
+
+    if (name === "start_date") {
+      const templatePatch = buildTemplateFormPatch(selectedTemplate, value);
+      setForm((current) => ({
+        ...current,
+        start_date: value,
+        end_date: templatePatch.end_date,
       }));
       return;
     }
@@ -133,12 +244,23 @@ export default function RoadmapGenerateForm({
   function handleSubmit(event) {
     event.preventDefault();
     const nextErrors = validateForm(form);
+    if (!selectedTemplate) {
+      nextErrors.duration_months = "Chưa có lộ trình mẫu trong database cho môn học và thời lượng này.";
+    }
     setClientErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || aiUnavailable || subjects.length === 0) return;
+
+    if (Object.keys(nextErrors).length > 0 || subjects.length === 0) return;
 
     onSubmit?.({
+      generation_mode: "template",
+      template_key: selectedTemplate.template_code,
+      template_id: selectedTemplate.id,
+      roadmap_template: selectedTemplate,
+      duration_months: form.duration_months,
       learning_goal_id: form.learning_goal_id || null,
       subject_id: Number(form.subject_id),
+      subject_code: selectedSubject?.subject_code || "",
+      subject_name: selectedSubject?.subject_name || "",
       goal: form.goal.trim(),
       current_level: form.current_level,
       study_time_per_day: parseStudyTime(form.study_time_per_day),
@@ -154,39 +276,73 @@ export default function RoadmapGenerateForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-      <Card className="p-5">
+    <form onSubmit={handleSubmit} className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <Card className="min-w-0 p-5">
         <div className="border-b border-slate-100 pb-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-sm font-black uppercase text-blue-600">Thông tin đầu vào</p>
-              <h2 className="mt-2 text-2xl font-black text-slate-950">Bạn muốn học gì?</h2>
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-black uppercase text-blue-600">Chọn mẫu lộ trình</p>
+              <h2 className="mt-2 break-words text-2xl font-black text-slate-950">Bắt đầu từ môn học và thời lượng</h2>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
-                Chọn mục tiêu đã lưu hoặc nhập mục tiêu mới cho môn học được admin gán.
+                StudyMate tự gợi ý lộ trình 1, 3 hoặc 6 tháng trước. Sau đó bạn mới chỉnh mục tiêu, lịch học và từng nhiệm vụ theo cá nhân.
               </p>
             </div>
-            <Badge tone={selectedGoal ? "blue" : "slate"}>{selectedGoal ? "Dùng mục tiêu đã lưu" : "Mục tiêu mới"}</Badge>
+            <Badge tone={selectedGoal ? "blue" : "green"}>
+              {selectedGoal ? "Có mục tiêu đã lưu" : "Template trước"}
+            </Badge>
           </div>
         </div>
 
         <div className="mt-5 grid gap-5 md:grid-cols-2">
-          <Field label="Mục tiêu đã lưu" error={errors.learning_goal_id} className="md:col-span-2">
-            <Select name="learning_goal_id" value={form.learning_goal_id} onChange={handleChange}>
-              <option value="">Nhập mục tiêu mới</option>
-              {learningGoals.map((goal) => (
-                <option key={goal.id} value={goal.id}>
-                  {goal.title} · {goal.subject_code}
-                </option>
-              ))}
-            </Select>
-          </Field>
-
           <Field label="Môn học" error={errors.subject_id}>
             <Select name="subject_id" value={form.subject_id} onChange={handleChange}>
               <option value="">Chọn môn học được gán</option>
               {subjects.map((subject) => (
                 <option key={subject.id} value={subject.id}>
                   {subject.subject_code} - {subject.subject_name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Thời lượng mẫu" error={errors.duration_months}>
+            <Select name="duration_months" value={form.duration_months} onChange={handleChange}>
+              {durationPresets.map((preset) => (
+                <option key={preset.value} value={preset.value}>
+                  {preset.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <div className="md:col-span-2 min-w-0 overflow-hidden rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <Layers3 className="h-4 w-4 text-blue-700" />
+                  <h3 className="min-w-0 break-words text-sm font-black text-blue-950">{selectedTemplate?.title || "Chưa có lộ trình mẫu"}</h3>
+                  <Badge tone="blue">{getDurationLabel(form.duration_months)}</Badge>
+                </div>
+                <p className="mt-2 break-words text-sm font-semibold leading-6 text-blue-800">
+                  {selectedTemplate?.goal || "Vui lòng chọn môn học có lộ trình mẫu trong database."}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <TemplatePhaseList phases={selectedTemplate?.phases || []} />
+            </div>
+          </div>
+
+          <div className="md:col-span-2 border-t border-slate-100 pt-5">
+            <p className="text-sm font-black uppercase text-slate-500">Cá nhân hóa sau khi chọn mẫu</p>
+          </div>
+
+          <Field label="Mục tiêu đã lưu" error={errors.learning_goal_id} className="md:col-span-2">
+            <Select name="learning_goal_id" value={form.learning_goal_id} onChange={handleChange}>
+              <option value="">Không dùng mục tiêu đã lưu</option>
+              {learningGoals.map((goal) => (
+                <option key={goal.id} value={goal.id}>
+                  {goal.title} · {goal.subject_code}
                 </option>
               ))}
             </Select>
@@ -263,49 +419,32 @@ export default function RoadmapGenerateForm({
         </Field>
       </Card>
 
-      <div className="space-y-5">
-        <Card className="p-5">
-          <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
-              <Bot size={20} />
+      <div className="min-w-0 space-y-5">
+        <Card className="min-w-0 p-5">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600">
+              <Layers3 size={20} />
             </div>
-            <div>
-              <h2 className="text-lg font-black text-slate-950">Tạo bằng AI</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                Backend PHP sẽ gọi {aiStatus?.provider_label || "AI"} và trả về bản nháp để bạn xem lại.
+            <div className="min-w-0">
+              <h2 className="break-words text-lg font-black text-slate-950">Preview từ template</h2>
+              <p className="mt-1 break-words text-sm leading-6 text-slate-500">
+                Tạo ngay bản nháp theo mẫu môn học, chia theo giai đoạn và cho phép chỉnh từng nhiệm vụ trước khi lưu.
               </p>
             </div>
           </div>
 
           <div className="mt-5 grid gap-3">
             <SummaryItem icon={Target} label="Môn học" value={selectedSubject ? `${selectedSubject.subject_code} - ${selectedSubject.subject_name}` : ""} />
-            <SummaryItem icon={Sparkles} label="Trình độ" value={levelLabels[form.current_level]} />
+            <SummaryItem icon={Sparkles} label="Mẫu" value={selectedTemplate ? `${selectedTemplate.title} · ${getDurationLabel(selectedTemplate.duration_months)}` : ""} />
             <SummaryItem icon={Clock3} label="Thời lượng" value={form.study_time_per_day ? `${form.study_time_per_day} giờ/ngày` : ""} />
-            <SummaryItem icon={Clock3} label="Khung giờ" value={`${form.preferred_start_time} · ${form.session_duration_minutes} phút/buổi`} />
             <SummaryItem icon={CalendarDays} label="Khoảng ngày" value={form.start_date && form.end_date ? `${form.start_date} → ${form.end_date}` : ""} />
           </div>
 
-          <div className={`mt-5 rounded-lg border p-4 ${aiUnavailable ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}>
-            <div className="flex items-start gap-3">
-              <CreditCard className={`mt-0.5 h-4 w-4 shrink-0 ${aiUnavailable ? "text-rose-600" : "text-emerald-600"}`} />
-              <p className={`text-sm font-bold leading-6 ${aiUnavailable ? "text-rose-700" : "text-emerald-700"}`}>
-                {aiStatus?.message || "AI sẵn sàng tạo lộ trình học."}
-              </p>
-            </div>
-          </div>
+          {noSubjectsReason && <Alert tone="warning" className="mt-4">{noSubjectsReason}</Alert>}
 
-          {disabledReason && <Alert tone={aiUnavailable ? "error" : "warning"} className="mt-4">{disabledReason}</Alert>}
-
-          {aiUnavailable && (
-            <Button type="button" variant="secondary" className="mt-4 w-full" onClick={onRefreshStatus}>
-              <RefreshCw size={16} />
-              Cập nhật trạng thái AI
-            </Button>
-          )}
-
-          <Button type="submit" size="lg" className="mt-5 w-full" disabled={submitting || subjects.length === 0 || aiUnavailable}>
-            <WandSparkles size={18} />
-            {submitting ? "Đang tạo lộ trình..." : aiUnavailable ? "AI đang tạm ngưng" : "Tạo lộ trình bằng AI"}
+          <Button type="submit" size="lg" className="mt-5 w-full min-w-0" disabled={submitting || subjects.length === 0 || !selectedTemplate}>
+            <Layers3 size={18} />
+            {submitting ? "Đang tạo preview..." : "Xem và chỉnh lộ trình mẫu"}
           </Button>
         </Card>
       </div>

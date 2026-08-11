@@ -1,0 +1,20 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Student
+
+rectangle "Learning Goal" {
+  usecase "Xem danh sách mục tiêu" as GUC01
+  usecase "Xem chi tiết mục tiêu" as GUC02
+  usecase "Tạo mục tiêu học tập" as GUC03
+  usecase "Cập nhật mục tiêu học tập" as GUC04
+  usecase "Xóa mục tiêu học tập" as GUC05
+}
+
+Student -- GUC01
+Student -- GUC02
+Student -- GUC03
+Student -- GUC04
+Student -- GUC05
+@enduml

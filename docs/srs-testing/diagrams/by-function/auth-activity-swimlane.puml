@@ -1,0 +1,40 @@
+@startuml
+!theme plain
+title Activity Swimlane - Đăng ký, đăng nhập và phân quyền
+
+|User|
+start
+:Mở trang đăng nhập;
+:Nhập email và mật khẩu;
+
+|System|
+:Gửi POST /api/login;
+if (Dữ liệu hợp lệ?) then (Không)
+  :Hiển thị lỗi validation 422;
+  stop
+else (Có)
+endif
+
+if (Thông tin đăng nhập đúng?) then (Không)
+  :Hiển thị lỗi 401;
+  stop
+else (Có)
+endif
+
+if (Tài khoản active?) then (Không)
+  :Hiển thị lỗi 403;
+  stop
+else (Có)
+  :Tạo JWT và trả role;
+endif
+
+if (Role là gì?) then (Admin)
+  :Chuyển đến /admin/dashboard;
+else (Student)
+  :Chuyển đến /student/dashboard;
+endif
+
+:Gọi GET /api/me khi cần kiểm tra phiên;
+:Hiển thị thông tin tài khoản;
+stop
+@enduml

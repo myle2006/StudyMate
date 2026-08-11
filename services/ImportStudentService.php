@@ -23,6 +23,7 @@ class ImportStudentService
                     'success_count' => 0,
                     'failed_count' => 1,
                 ],
+                'temporary_passwords' => [],
                 'errors' => [
                     [
                         'row' => 0,
@@ -38,6 +39,7 @@ class ImportStudentService
         $errors = [];
         $seenEmails = [];
         $seenStudentCodes = [];
+        $temporaryPasswords = [];
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2;
@@ -57,7 +59,12 @@ class ImportStudentService
             $seenEmails[] = strtolower($data['email']);
             $seenStudentCodes[] = strtolower($data['student_code']);
 
-            $password = $data['password'] !== '' ? $data['password'] : $data['student_code'];
+            $temporaryPassword = null;
+            $password = $data['password'] !== '' ? $data['password'] : PasswordGenerator::temporary();
+            if ($data['password'] === '') {
+                $temporaryPassword = $password;
+            }
+
             $this->student->create([
                 'role_id' => (int) $studentRole['id'],
                 'full_name' => $data['full_name'],
@@ -67,6 +74,15 @@ class ImportStudentService
                 'student_code' => $data['student_code'],
                 'status' => $data['status'] ?: 'active',
             ]);
+
+            if ($temporaryPassword !== null) {
+                $temporaryPasswords[] = [
+                    'row' => $rowNumber,
+                    'email' => $data['email'],
+                    'student_code' => $data['student_code'],
+                    'temporary_password' => $temporaryPassword,
+                ];
+            }
 
             $successCount++;
         }
@@ -78,6 +94,7 @@ class ImportStudentService
                 'failed_count' => count($errors),
             ],
             'errors' => $errors,
+            'temporary_passwords' => $temporaryPasswords,
         ];
     }
 

@@ -1,0 +1,14 @@
+flowchart TD
+    A[Người dùng mở trang đăng nhập] --> B[Nhập email và password]
+    B --> C[Nhấn đăng nhập]
+    C --> D["Frontend gọi POST /api/login"]
+    D --> E{Dữ liệu hợp lệ?}
+    E -- Không --> F[Trả lỗi validation 422]
+    E -- Có --> G{Email/password đúng?}
+    G -- Không --> H[Trả lỗi 401]
+    G -- Có --> I{Tài khoản active?}
+    I -- Locked/Inactive --> J[Trả lỗi 403]
+    I -- Active --> K[Tạo JWT và trả role]
+    K --> L{Role}
+    L -- Admin --> M["Chuyển đến /admin/dashboard"]
+    L -- Student --> N["Chuyển đến /student/dashboard"]

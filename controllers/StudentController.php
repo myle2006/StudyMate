@@ -71,7 +71,11 @@ class StudentController extends Controller
             return;
         }
 
-        $password = $data['password'] !== '' ? $data['password'] : $data['student_code'];
+        $temporaryPassword = null;
+        $password = $data['password'] !== '' ? $data['password'] : PasswordGenerator::temporary();
+        if ($data['password'] === '') {
+            $temporaryPassword = $password;
+        }
         $studentId = $this->student->create([
             'role_id' => (int) $studentRole['id'],
             'full_name' => $data['full_name'],
@@ -82,10 +86,15 @@ class StudentController extends Controller
             'status' => $data['status'],
         ]);
 
+        $studentPayload = $this->compactStudent($this->student->findById($studentId));
+        if ($temporaryPassword !== null) {
+            $studentPayload['temporary_password'] = $temporaryPassword;
+        }
+
         $this->json([
             'success' => true,
             'message' => 'Thêm sinh viên thành công.',
-            'data' => $this->compactStudent($this->student->findById($studentId)),
+            'data' => $studentPayload,
         ], 201);
     }
 
@@ -204,10 +213,10 @@ class StudentController extends Controller
             return;
         }
 
-        $password = $newPassword !== '' ? $newPassword : (string) $student['student_code'];
-        if ($password === '') {
-            $this->validationFailed(['new_password' => 'Sinh viên chưa có mã sinh viên để dùng làm mật khẩu mặc định.']);
-            return;
+        $temporaryPassword = null;
+        $password = $newPassword !== '' ? $newPassword : PasswordGenerator::temporary();
+        if ($newPassword === '') {
+            $temporaryPassword = $password;
         }
 
         $this->student->resetPassword($studentId, $password);
@@ -215,6 +224,9 @@ class StudentController extends Controller
         $this->json([
             'success' => true,
             'message' => 'Reset mật khẩu sinh viên thành công.',
+            'data' => [
+                'temporary_password' => $temporaryPassword,
+            ],
         ]);
     }
 
@@ -265,6 +277,7 @@ class StudentController extends Controller
             'message' => 'Import danh sách sinh viên hoàn tất.',
             'summary' => $result['summary'],
             'errors' => $result['errors'],
+            'temporary_passwords' => $result['temporary_passwords'] ?? [],
         ]);
     }
 
@@ -276,7 +289,7 @@ class StudentController extends Controller
 
         $output = fopen('php://output', 'wb');
         fputcsv($output, ['full_name', 'email', 'phone', 'student_code', 'password', 'status']);
-        fputcsv($output, ['Tran Thi My Le', 'student@example.com', '0336655409', '24211TT3192', '24211TT3192', 'active']);
+        fputcsv($output, ['Tran Thi My Le', 'student@example.com', '0336655409', '24211TT3192', '', 'active']);
         fclose($output);
     }
 

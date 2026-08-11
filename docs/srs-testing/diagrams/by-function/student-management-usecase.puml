@@ -1,0 +1,28 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Admin
+
+rectangle "Student Management" {
+  usecase "Xem danh sách sinh viên" as SUC01
+  usecase "Xem chi tiết sinh viên" as SUC02
+  usecase "Tạo sinh viên" as SUC03
+  usecase "Cập nhật sinh viên" as SUC04
+  usecase "Xóa hoặc vô hiệu hóa sinh viên" as SUC05
+  usecase "Import sinh viên" as SUC06
+  usecase "Tải template import" as SUC07
+  usecase "Khóa/mở khóa/kích hoạt" as SUC08
+  usecase "Reset mật khẩu" as SUC09
+}
+
+Admin -- SUC01
+Admin -- SUC02
+Admin -- SUC03
+Admin -- SUC04
+Admin -- SUC05
+Admin -- SUC06
+Admin -- SUC07
+Admin -- SUC08
+Admin -- SUC09
+@enduml

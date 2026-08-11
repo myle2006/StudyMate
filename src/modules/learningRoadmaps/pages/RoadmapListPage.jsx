@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Bot, Eye, Plus, Search, Trash2 } from "lucide-react";
+import { BookOpenCheck, Eye, Plus, Search, Trash2 } from "lucide-react";
 import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
 import RoadmapProgressBar from "../components/RoadmapProgressBar";
@@ -73,32 +73,28 @@ export default function RoadmapListPage() {
     const activeCount = roadmaps.filter((roadmap) => roadmap.status === "active").length;
     return `${roadmaps.length} lộ trình đang hiển thị, ${activeCount} lộ trình đang học.`;
   }, [roadmaps]);
-  const guestHeaderDescriptionProps = isGuestPreview && roadmaps.length === 0
-    ? { description: "Tự tạo lộ trình học và chỉnh sửa trước khi lưu." }
-    : {};
-  const guestEmptyDescriptionProps = isGuestPreview
-    ? { description: "Tự tạo lộ trình học từ đầu rồi chỉnh sửa trước khi lưu." }
-    : {};
+  const headerDescription = isGuestPreview
+    ? (roadmaps.length ? summary : "Xem nhanh lộ trình mẫu và cách StudyMate trình bày tiến độ theo từng giai đoạn.")
+    : (roadmaps.length ? summary : "Tự tạo lộ trình hoặc chọn lộ trình mẫu rồi chỉnh sửa trước khi lưu.");
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-6">
         <PageHeader
-          eyebrow="StudyMate AI"
+          eyebrow="StudyMate Roadmap"
           title="Lộ trình học"
-          description={roadmaps.length ? summary : "Tự tạo lộ trình hoặc dùng AI gợi ý rồi chỉnh sửa trước khi lưu."}
-          {...guestHeaderDescriptionProps}
+          description={headerDescription}
           actions={
-            <div className="flex flex-wrap gap-2">
-              <Button to="/student/roadmaps/create">
-                <Plus size={16} /> Tự tạo lộ trình
-              </Button>
-              {!isGuestPreview && (
-                <Button to="/student/roadmaps/generate" variant="secondary">
-                  <Bot size={16} /> Tạo bằng AI
+            !isGuestPreview && (
+              <div className="flex flex-wrap gap-2">
+                <Button to="/student/roadmaps/create">
+                  <Plus size={16} /> Tự tạo lộ trình
                 </Button>
-              )}
-            </div>
+                <Button to="/student/roadmaps/generate" variant="secondary">
+                  <BookOpenCheck size={16} /> Tạo từ mẫu
+                </Button>
+              </div>
+            )
           }
         />
 
@@ -132,10 +128,9 @@ export default function RoadmapListPage() {
         ) : roadmaps.length === 0 ? (
           <EmptyState
             title="Chưa có lộ trình học"
-            description="Tự tạo lộ trình từ đầu hoặc dùng AI gợi ý rồi chỉnh sửa trước khi lưu."
-            actionLabel="Tự tạo lộ trình"
-            {...guestEmptyDescriptionProps}
-            actionTo="/student/roadmaps/create"
+            description={isGuestPreview ? "Demo hiện chưa có lộ trình mẫu để hiển thị." : "Tự tạo lộ trình từ đầu hoặc chọn lộ trình mẫu rồi chỉnh sửa trước khi lưu."}
+            actionLabel={isGuestPreview ? undefined : "Tự tạo lộ trình"}
+            actionTo={isGuestPreview ? undefined : "/student/roadmaps/create"}
           />
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -157,13 +152,15 @@ export default function RoadmapListPage() {
                     {roadmap.item_count || 0} bước · {formatDate(roadmap.start_date)} - {formatDate(roadmap.end_date)}
                   </p>
                 </div>
-                <div className="mt-auto grid gap-2 pt-5 sm:grid-cols-2">
+                <div className={`mt-auto grid gap-2 pt-5 ${isGuestPreview ? "" : "sm:grid-cols-2"}`}>
                   <Button to={`/student/roadmaps/${roadmap.id}`} variant="secondary">
                     <Eye size={16} /> Chi tiết
                   </Button>
-                  <Button type="button" variant="danger" onClick={() => setDeletingRoadmap(roadmap)}>
-                    <Trash2 size={16} /> Xóa
-                  </Button>
+                  {!isGuestPreview && (
+                    <Button type="button" variant="danger" onClick={() => setDeletingRoadmap(roadmap)}>
+                      <Trash2 size={16} /> Xóa
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}

@@ -1,0 +1,16 @@
+flowchart TD
+    A[Admin đăng nhập] --> B["Mở /admin/students"]
+    B --> C{Chọn thao tác}
+    C -- Tạo hoặc sửa --> D[Nhập thông tin sinh viên]
+    D --> E{Dữ liệu hợp lệ?}
+    E -- Không --> F[Hiển thị lỗi validation]
+    E -- Có --> G[Lưu sinh viên]
+    C -- Import --> H[Chọn file CSV, XLS hoặc XLSX]
+    H --> I{File hợp lệ?}
+    I -- Không --> J[Hiển thị lỗi file]
+    I -- Có --> K[Import danh sách sinh viên]
+    C -- Trạng thái --> L[Khóa, mở khóa, enable hoặc disable]
+    C -- Reset mật khẩu --> M[Nhập mật khẩu mới hoặc dùng mã sinh viên]
+    M --> N{Mật khẩu hợp lệ?}
+    N -- Không --> O[Hiển thị lỗi tối thiểu 6 ký tự]
+    N -- Có --> P[Cập nhật mật khẩu]

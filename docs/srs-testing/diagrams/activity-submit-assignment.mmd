@@ -1,0 +1,13 @@
+flowchart TD
+    A[Student đăng nhập] --> B["Mở /student/assignments"]
+    B --> C[Chọn assignment]
+    C --> D["Frontend gọi API chi tiết assignment"]
+    D --> E{Assignment thuộc student?}
+    E -- Không --> F[Từ chối truy cập]
+    E -- Có --> G[Mở form nộp bài]
+    G --> H[Nhập nội dung hoặc chọn file]
+    H --> I["Gửi POST /api/student/assignments/{assignmentId}/submit"]
+    I --> J{Dữ liệu hợp lệ?}
+    J -- Không --> K[Hiển thị lỗi validation]
+    J -- Có --> L[Lưu submission]
+    L --> M[Hiển thị chi tiết bài nộp]

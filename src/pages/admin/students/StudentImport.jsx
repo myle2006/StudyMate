@@ -116,7 +116,7 @@ full_name,email,phone,student_code,password,status
           </pre>
           <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
             <li>full_name, email, student_code là bắt buộc.</li>
-            <li>password có thể trống, hệ thống sẽ dùng student_code.</li>
+            <li>password có thể trống, hệ thống sẽ sinh mật khẩu tạm và hiển thị trong kết quả import.</li>
             <li>status nhận active, inactive hoặc locked.</li>
             <li>File tối đa 5MB và không thực thi nội dung upload.</li>
           </ul>

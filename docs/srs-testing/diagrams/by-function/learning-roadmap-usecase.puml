@@ -1,0 +1,34 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Student
+actor "AI Provider" as AI
+
+rectangle "Learning Roadmap" {
+  usecase "Xem danh sách roadmap" as RM01
+  usecase "Xem chi tiết roadmap" as RM02
+  usecase "Tạo roadmap thủ công" as RM03
+  usecase "Sinh roadmap bằng AI" as RM04
+  usecase "Lưu roadmap từ preview" as RM05
+  usecase "Cập nhật roadmap" as RM06
+  usecase "Xóa roadmap" as RM07
+  usecase "Cập nhật trạng thái item" as RM08
+  usecase "Cập nhật kết quả item" as RM09
+  usecase "Dời lịch item" as RM10
+  usecase "Xem tiến độ roadmap" as RM11
+}
+
+Student -- RM01
+Student -- RM02
+Student -- RM03
+Student -- RM04
+Student -- RM05
+Student -- RM06
+Student -- RM07
+Student -- RM08
+Student -- RM09
+Student -- RM10
+Student -- RM11
+RM04 -- AI
+@enduml

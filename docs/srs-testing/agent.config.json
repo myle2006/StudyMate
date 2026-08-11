@@ -1,0 +1,74 @@
+{
+  "name": "StudyMate SRS Testing Agent",
+  "outputDir": "docs/srs-testing/generated",
+  "promptFile": "docs/srs-testing/01-agent-prompt.md",
+  "maxFileCharacters": 30000,
+  "maxTotalCharacters": 180000,
+  "sources": [
+    {
+      "path": "routes",
+      "extensions": [".php"]
+    },
+    {
+      "path": "controllers",
+      "extensions": [".php"]
+    },
+    {
+      "path": "models",
+      "extensions": [".php"]
+    },
+    {
+      "path": "validations",
+      "extensions": [".php"]
+    },
+    {
+      "path": "middlewares",
+      "extensions": [".php"]
+    },
+    {
+      "path": "services",
+      "extensions": [".php"]
+    },
+    {
+      "path": "database/migrations",
+      "extensions": [".sql"]
+    },
+    {
+      "path": "studymate.sql"
+    },
+    {
+      "path": "src/App.jsx"
+    },
+    {
+      "path": "src/routes",
+      "extensions": [".jsx", ".js"]
+    },
+    {
+      "path": "src/pages",
+      "extensions": [".jsx", ".js"]
+    },
+    {
+      "path": "src/modules",
+      "extensions": [".jsx", ".js"]
+    }
+  ],
+  "excludeDirectories": [
+    ".git",
+    "node_modules",
+    "dist",
+    "build",
+    "public/uploads",
+    "docs/report_assets",
+    "docs/report_render",
+    "storage"
+  ],
+  "targetDocs": [
+    "docs/srs-testing/02-system-analysis.md",
+    "docs/srs-testing/03-srs.md",
+    "docs/srs-testing/04-use-cases.md",
+    "docs/srs-testing/05-diagrams.md",
+    "docs/srs-testing/06-test-scenarios.md",
+    "docs/srs-testing/07-test-cases.md",
+    "docs/srs-testing/08-traceability-matrix.md"
+  ]
+}

@@ -45,11 +45,23 @@ export default function SubmissionForm({ assignment, submission, apiErrors = {},
   const [clientErrors, setClientErrors] = useState({});
   const errors = useMemo(() => ({ ...clientErrors, ...apiErrors }), [clientErrors, apiErrors]);
   const hasExistingFile = Boolean(submission?.file_path || assignment?.submission_file_path);
-  const deadlineState = getDeadlineState(assignment?.deadline, assignment?.status, submission?.status || assignment?.submission_status || "not_submitted");
+  const hasSubmission = Boolean(submission || assignment?.submission_status);
+  const submissionStatusValue = submission?.status || assignment?.submission_status || "not_submitted";
+  const deadlineState = getDeadlineState(assignment?.deadline, assignment?.status, submissionStatusValue);
   const isClosed = assignment?.status === "closed";
+  const disabledReason = isClosed
+    ? "Bài tập đã đóng, bạn không thể nộp hoặc cập nhật bài."
+    : submissionStatusValue === "graded"
+      ? "Bài nộp đã được chấm điểm, bạn không thể chỉnh sửa."
+      : hasSubmission && deadlineState.overdue
+        ? "Đã quá deadline nên bài nộp hiện có không thể cập nhật."
+        : "";
+  const isLocked = Boolean(disabledReason);
 
   function handleSubmit(event) {
     event.preventDefault();
+    if (isLocked) return;
+
     const nextErrors = validate(content, file, hasExistingFile);
     setClientErrors(nextErrors);
 
@@ -72,7 +84,7 @@ export default function SubmissionForm({ assignment, submission, apiErrors = {},
             value={content}
             onChange={(event) => setContent(event.target.value)}
             rows={12}
-            disabled={isClosed}
+            disabled={isLocked}
             placeholder="Nhập nội dung bài làm, đường link repository, ghi chú hoặc phần trả lời của bạn"
           />
         </Field>
@@ -106,11 +118,18 @@ export default function SubmissionForm({ assignment, submission, apiErrors = {},
           </div>
         )}
 
+        {isLocked && (
+          <div className="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-700">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-slate-500" />
+            {disabledReason}
+          </div>
+        )}
+
         <Field label="File bài nộp" error={errors.file} hint="Tối đa 10MB. Hỗ trợ pdf, doc, docx, zip, rar, png, jpg, jpeg.">
           <input
             type="file"
             accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
-            disabled={isClosed}
+            disabled={isLocked}
             onChange={(event) => setFile(event.target.files?.[0] || null)}
             className="mt-2 w-full rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700 disabled:bg-slate-100"
           />
@@ -128,7 +147,7 @@ export default function SubmissionForm({ assignment, submission, apiErrors = {},
         )}
 
         <div className="flex flex-col gap-3">
-          <Button type="submit" size="lg" disabled={submitting || isClosed}>
+          <Button type="submit" size="lg" disabled={submitting || isLocked}>
             {submitting ? "Đang gửi..." : submission ? "Cập nhật bài nộp" : "Nộp bài"}
           </Button>
           <Button to={`/student/assignments/${assignment?.id}`} variant="secondary" size="lg">

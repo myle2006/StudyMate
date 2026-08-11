@@ -1,0 +1,17 @@
+sequenceDiagram
+    actor Admin
+    participant UI as React UI
+    participant API as PHP API
+    participant DB as MySQL
+
+    Admin->>UI: Mở chi tiết bài nộp
+    UI->>API: GET /api/admin/submissions/{id}
+    API->>DB: Truy vấn submission
+    DB-->>API: Dữ liệu submission
+    API-->>UI: Trả chi tiết submission
+    Admin->>UI: Nhập điểm và feedback
+    UI->>API: PUT /api/admin/submissions/{id}/grade
+    API->>API: Validate điểm/feedback
+    API->>DB: Cập nhật kết quả chấm
+    DB-->>API: Thành công
+    API-->>UI: Trả thông báo thành công

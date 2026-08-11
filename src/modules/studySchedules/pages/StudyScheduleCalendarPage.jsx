@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, EmptyState, LoadingState, PageHeader } from "../../../components/ui";
-import { getSubjects } from "../../subjects/services/subjectService";
+import { getMySubjects } from "../../studentSubjects/services/studentSubjectService";
 import StudyScheduleCalendar from "../components/StudyScheduleCalendar";
 import StudyScheduleFilter from "../components/StudyScheduleFilter";
 import { getStudySchedules } from "../services/studyScheduleService";
@@ -33,7 +33,7 @@ export default function StudyScheduleCalendarPage() {
 
     try {
       const [subjectResponse, scheduleResponse] = await Promise.all([
-        getSubjects(),
+        getMySubjects(),
         getStudySchedules(nextFilters),
       ]);
       setSubjects(subjectResponse.data || []);

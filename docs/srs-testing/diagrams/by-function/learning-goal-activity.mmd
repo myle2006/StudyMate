@@ -1,0 +1,12 @@
+flowchart TD
+    A[Student đăng nhập] --> B["Mở /student/learning-goals"]
+    B --> C{Chọn thao tác}
+    C -- Tạo --> D[Nhập thông tin mục tiêu]
+    C -- Sửa --> D
+    D --> E{Dữ liệu hợp lệ?}
+    E -- Không --> F[Hiển thị lỗi validation]
+    E -- Có --> G[Lưu mục tiêu]
+    C -- Xóa --> H[Xác nhận xóa]
+    H --> I[Xóa mục tiêu]
+    G --> J[Cập nhật danh sách mục tiêu]
+    I --> J

@@ -1,0 +1,12 @@
+flowchart TD
+    A[Student mở trang tạo roadmap] --> B[Nhập môn học, mục tiêu, thời gian học]
+    B --> C["Gửi POST /api/student/roadmaps/generate-ai"]
+    C --> D{AI Provider được cấu hình?}
+    D -- Không --> E[Hiển thị lỗi thiếu API key]
+    D -- Có --> F[Gọi AI Provider]
+    F --> G{Provider trả thành công?}
+    G -- Không --> H[Hiển thị lỗi quota/rate limit/API]
+    G -- Có --> I{JSON hợp lệ?}
+    I -- Không --> J[Hiển thị lỗi phản hồi AI không hợp lệ]
+    I -- Có --> K[Hiển thị preview roadmap]
+    K --> L[Student lưu roadmap]

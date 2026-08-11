@@ -1,0 +1,58 @@
+@startuml
+!theme plain
+title Activity Swimlane - Quản lý môn học và phân công sinh viên
+
+|User|
+start
+if (Người dùng là quản trị viên?) then (Có)
+  :Quản trị viên đăng nhập;
+  |System|
+  :Mở /admin/subjects;
+  :Hiển thị danh sách môn học;
+
+  |User|
+  if (Tạo hoặc sửa môn?) then (Có)
+    :Nhập tên, mã, tín chỉ, trạng thái và ảnh;
+    |System|
+    :Kiểm tra dữ liệu môn học;
+    if (Dữ liệu hợp lệ?) then (Không)
+      :Hiển thị lỗi validation;
+      stop
+    else (Có)
+      :Lưu môn học;
+      :Cập nhật danh sách môn học;
+      stop
+    endif
+  else (Không)
+  endif
+
+  |User|
+  if (Gán sinh viên?) then (Có)
+    :Chọn sinh viên cần gán;
+    |System|
+    :Mở /admin/subjects/subjectId/students;
+    :Hiển thị sinh viên khả dụng;
+    if (Sinh viên đã được gán?) then (Có)
+      :Hiển thị lỗi gán trùng 409;
+      stop
+    else (Không)
+      :Gán sinh viên vào môn;
+      :Cập nhật danh sách phân công;
+      stop
+    endif
+  else (Gỡ sinh viên)
+    :Chọn sinh viên đang được gán;
+    |System|
+    :Gỡ sinh viên khỏi môn học;
+    :Cập nhật danh sách phân công;
+    stop
+  endif
+else (Sinh viên)
+  :Sinh viên đăng nhập;
+  |System|
+  :Mở /student/my-subjects;
+  :Lọc môn học theo phân công của sinh viên;
+  :Hiển thị môn đã được gán;
+  stop
+endif
+@enduml

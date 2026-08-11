@@ -1,0 +1,33 @@
+@startuml
+!theme plain
+title Activity Swimlane - Sinh viên nộp bài
+
+|User|
+start
+:Sinh viên đăng nhập;
+:Chọn assignment;
+
+|System|
+:Mở /student/assignments;
+:Gọi API chi tiết assignment;
+if (Assignment thuộc sinh viên?) then (Không)
+  :Hiển thị thông báo không có quyền;
+  stop
+else (Có)
+  :Mở form nộp bài;
+endif
+
+|User|
+:Nhập nội dung hoặc chọn file;
+
+|System|
+:Gửi POST /api/student/assignments/assignmentId/submit;
+if (Dữ liệu hợp lệ?) then (Không)
+  :Hiển thị lỗi validation;
+  stop
+else (Có)
+  :Lưu submission;
+  :Hiển thị chi tiết bài nộp;
+  stop
+endif
+@enduml

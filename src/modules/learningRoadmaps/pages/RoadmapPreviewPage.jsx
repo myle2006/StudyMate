@@ -48,8 +48,8 @@ export default function RoadmapPreviewPage() {
       <main className="px-4 py-6 sm:px-6 lg:px-8">
         <EmptyState
           title="Chưa có lộ trình preview"
-          description="Hãy tạo lộ trình bằng AI trước, sau đó quay lại màn hình preview để chỉnh sửa và lưu."
-          actionLabel="Tạo lộ trình AI"
+          description="Hãy tạo lộ trình từ mẫu trước, sau đó quay lại màn hình preview để chỉnh sửa và lưu."
+          actionLabel="Tạo lộ trình từ mẫu"
           actionTo="/student/roadmaps/generate"
         />
       </main>
@@ -61,8 +61,8 @@ export default function RoadmapPreviewPage() {
       <div className="space-y-6">
         <PageHeader
           eyebrow="Preview"
-          title="Xem lại lộ trình AI"
-          description="AI chỉ tạo lộ trình gợi ý. Bạn có thể chỉnh sửa từng nhiệm vụ trước khi chấp nhận."
+          title="Xem lại lộ trình mẫu"
+          description="Đây là bản nháp từ mẫu môn học. Bạn có thể chỉnh sửa từng nhiệm vụ trước khi chấp nhận."
           actions={
             <Button to="/student/roadmaps/generate" variant="secondary">
               <ArrowLeft size={16} /> Tạo lại

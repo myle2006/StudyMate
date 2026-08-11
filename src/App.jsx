@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link, Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
-import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Route as RouteIcon, Target, Users } from "lucide-react";
+import { Link, Navigate, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import LandingPage from "./pages/LandingPage";
@@ -83,6 +83,12 @@ const studentMenu = [
   { label: "Lộ trình học", to: "/student/roadmaps", icon: RouteIcon },
 ];
 
+const guestPreviewMenu = [
+  { label: "Dashboard demo", to: "/student/dashboard", icon: Home },
+  { label: "Lộ trình mẫu", to: "/student/roadmaps", icon: RouteIcon },
+  { label: "Môn học mẫu", to: "/student/my-subjects", icon: BookOpen },
+];
+
 function BrandLogo({ compact = false, subtitle = "StudyMate AI" }) {
   return (
     <>
@@ -101,8 +107,8 @@ function BrandLogo({ compact = false, subtitle = "StudyMate AI" }) {
   );
 }
 
-function Sidebar({ user, onLogout, unreadCount = 0 }) {
-  const menu = user?.role === "admin" ? adminMenu : studentMenu;
+function Sidebar({ user, onLogout, unreadCount = 0, isGuestPreview = false }) {
+  const menu = isGuestPreview ? guestPreviewMenu : user?.role === "admin" ? adminMenu : studentMenu;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 border-r border-slate-200/80 bg-white/95 backdrop-blur lg:flex lg:flex-col">
@@ -113,7 +119,7 @@ function Sidebar({ user, onLogout, unreadCount = 0 }) {
       </div>
 
       <div className="mx-3 mt-3 rounded-xl border border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-4">
-        <p className="text-xs font-bold uppercase text-slate-400">Tài khoản</p>
+        <p className="text-xs font-bold uppercase text-slate-400">{isGuestPreview ? "Bản dùng thử" : "Tài khoản"}</p>
         <p className="mt-2 truncate text-sm font-extrabold text-slate-800">{user?.full_name}</p>
         <p className="truncate text-xs font-semibold text-slate-500">{user?.email}</p>
       </div>
@@ -155,15 +161,16 @@ function Sidebar({ user, onLogout, unreadCount = 0 }) {
           className="flex w-full items-center gap-3 rounded-xl border border-rose-200 bg-white px-3 py-3 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50"
         >
           <LogOut className="h-4 w-4" />
-          Đăng xuất
+          {isGuestPreview ? "Thoát dùng thử" : "Đăng xuất"}
         </button>
       </div>
     </aside>
   );
 }
 
-function MobileNav({ user, onLogout, unreadCount = 0 }) {
-  const menu = user?.role === "admin" ? adminMenu : studentMenu;
+function MobileNav({ user, onLogout, unreadCount = 0, isGuestPreview = false }) {
+  const menu = isGuestPreview ? guestPreviewMenu : user?.role === "admin" ? adminMenu : studentMenu;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
@@ -172,37 +179,45 @@ function MobileNav({ user, onLogout, unreadCount = 0 }) {
           <BrandLogo compact />
           <span className="text-sm font-extrabold text-slate-950">StudyMate AI</span>
         </Link>
-        <button type="button" onClick={onLogout} className="rounded-lg border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600">
-          Đăng xuất
-        </button>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setMenuOpen((current) => !current)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700">
+            {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+          <button type="button" onClick={onLogout} className="rounded-lg border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600">
+            {isGuestPreview ? "Thoát" : "Đăng xuất"}
+          </button>
+        </div>
       </div>
-      <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        {menu.map((item) => {
-          const Icon = item.icon;
+      {menuOpen && (
+        <nav className="mt-3 grid gap-2 sm:grid-cols-2">
+          {menu.map((item) => {
+            const Icon = item.icon;
 
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/admin/dashboard" || item.to === "/student/dashboard"}
-              className={({ isActive }) =>
-                [
-                  "flex flex-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold",
-                  isActive ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700",
-                ].join(" ")
-              }
-            >
-              <Icon className="h-4 w-4" />
-              <span>{item.label}</span>
-              {item.badgeKey === "notifications" && unreadCount > 0 && (
-                <span className="grid min-w-5 place-items-center rounded-full bg-rose-500 px-1.5 text-[11px] font-black leading-5 text-white">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/admin/dashboard" || item.to === "/student/dashboard"}
+                onClick={() => setMenuOpen(false)}
+                className={({ isActive }) =>
+                  [
+                    "flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold",
+                    isActive ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700",
+                  ].join(" ")
+                }
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                {item.badgeKey === "notifications" && unreadCount > 0 && (
+                  <span className="grid min-w-5 place-items-center rounded-full bg-rose-500 px-1.5 text-[11px] font-black leading-5 text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      )}
     </header>
   );
 }
@@ -256,9 +271,36 @@ function AppLayout({ children }) {
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-950 antialiased">
-        <Sidebar user={user} onLogout={handleLogout} unreadCount={unreadCount} />
-        <MobileNav user={user} onLogout={handleLogout} unreadCount={unreadCount} />
+        <Sidebar
+          user={user}
+          onLogout={isGuestPreview ? handleEndPreview : handleLogout}
+          unreadCount={unreadCount}
+          isGuestPreview={isGuestPreview}
+        />
+        <MobileNav
+          user={user}
+          onLogout={isGuestPreview ? handleEndPreview : handleLogout}
+          unreadCount={unreadCount}
+          isGuestPreview={isGuestPreview}
+        />
         <div className="min-h-screen w-full lg:pl-72">
+          {isGuestPreview && (
+            <div className="border-b border-amber-200 bg-amber-50">
+              <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3 px-4 py-3 text-sm font-semibold text-amber-900 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+                <span>
+                  Bạn đang xem demo rút gọn: dashboard, lộ trình mẫu và môn học mẫu. Các thao tác ghi dữ liệu được khóa.
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <Link to="/student/roadmaps/1" className="rounded-lg bg-amber-600 px-3 py-2 text-xs font-black text-white hover:bg-amber-700">
+                    Xem lộ trình mẫu
+                  </Link>
+                  <Link to="/register" className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-black text-amber-900 hover:bg-amber-100">
+                    Đăng ký để lưu
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="mx-auto w-full max-w-[1500px]">{children}</div>
         </div>
       </div>
@@ -308,12 +350,22 @@ function Forbidden() {
 
 function SubjectLegacyRedirect() {
   const { user } = useAuth();
-  return <Navigate to={user?.role === "admin" ? "/admin/subjects" : "/student/subjects"} replace />;
+  const { id } = useParams();
+  const target = user?.role === "admin"
+    ? id ? `/admin/subjects/${id}` : "/admin/subjects"
+    : id ? `/student/my-subjects/${id}` : "/student/my-subjects";
+
+  return <Navigate to={target} replace />;
 }
 
 function GuestPreviewRedirect({ children }) {
   const { isGuestPreview } = useAuth();
   return isGuestPreview ? <Navigate to="/student/roadmaps" replace /> : children;
+}
+
+function GuestPreviewDashboardRedirect({ children }) {
+  const { isGuestPreview } = useAuth();
+  return isGuestPreview ? <Navigate to="/student/dashboard" replace /> : children;
 }
 
 export default function App() {
@@ -355,30 +407,30 @@ export default function App() {
         <Route path="/student/dashboard" element={<StudentRoute><StudentDashboardPage /></StudentRoute>} />
         <Route path="/student/my-subjects" element={<StudentRoute><MySubjectsPage /></StudentRoute>} />
         <Route path="/student/my-subjects/:subjectId" element={<StudentRoute><MySubjectDetailPage /></StudentRoute>} />
-        <Route path="/student/subjects" element={<StudentRoute><Navigate to="/student/my-subjects" replace /></StudentRoute>} />
-        <Route path="/student/subjects/:id" element={<StudentRoute><Navigate to="/student/my-subjects" replace /></StudentRoute>} />
+        <Route path="/student/subjects" element={<StudentRoute><SubjectLegacyRedirect /></StudentRoute>} />
+        <Route path="/student/subjects/:id" element={<StudentRoute><SubjectLegacyRedirect /></StudentRoute>} />
         <Route path="/student/assignments" element={<StudentRoute><StudentAssignmentListPage /></StudentRoute>} />
         <Route path="/student/assignments/:id" element={<StudentRoute><StudentAssignmentDetailPage /></StudentRoute>} />
-        <Route path="/student/assignments/:assignmentId/submit" element={<StudentRoute><StudentSubmissionFormPage /></StudentRoute>} />
+        <Route path="/student/assignments/:assignmentId/submit" element={<StudentRoute><GuestPreviewDashboardRedirect><StudentSubmissionFormPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/submissions/:id" element={<StudentRoute><StudentSubmissionDetailPage /></StudentRoute>} />
         <Route path="/student/lessons" element={<StudentRoute><StudentLessonListPage /></StudentRoute>} />
         <Route path="/student/lessons/:id" element={<StudentRoute><StudentLessonDetailPage /></StudentRoute>} />
         <Route path="/student/grades" element={<StudentRoute><StudentGradesPage /></StudentRoute>} />
         <Route path="/student/grades/:submissionId" element={<StudentRoute><StudentGradeDetailPage /></StudentRoute>} />
         <Route path="/student/learning-goals" element={<StudentRoute><LearningGoalListPage /></StudentRoute>} />
-        <Route path="/student/learning-goals/create" element={<StudentRoute><LearningGoalCreatePage /></StudentRoute>} />
+        <Route path="/student/learning-goals/create" element={<StudentRoute><GuestPreviewDashboardRedirect><LearningGoalCreatePage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/learning-goals/:id" element={<StudentRoute><LearningGoalDetailPage /></StudentRoute>} />
-        <Route path="/student/learning-goals/:id/edit" element={<StudentRoute><LearningGoalEditPage /></StudentRoute>} />
+        <Route path="/student/learning-goals/:id/edit" element={<StudentRoute><GuestPreviewDashboardRedirect><LearningGoalEditPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/roadmaps" element={<StudentRoute><RoadmapListPage /></StudentRoute>} />
-        <Route path="/student/roadmaps/create" element={<StudentRoute><RoadmapCreatePage /></StudentRoute>} />
+        <Route path="/student/roadmaps/create" element={<StudentRoute><GuestPreviewRedirect><RoadmapCreatePage /></GuestPreviewRedirect></StudentRoute>} />
         <Route path="/student/roadmaps/generate" element={<StudentRoute><GuestPreviewRedirect><RoadmapGeneratePage /></GuestPreviewRedirect></StudentRoute>} />
         <Route path="/student/roadmaps/preview" element={<StudentRoute><GuestPreviewRedirect><RoadmapPreviewPage /></GuestPreviewRedirect></StudentRoute>} />
         <Route path="/student/roadmaps/:id" element={<StudentRoute><RoadmapDetailPage /></StudentRoute>} />
-        <Route path="/student/roadmaps/:id/edit" element={<StudentRoute><RoadmapEditPage /></StudentRoute>} />
+        <Route path="/student/roadmaps/:id/edit" element={<StudentRoute><GuestPreviewRedirect><RoadmapEditPage /></GuestPreviewRedirect></StudentRoute>} />
         <Route path="/student/schedules" element={<StudentRoute><StudyScheduleCalendarPage /></StudentRoute>} />
-        <Route path="/student/schedules/create" element={<StudentRoute><StudyScheduleCreatePage /></StudentRoute>} />
+        <Route path="/student/schedules/create" element={<StudentRoute><GuestPreviewDashboardRedirect><StudyScheduleCreatePage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/schedules/:id" element={<StudentRoute><StudyScheduleDetailPage /></StudentRoute>} />
-        <Route path="/student/schedules/:id/edit" element={<StudentRoute><StudyScheduleEditPage /></StudentRoute>} />
+        <Route path="/student/schedules/:id/edit" element={<StudentRoute><GuestPreviewDashboardRedirect><StudyScheduleEditPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/roadmap" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
         <Route path="/notifications" element={<PrivateRoute><NotificationListPage /></PrivateRoute>} />
 

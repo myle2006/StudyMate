@@ -125,8 +125,9 @@ export default function StudentForm() {
         await updateStudent(id, payload);
         toast.success("Đã cập nhật thông tin sinh viên.");
       } else {
-        await createStudent(form);
-        toast.success("Đã thêm sinh viên mới.");
+        const response = await createStudent(form);
+        const temporaryPassword = response.data?.temporary_password;
+        toast.success(temporaryPassword ? `Đã thêm sinh viên mới. Mật khẩu tạm: ${temporaryPassword}` : "Đã thêm sinh viên mới.");
       }
       navigate("/admin/students");
     } catch (err) {
@@ -181,7 +182,7 @@ export default function StudentForm() {
                   type="password"
                   value={form.password}
                   onChange={(event) => updateField("password", event.target.value)}
-                  placeholder="Để trống để dùng mã sinh viên"
+                  placeholder="Để trống để hệ thống sinh mật khẩu tạm"
                 />
               </Field>
             )}

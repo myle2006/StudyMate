@@ -3,10 +3,12 @@
 class SubjectController extends Controller
 {
     private Subject $subject;
+    private RoadmapTemplateProvisioner $roadmapTemplates;
 
     public function __construct()
     {
         $this->subject = new Subject();
+        $this->roadmapTemplates = new RoadmapTemplateProvisioner();
     }
 
     public function index(): void
@@ -66,13 +68,39 @@ class SubjectController extends Controller
         $user = $this->currentUser();
         $data['created_by'] = (int) ($user['id'] ?? 0);
 
-        $subjectId = $this->subject->create($data);
-        $createdSubject = $this->subject->getById($subjectId);
+        try {
+            $this->roadmapTemplates->ensureTables();
+
+            $db = Database::connection();
+            $db->beginTransaction();
+            $subjectId = $this->subject->create($data);
+            $createdSubject = $this->subject->getById($subjectId);
+            $templateReport = $createdSubject
+                ? $this->roadmapTemplates->ensureForSubject($createdSubject, false)
+                : [];
+            $db->commit();
+        } catch (Throwable $exception) {
+            if (isset($db) && $db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            $this->json([
+                'success' => false,
+                'message' => 'Không thể thêm môn học và tạo lộ trình mẫu.',
+                'errors' => [
+                    'roadmap_templates' => $exception->getMessage(),
+                ],
+            ], 500);
+            return;
+        }
 
         $this->json([
             'success' => true,
-            'message' => 'Thêm môn học thành công.',
-            'data' => $createdSubject,
+            'message' => 'Thêm môn học thành công và đã tạo lộ trình mẫu.',
+            'data' => [
+                ...($createdSubject ?? []),
+                'roadmap_templates' => $templateReport,
+            ],
         ], 201);
     }
 

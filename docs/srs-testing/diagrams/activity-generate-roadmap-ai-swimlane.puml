@@ -1,0 +1,35 @@
+@startuml
+!theme plain
+title Activity Swimlane - Tạo roadmap bằng AI
+
+|User|
+start
+:Mở trang tạo roadmap;
+:Nhập môn học, mục tiêu và thời gian học;
+
+|System|
+:Gửi POST /api/student/roadmaps/generate-ai;
+if (AI Provider được cấu hình?) then (Không)
+  :Hiển thị lỗi thiếu API key;
+  stop
+else (Có)
+  :Gọi AI Provider;
+endif
+
+if (Provider trả thành công?) then (Không)
+  :Hiển thị lỗi quota, rate limit hoặc API;
+  stop
+else (Có)
+endif
+
+if (JSON hợp lệ?) then (Không)
+  :Hiển thị lỗi phản hồi AI không hợp lệ;
+  stop
+else (Có)
+  :Hiển thị preview roadmap;
+endif
+
+|User|
+:Lưu roadmap;
+stop
+@enduml

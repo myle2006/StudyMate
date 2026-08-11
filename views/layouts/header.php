@@ -13,7 +13,7 @@
           theme: {
             extend: {
               fontFamily: {
-                sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+                sans: ["Nunito Sans", "ui-sans-serif", "system-ui", "sans-serif"],
               },
               boxShadow: {
                 glow: "0 24px 80px rgba(67, 97, 238, 0.18)",
@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="<?= asset('css/main.css') ?>" />

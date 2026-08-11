@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
+import RoadmapPhaseMap from "./RoadmapPhaseMap";
 import RoadmapProgressBar from "./RoadmapProgressBar";
 
 function normalizeInitial(data = {}) {
@@ -317,7 +318,7 @@ export default function RoadmapPreviewEditor({
           <p className="text-sm leading-6 text-slate-600">
             {allowSubjectSelect
               ? `Bạn đang tự tạo lộ trình cho ${selectedSubject ? `${selectedSubject.subject_code} - ${selectedSubject.subject_name}` : "môn học được gán"}. Sau khi lưu, các bước có ngày và giờ học sẽ được thêm vào lịch cá nhân.`
-              : "Bạn có thể chỉnh sửa lộ trình AI gợi ý trước khi lưu. Sau khi lưu, tiến độ sẽ được tính theo trạng thái từng bước học."}
+              : "Bạn có thể chỉnh sửa lộ trình mẫu trước khi lưu. Sau khi lưu, tiến độ sẽ được tính theo trạng thái từng bước học."}
           </p>
           <Button type="submit" size="lg" className="w-full" disabled={submitting}>
             {submitting ? "Đang lưu..." : submitLabel}
@@ -333,6 +334,8 @@ export default function RoadmapPreviewEditor({
           <Textarea value={form.overview} onChange={(event) => updateField("overview", event.target.value)} rows={4} />
         </Field>
       </Card>
+
+      <RoadmapPhaseMap items={form.items} title="Map xem trước lộ trình" />
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-black text-slate-950">Các bước học</h2>

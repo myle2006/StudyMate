@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Alert, Button, LoadingState, PageHeader, useToast } from "../../../components/ui";
-import { getSubjects } from "../../subjects/services/subjectService";
+import { getMySubjects } from "../../studentSubjects/services/studentSubjectService";
 import StudyScheduleForm from "../components/StudyScheduleForm";
 import { createStudySchedule } from "../services/studyScheduleService";
 
@@ -18,7 +18,7 @@ export default function StudyScheduleCreatePage() {
   useEffect(() => {
     async function loadSubjects() {
       try {
-        const response = await getSubjects();
+        const response = await getMySubjects();
         setSubjects(response.data || []);
       } catch (err) {
         setError(err.message || "Không thể tải danh sách môn học.");

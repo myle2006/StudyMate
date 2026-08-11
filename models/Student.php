@@ -189,6 +189,14 @@ class Student extends Model
     {
         $relations = [
             'subjects' => ['created_by'],
+            'student_subjects' => ['student_id', 'assigned_by'],
+            'assignments' => ['created_by'],
+            'assignment_submissions' => ['student_id', 'graded_by'],
+            'learning_goals' => ['user_id'],
+            'learning_roadmaps' => ['user_id'],
+            'study_schedules' => ['user_id'],
+            'notification_reads' => ['user_id'],
+            'lesson_progress' => ['user_id'],
             'study_plans' => ['user_id', 'student_id'],
             'tasks' => ['user_id', 'student_id'],
             'notes' => ['user_id', 'student_id'],

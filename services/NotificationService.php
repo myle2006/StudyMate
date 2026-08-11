@@ -26,6 +26,14 @@ class NotificationService
             $notifications = array_values(array_filter($notifications, static fn (array $item): bool => ! $item['read']));
         }
 
+        $type = trim((string) ($filters['type'] ?? ''));
+        if ($type !== '') {
+            $notifications = array_values(array_filter(
+                $notifications,
+                fn (array $item): bool => $this->notificationMatchesType($item, $type)
+            ));
+        }
+
         usort($notifications, static function (array $left, array $right): int {
             return strcmp((string) ($right['occurred_at'] ?? ''), (string) ($left['occurred_at'] ?? ''));
         });
@@ -93,7 +101,7 @@ class NotificationService
              WHERE ss.student_id = :student_id_subject
                AND ss.status = :student_subject_status
                AND a.status = :assignment_status
-               AND a.deadline BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 3 DAY)
+               AND a.deadline <= DATE_ADD(NOW(), INTERVAL 3 DAY)
                AND sub.id IS NULL
                AND a.deleted_at IS NULL
                AND s.deleted_at IS NULL
@@ -110,13 +118,17 @@ class NotificationService
             $deadline = strtotime((string) $row['deadline']);
             $hoursLeft = $deadline > 0 ? ($deadline - time()) / 3600 : 99;
 
+            $isOverdue = $hoursLeft < 0;
+
             return [
-                'key' => 'assignment_due:' . $row['id'],
-                'type' => 'assignment_due',
-                'tone' => $hoursLeft <= 24 ? 'rose' : 'amber',
-                'title' => 'Bài tập sắp đến hạn',
+                'key' => 'assignment_due:' . $row['id'] . ':' . strtotime((string) $row['deadline']),
+                'type' => $isOverdue ? 'assignment_overdue' : 'assignment_due',
+                'target_type' => 'assignment',
+                'target_id' => (int) $row['id'],
+                'tone' => $isOverdue || $hoursLeft <= 24 ? 'rose' : 'amber',
+                'title' => $isOverdue ? 'Bài tập đã quá hạn' : 'Bài tập sắp đến hạn',
                 'message' => $row['subject_code'] . ' - ' . $row['title'],
-                'meta' => 'Hạn nộp: ' . $row['deadline'],
+                'meta' => ($isOverdue ? 'Đã quá hạn: ' : 'Hạn nộp: ') . $row['deadline'],
                 'link' => '/student/assignments/' . $row['id'],
                 'occurred_at' => $row['deadline'],
             ];
@@ -132,6 +144,7 @@ class NotificationService
              INNER JOIN subjects s ON s.id = ss.subject_id
              WHERE ss.user_id = :student_id
                AND ss.study_date = CURDATE()
+               AND ss.end_time >= CURTIME()
                AND ss.status = :status
                AND ss.deleted_at IS NULL
                AND s.deleted_at IS NULL
@@ -143,8 +156,10 @@ class NotificationService
         ]);
 
         return array_map(static fn (array $row): array => [
-            'key' => 'schedule_today:' . $row['id'] . ':' . $row['study_date'],
+            'key' => 'schedule_today:' . $row['id'] . ':' . $row['study_date'] . ':' . $row['start_time'] . ':' . $row['end_time'],
             'type' => 'schedule_today',
+            'target_type' => 'schedule',
+            'target_id' => (int) $row['id'],
             'tone' => 'blue',
             'title' => 'Lịch học hôm nay',
             'message' => $row['subject_code'] . ' - ' . $row['title'],
@@ -178,8 +193,10 @@ class NotificationService
         ]);
 
         return array_map(static fn (array $row): array => [
-            'key' => 'roadmap_overdue:' . $row['id'],
+            'key' => 'roadmap_overdue:' . $row['id'] . ':' . $row['overdue_date'] . ':' . $row['overdue_item_count'],
             'type' => 'roadmap_overdue',
+            'target_type' => 'roadmap',
+            'target_id' => (int) $row['id'],
             'tone' => 'rose',
             'title' => 'Lộ trình bị trễ tiến độ',
             'message' => $row['subject_code'] . ' - ' . $row['title'],
@@ -215,8 +232,10 @@ class NotificationService
             $missing = max(0, (int) $row['assigned_count'] - (int) $row['submitted_count']);
 
             return [
-                'key' => 'admin_assignment_due:' . $row['id'],
+                'key' => 'admin_assignment_due:' . $row['id'] . ':' . strtotime((string) $row['deadline']),
                 'type' => 'admin_assignment_due',
+                'target_type' => 'assignment',
+                'target_id' => (int) $row['id'],
                 'tone' => $missing > 0 ? 'amber' : 'green',
                 'title' => 'Deadline bài tập sắp tới',
                 'message' => $row['subject_code'] . ' - ' . $row['title'],
@@ -225,6 +244,26 @@ class NotificationService
                 'occurred_at' => $row['deadline'],
             ];
         }, $statement->fetchAll());
+    }
+
+    private function notificationMatchesType(array $notification, string $type): bool
+    {
+        $notificationType = (string) ($notification['type'] ?? '');
+        $targetType = (string) ($notification['target_type'] ?? '');
+
+        if ($type === 'assignment') {
+            return $targetType === 'assignment' || str_starts_with($notificationType, 'assignment_') || str_starts_with($notificationType, 'admin_assignment_');
+        }
+
+        if ($type === 'schedule') {
+            return $targetType === 'schedule' || str_starts_with($notificationType, 'schedule_');
+        }
+
+        if ($type === 'roadmap') {
+            return $targetType === 'roadmap' || str_starts_with($notificationType, 'roadmap_');
+        }
+
+        return $notificationType === $type || $targetType === $type;
     }
 
     private function readKeys(int $userId): array

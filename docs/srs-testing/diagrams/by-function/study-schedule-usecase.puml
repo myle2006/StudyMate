@@ -1,0 +1,20 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Student
+
+rectangle "Study Schedule" {
+  usecase "Xem lịch học" as SCH01
+  usecase "Xem chi tiết lịch học" as SCH02
+  usecase "Tạo lịch học" as SCH03
+  usecase "Cập nhật lịch học" as SCH04
+  usecase "Xóa lịch học" as SCH05
+}
+
+Student -- SCH01
+Student -- SCH02
+Student -- SCH03
+Student -- SCH04
+Student -- SCH05
+@enduml

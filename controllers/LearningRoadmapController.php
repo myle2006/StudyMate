@@ -5,95 +5,12 @@ class LearningRoadmapController extends Controller
     private LearningRoadmap $roadmap;
     private LearningRoadmapItem $item;
     private LearningGoal $learningGoal;
-    private AIService $aiService;
 
     public function __construct()
     {
         $this->roadmap = new LearningRoadmap();
         $this->item = new LearningRoadmapItem();
         $this->learningGoal = new LearningGoal();
-        $this->aiService = new AIService();
-    }
-
-    public function aiStatus(): void
-    {
-        $this->json([
-            'success' => true,
-            'message' => 'Lấy trạng thái AI thành công.',
-            'data' => $this->aiService->status(),
-        ]);
-    }
-
-    public function generateAi(): void
-    {
-        $studentId = $this->currentUserId();
-        $data = $this->normalizeRoadmapData($this->input());
-        $this->mergeLearningGoalData($data, $studentId);
-
-        $errors = $this->validateContext($data, $studentId, false, false);
-        if ($errors !== []) {
-            $this->validationFailed($errors);
-            return;
-        }
-
-        $subject = $this->roadmap->findAssignedSubject((int) $data['subject_id'], $studentId);
-
-        try {
-            $aiResult = $this->aiService->generateLearningRoadmap([
-                ...$data,
-                'subject_code' => $subject['subject_code'] ?? '',
-                'subject_name' => $subject['subject_name'] ?? '',
-            ]);
-        } catch (Throwable $exception) {
-            $message = $exception->getMessage();
-            $haystack = strtolower($message);
-            $statusCode = (
-                str_contains($haystack, 'quota')
-                || str_contains($haystack, 'credit')
-                || str_contains($haystack, 'tạm ngưng')
-                || str_contains($haystack, 'giới hạn')
-                || str_contains($haystack, 'rate limit')
-            ) ? 429 : 502;
-            $this->json([
-                'success' => false,
-                'message' => 'Không thể tạo lộ trình bằng AI: ' . $exception->getMessage(),
-                'errors' => [],
-            ], $statusCode);
-            return;
-        }
-
-        $items = $this->attachPlannedSchedule($aiResult['items'], $data);
-
-        $this->json([
-            'success' => true,
-            'message' => 'Tạo lộ trình gợi ý bằng AI thành công. Vui lòng xem lại trước khi lưu.',
-            'data' => [
-                'user_id' => $studentId,
-                'subject_id' => (int) $data['subject_id'],
-                'learning_goal_id' => $data['learning_goal_id'] !== '' ? (int) $data['learning_goal_id'] : null,
-                'subject_code' => $subject['subject_code'] ?? '',
-                'subject_name' => $subject['subject_name'] ?? '',
-                'title' => $aiResult['title'],
-                'overview' => $aiResult['overview'],
-                'goal' => $data['goal'],
-                'current_level' => $data['current_level'],
-                'study_time_per_day' => (float) $data['study_time_per_day'],
-                'available_weekdays' => $data['available_weekdays'],
-                'preferred_start_time' => $data['preferred_start_time'],
-                'session_duration_minutes' => (int) $data['session_duration_minutes'],
-                'max_daily_minutes' => $data['max_daily_minutes'] !== '' ? (int) $data['max_daily_minutes'] : null,
-                'max_weekly_minutes' => $data['max_weekly_minutes'] !== '' ? (int) $data['max_weekly_minutes'] : null,
-                'reminder_minutes_before' => (int) $data['reminder_minutes_before'],
-                'start_date' => $data['start_date'],
-                'end_date' => $data['end_date'],
-                'generated_by_ai' => true,
-                'ai_prompt' => $aiResult['ai_prompt'],
-                'ai_raw_response' => $aiResult['ai_raw_response'],
-                'status' => 'active',
-                'progress_percent' => 0,
-                'items' => $items,
-            ],
-        ]);
     }
 
     public function store(): void
@@ -468,72 +385,6 @@ class LearningRoadmapController extends Controller
         $roadmap['items'] = $this->item->getForRoadmap($roadmapId);
 
         return $roadmap;
-    }
-
-    private function attachPlannedSchedule(array $items, array $data): array
-    {
-        $dates = $this->availableStudyDates($data['start_date'], $data['end_date'], $data['available_weekdays']);
-        $dates = $dates !== [] ? $dates : [$data['start_date']];
-        $sessionDuration = max(15, (int) ($data['session_duration_minutes'] ?: 60));
-        $maxDailyMinutes = (int) ($data['max_daily_minutes'] ?: max($sessionDuration, (int) round(((float) $data['study_time_per_day']) * 60)));
-        $startMinute = $this->timeToMinutes($data['preferred_start_time']);
-        $dailyUsed = [];
-        $dateIndex = 0;
-        $start = new DateTimeImmutable($data['start_date']);
-
-        return array_map(function (array $item, int $index) use ($dates, $sessionDuration, $maxDailyMinutes, $startMinute, &$dailyUsed, &$dateIndex, $start): array {
-            $duration = max(15, (int) ($item['duration_minutes'] ?? $sessionDuration));
-            $plannedDate = trim((string) ($item['planned_date'] ?? ''));
-            $startTime = LearningRoadmapValidation::normalizeTime((string) ($item['start_time'] ?? ''));
-
-            if ($plannedDate === '' || $startTime === '') {
-                $attempts = 0;
-                do {
-                    $plannedDate = $dates[$dateIndex % count($dates)];
-                    $used = (int) ($dailyUsed[$plannedDate] ?? 0);
-                    if ($used + $duration <= $maxDailyMinutes || $attempts >= count($dates)) {
-                        break;
-                    }
-                    $dateIndex++;
-                    $attempts++;
-                } while (true);
-
-                $used = (int) ($dailyUsed[$plannedDate] ?? 0);
-                $startTime = $this->minutesToTime($startMinute + $used);
-                $dailyUsed[$plannedDate] = $used + $duration;
-                if ($dailyUsed[$plannedDate] >= $maxDailyMinutes) {
-                    $dateIndex++;
-                }
-            }
-
-            $planned = new DateTimeImmutable($plannedDate);
-
-            return [
-                ...$item,
-                'week_number' => max(1, (int) floor(((int) $start->diff($planned)->format('%a')) / 7) + 1),
-                'order_number' => $index + 1,
-                'planned_date' => $plannedDate,
-                'start_time' => $startTime,
-                'duration_minutes' => $duration,
-                'priority' => in_array(($item['priority'] ?? 'medium'), ['low', 'medium', 'high'], true) ? $item['priority'] : 'medium',
-                'status' => $item['status'] ?? 'not_started',
-            ];
-        }, $items, array_keys($items));
-    }
-
-    private function availableStudyDates(string $startDate, string $endDate, array $weekdays): array
-    {
-        $start = new DateTimeImmutable($startDate);
-        $end = new DateTimeImmutable($endDate);
-        $dates = [];
-
-        for ($date = $start; $date <= $end; $date = $date->modify('+1 day')) {
-            if (in_array((int) $date->format('N'), $weekdays, true)) {
-                $dates[] = $date->format('Y-m-d');
-            }
-        }
-
-        return $dates;
     }
 
     private function normalizeItemResultData(array $input): array

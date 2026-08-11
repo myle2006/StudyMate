@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, LoadingState, PageHeader, useToast } from "../../../components/ui";
-import { getSubjects } from "../../subjects/services/subjectService";
+import { getMySubjects } from "../../studentSubjects/services/studentSubjectService";
 import StudyScheduleForm from "../components/StudyScheduleForm";
 import { getStudyScheduleById, updateStudySchedule } from "../services/studyScheduleService";
 
@@ -23,7 +23,7 @@ export default function StudyScheduleEditPage() {
       setError("");
 
       try {
-        const [subjectResponse, scheduleResponse] = await Promise.all([getSubjects(), getStudyScheduleById(id)]);
+        const [subjectResponse, scheduleResponse] = await Promise.all([getMySubjects(), getStudyScheduleById(id)]);
         setSubjects(subjectResponse.data || []);
         setSchedule(scheduleResponse.data);
       } catch (err) {

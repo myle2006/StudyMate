@@ -18,6 +18,7 @@ class NotificationController extends Controller
             'message' => 'Lấy danh sách thông báo thành công.',
             'data' => $this->notifications->listForUser($user, [
                 'status' => trim((string) ($_GET['status'] ?? '')),
+                'type' => trim((string) ($_GET['type'] ?? '')),
             ]),
             'unread_count' => $this->notifications->unreadCount($user),
         ]);

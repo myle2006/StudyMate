@@ -1,0 +1,24 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Guest
+actor Admin
+actor Student
+
+rectangle "Authentication" {
+  usecase "Đăng ký tài khoản" as AUC01
+  usecase "Đăng nhập" as AUC02
+  usecase "Xem thông tin tài khoản" as AUC03
+  usecase "Đăng xuất" as AUC04
+}
+
+Guest -- AUC01
+Guest -- AUC02
+Admin -- AUC02
+Admin -- AUC03
+Admin -- AUC04
+Student -- AUC02
+Student -- AUC03
+Student -- AUC04
+@enduml

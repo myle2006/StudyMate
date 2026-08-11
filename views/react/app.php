@@ -16,7 +16,7 @@
           theme: {
             extend: {
               fontFamily: {
-                sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"]
+                sans: ["Nunito Sans", "ui-sans-serif", "system-ui", "sans-serif"]
               }
             }
           }
@@ -26,7 +26,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <?php
       $manifestPath = BASE_PATH . '/public/build/react/.vite/manifest.json';
       $manifest = file_exists($manifestPath)
@@ -46,7 +46,7 @@
     <?php if ($entry): ?>
       <script type="module" src="<?= public_url_path() . '/build/react/' . $entry['file'] ?>"></script>
     <?php else: ?>
-      <div style="font-family: Inter, Arial, sans-serif; padding: 32px;">
+      <div style="font-family: 'Nunito Sans', Arial, sans-serif; padding: 32px;">
         <h1>React app chưa được build</h1>
         <p>Chạy <code>npm install</code> rồi <code>npm run build</code> trong thư mục dự án.</p>
       </div>
