@@ -33,6 +33,7 @@ import AdminAssignmentSubmissionsPage from "./modules/assignments/pages/AdminAss
 import AdminSubmissionDetailPage from "./modules/assignments/pages/AdminSubmissionDetailPage";
 import StudentAssignmentListPage from "./modules/assignments/pages/StudentAssignmentListPage";
 import StudentAssignmentDetailPage from "./modules/assignments/pages/StudentAssignmentDetailPage";
+import StudentQuizPage from "./modules/assignments/pages/StudentQuizPage";
 import StudentSubmissionFormPage from "./modules/assignments/pages/StudentSubmissionFormPage";
 import StudentSubmissionDetailPage from "./modules/assignments/pages/StudentSubmissionDetailPage";
 import StudentGradesPage from "./modules/assignments/pages/StudentGradesPage";
@@ -60,6 +61,7 @@ import { getUnreadNotificationCount } from "./modules/notifications/services/not
 
 const publicBasePath = `${window.STUDYMATE_BASE_PATH || ""}/public`;
 const logoImage = `${publicBasePath}/assets/images/plt-solutions-logo.png`;
+const brandSlogan = "PLT Solutions – Học kỹ năng nghề CNTT từ doanh nghiệp";
 
 const adminMenu = [
   { label: "Dashboard", to: "/admin/dashboard", icon: Home },
@@ -89,7 +91,7 @@ const guestPreviewMenu = [
   { label: "Môn học mẫu", to: "/student/my-subjects", icon: BookOpen },
 ];
 
-function BrandLogo({ compact = false, subtitle = "StudyMate AI" }) {
+function BrandLogo({ compact = false, subtitle = brandSlogan }) {
   return (
     <>
       <span
@@ -114,7 +116,7 @@ function Sidebar({ user, onLogout, unreadCount = 0, isGuestPreview = false }) {
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 border-r border-slate-200/80 bg-white/95 backdrop-blur lg:flex lg:flex-col">
       <div className="border-b border-slate-200/80 px-5 py-5">
         <Link to={user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard"} className="flex items-center gap-3">
-          <BrandLogo subtitle={user?.role === "admin" ? "Trang quản trị" : "Không gian học tập"} />
+          <BrandLogo subtitle={brandSlogan} />
         </Link>
       </div>
 
@@ -177,7 +179,7 @@ function MobileNav({ user, onLogout, unreadCount = 0, isGuestPreview = false }) 
       <div className="flex items-center justify-between gap-3">
         <Link to={user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard"} className="flex items-center gap-2">
           <BrandLogo compact />
-          <span className="text-sm font-extrabold text-slate-950">StudyMate AI</span>
+          <span className="text-sm font-extrabold text-slate-950">StudyMate</span>
         </Link>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => setMenuOpen((current) => !current)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700">
@@ -411,6 +413,7 @@ export default function App() {
         <Route path="/student/subjects/:id" element={<StudentRoute><SubjectLegacyRedirect /></StudentRoute>} />
         <Route path="/student/assignments" element={<StudentRoute><StudentAssignmentListPage /></StudentRoute>} />
         <Route path="/student/assignments/:id" element={<StudentRoute><StudentAssignmentDetailPage /></StudentRoute>} />
+        <Route path="/student/assignments/:assignmentId/quiz" element={<StudentRoute><GuestPreviewDashboardRedirect><StudentQuizPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/assignments/:assignmentId/submit" element={<StudentRoute><GuestPreviewDashboardRedirect><StudentSubmissionFormPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/submissions/:id" element={<StudentRoute><StudentSubmissionDetailPage /></StudentRoute>} />
         <Route path="/student/lessons" element={<StudentRoute><StudentLessonListPage /></StudentRoute>} />
@@ -422,11 +425,11 @@ export default function App() {
         <Route path="/student/learning-goals/:id" element={<StudentRoute><LearningGoalDetailPage /></StudentRoute>} />
         <Route path="/student/learning-goals/:id/edit" element={<StudentRoute><GuestPreviewDashboardRedirect><LearningGoalEditPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/roadmaps" element={<StudentRoute><RoadmapListPage /></StudentRoute>} />
-        <Route path="/student/roadmaps/create" element={<StudentRoute><GuestPreviewRedirect><RoadmapCreatePage /></GuestPreviewRedirect></StudentRoute>} />
-        <Route path="/student/roadmaps/generate" element={<StudentRoute><GuestPreviewRedirect><RoadmapGeneratePage /></GuestPreviewRedirect></StudentRoute>} />
-        <Route path="/student/roadmaps/preview" element={<StudentRoute><GuestPreviewRedirect><RoadmapPreviewPage /></GuestPreviewRedirect></StudentRoute>} />
+        <Route path="/student/roadmaps/create" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
+        <Route path="/student/roadmaps/generate" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
+        <Route path="/student/roadmaps/preview" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
         <Route path="/student/roadmaps/:id" element={<StudentRoute><RoadmapDetailPage /></StudentRoute>} />
-        <Route path="/student/roadmaps/:id/edit" element={<StudentRoute><GuestPreviewRedirect><RoadmapEditPage /></GuestPreviewRedirect></StudentRoute>} />
+        <Route path="/student/roadmaps/:id/edit" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
         <Route path="/student/schedules" element={<StudentRoute><StudyScheduleCalendarPage /></StudentRoute>} />
         <Route path="/student/schedules/create" element={<StudentRoute><GuestPreviewDashboardRedirect><StudyScheduleCreatePage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/schedules/:id" element={<StudentRoute><StudyScheduleDetailPage /></StudentRoute>} />

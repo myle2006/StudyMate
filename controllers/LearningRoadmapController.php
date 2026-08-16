@@ -382,7 +382,7 @@ class LearningRoadmapController extends Controller
             return null;
         }
 
-        $roadmap['items'] = $this->item->getForRoadmap($roadmapId);
+        $roadmap['items'] = $this->item->getForRoadmap($roadmapId, $studentId);
 
         return $roadmap;
     }

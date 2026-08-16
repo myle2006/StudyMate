@@ -146,7 +146,8 @@ class RoadmapTemplate extends Model
 
         $placeholders = implode(',', array_fill(0, count($phaseIds), '?'));
         $statement = $this->db()->prepare(
-            "SELECT id, phase_id, task_number, week_number, title, description,
+            "SELECT id, phase_id, lesson_id, assignment_id, content_type, branch_label,
+                    is_required, allow_skip, task_number, week_number, title, description,
                     expected_result, suggested_task, reference_materials,
                     completion_criteria, priority
              FROM roadmap_template_tasks
@@ -154,14 +155,64 @@ class RoadmapTemplate extends Model
              ORDER BY phase_id ASC, week_number ASC, task_number ASC"
         );
         $statement->execute($phaseIds);
+        $tasks = $statement->fetchAll();
+        $dependenciesByLesson = $this->getLessonDependencies(array_filter(array_map(
+            static fn (array $task): ?int => ! empty($task['lesson_id']) ? (int) $task['lesson_id'] : null,
+            $tasks
+        )));
 
-        return array_map(function (array $task): array {
+        return array_map(function (array $task) use ($dependenciesByLesson): array {
             $task['id'] = (int) $task['id'];
             $task['phase_id'] = (int) $task['phase_id'];
+            $task['lesson_id'] = ! empty($task['lesson_id']) ? (int) $task['lesson_id'] : null;
+            $task['assignment_id'] = ! empty($task['assignment_id']) ? (int) $task['assignment_id'] : null;
+            $task['is_required'] = (bool) ($task['is_required'] ?? true);
+            $task['allow_skip'] = (bool) ($task['allow_skip'] ?? false);
             $task['task_number'] = (int) $task['task_number'];
             $task['week_number'] = (int) $task['week_number'];
+            $task['prerequisite_lesson_ids'] = $task['lesson_id'] !== null ? ($dependenciesByLesson[$task['lesson_id']] ?? []) : [];
 
             return $task;
-        }, $statement->fetchAll());
+        }, $tasks);
+    }
+
+    private function getLessonDependencies(array $lessonIds): array
+    {
+        $this->ensureLessonDependencySchema();
+        $lessonIds = array_values(array_unique(array_map('intval', $lessonIds)));
+        if ($lessonIds === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($lessonIds), '?'));
+        $statement = $this->db()->prepare(
+            "SELECT lesson_id, prerequisite_lesson_id
+             FROM lesson_dependencies
+             WHERE lesson_id IN ({$placeholders})
+             ORDER BY id ASC"
+        );
+        $statement->execute($lessonIds);
+
+        $dependencies = [];
+        foreach ($statement->fetchAll() as $row) {
+            $dependencies[(int) $row['lesson_id']][] = (int) $row['prerequisite_lesson_id'];
+        }
+
+        return $dependencies;
+    }
+
+    private function ensureLessonDependencySchema(): void
+    {
+        $path = BASE_PATH . '/database/migrations/create_lesson_dependencies_table.sql';
+        $sql = file_get_contents($path);
+        if ($sql === false) {
+            return;
+        }
+
+        foreach (array_filter(array_map('trim', explode(';', $sql))) as $statement) {
+            if ($statement !== '') {
+                $this->db()->exec($statement);
+            }
+        }
     }
 }

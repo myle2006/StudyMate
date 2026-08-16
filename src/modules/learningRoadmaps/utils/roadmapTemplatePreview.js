@@ -47,6 +47,13 @@ export function buildRoadmapPreviewFromDbTemplate(data, template) {
       const item = {
         week_number: Number(task.week_number || phase.start_week || 1),
         order_number: orderNumber,
+        lesson_id: task.lesson_id || null,
+        assignment_id: task.assignment_id || null,
+        prerequisite_lesson_ids: task.prerequisite_lesson_ids || [],
+        content_type: task.content_type || "lesson",
+        branch_label: task.branch_label || "",
+        is_required: task.is_required ?? true,
+        allow_skip: Boolean(task.allow_skip),
         title: task.title,
         description: [
           phase.title ? `Giai đoạn ${phase.phase_number}: ${phase.title}` : "",

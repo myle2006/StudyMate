@@ -36,6 +36,7 @@ $router->get('/student/my-subjects', [HomeController::class, 'dashboard']);
 $router->get('/student/my-subjects/{subjectId}', [HomeController::class, 'dashboard']);
 $router->get('/student/assignments', [HomeController::class, 'dashboard']);
 $router->get('/student/assignments/{id}', [HomeController::class, 'dashboard']);
+$router->get('/student/assignments/{assignmentId}/quiz', [HomeController::class, 'dashboard']);
 $router->get('/student/assignments/{assignmentId}/submit', [HomeController::class, 'dashboard']);
 $router->get('/student/submissions/{id}', [HomeController::class, 'dashboard']);
 $router->get('/student/lessons', [HomeController::class, 'dashboard']);

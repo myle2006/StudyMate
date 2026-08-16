@@ -42,7 +42,13 @@ class LessonController extends Controller
         $data = $this->normalizeData($this->requestData());
         $data['created_by'] = (int) (($this->currentUser() ?? [])['id'] ?? 0);
         $file = $this->uploadedMaterial();
+        $quizFile = $this->uploadedQuizFile();
+        $syncService = new LessonRoadmapSyncService();
         $errors = $this->validateData($data, $file);
+        $quizFileError = $syncService->validateQuizFile($quizFile);
+        if ($quizFileError !== null) {
+            $errors['quiz_file'] = $quizFileError;
+        }
 
         if ($errors !== []) {
             $this->validationFailed($errors);
@@ -59,11 +65,29 @@ class LessonController extends Controller
         }
 
         $lessonId = $this->lesson->create($data);
+        $lesson = $this->lesson->findAdmin($lessonId);
+        $syncReport = [];
+        if ($lesson !== null) {
+            try {
+                $syncReport = $syncService->syncAfterLessonCreated($lesson, (int) $data['created_by'], $quizFile);
+            } catch (Throwable $exception) {
+                error_log($exception);
+                $syncReport = [
+                    'templates' => 0,
+                    'roadmaps' => 0,
+                    'assignment_id' => null,
+                    'error' => 'Bài học đã được tạo nhưng chưa đồng bộ được quiz/roadmap.',
+                ];
+            }
+        }
 
         $this->json([
             'success' => true,
             'message' => 'Tạo bài học thành công.',
-            'data' => $this->lesson->findAdmin($lessonId),
+            'data' => [
+                ...($lesson ?? []),
+                'roadmap_sync' => $syncReport,
+            ],
         ], 201);
     }
 
@@ -78,7 +102,13 @@ class LessonController extends Controller
 
         $data = $this->normalizeData($this->requestData(), $current);
         $file = $this->uploadedMaterial();
+        $quizFile = $this->uploadedQuizFile();
+        $syncService = new LessonRoadmapSyncService();
         $errors = $this->validateData($data, $file);
+        $quizFileError = $syncService->validateQuizFile($quizFile);
+        if ($quizFileError !== null) {
+            $errors['quiz_file'] = $quizFileError;
+        }
 
         if ($errors !== []) {
             $this->validationFailed($errors);
@@ -95,19 +125,56 @@ class LessonController extends Controller
         }
 
         $this->lesson->update($lessonId, $data);
+        $lesson = $this->lesson->findAdmin($lessonId);
+        $syncReport = [];
+        if ($lesson !== null) {
+            try {
+                $syncReport = $syncService->syncAfterLessonUpdated(
+                    $lesson,
+                    $quizFile,
+                    (int) (($this->currentUser() ?? [])['id'] ?? 0)
+                );
+            } catch (Throwable $exception) {
+                error_log($exception);
+                $syncReport = [
+                    'templates' => 0,
+                    'roadmaps' => 0,
+                    'assignment_id' => null,
+                    'error' => 'Bai hoc da cap nhat nhung chua dong bo duoc roadmap.',
+                ];
+            }
+        }
 
         $this->json([
             'success' => true,
             'message' => 'Cập nhật bài học thành công.',
-            'data' => $this->lesson->findAdmin($lessonId),
+            'data' => [
+                ...($lesson ?? []),
+                'roadmap_sync' => $syncReport,
+            ],
         ]);
     }
 
     public function destroy(string|int $id): void
     {
-        if (! $this->lesson->delete((int) $id)) {
+        $lessonId = (int) $id;
+        $lesson = $this->lesson->findAdmin($lessonId);
+        if ($lesson === null || ! $this->lesson->delete($lessonId)) {
             $this->notFound();
             return;
+        }
+
+        $syncReport = [];
+        try {
+            $syncReport = (new LessonRoadmapSyncService())->syncAfterLessonDeleted($lesson);
+        } catch (Throwable $exception) {
+            error_log($exception);
+            $syncReport = [
+                'templates' => 0,
+                'roadmaps' => 0,
+                'dependencies' => 0,
+                'error' => 'Bai hoc da xoa nhung chua dong bo duoc roadmap.',
+            ];
         }
 
         $this->json([
@@ -172,6 +239,7 @@ class LessonController extends Controller
     {
         return [
             'subject_id' => trim((string) ($input['subject_id'] ?? $current['subject_id'] ?? '')),
+            'chapter' => trim((string) ($input['chapter'] ?? $current['chapter'] ?? '')),
             'title' => trim((string) ($input['title'] ?? $current['title'] ?? '')),
             'content' => trim((string) ($input['content'] ?? $current['content'] ?? '')),
             'video_url' => trim((string) ($input['video_url'] ?? $current['video_url'] ?? '')),
@@ -210,6 +278,17 @@ class LessonController extends Controller
     private function uploadedMaterial(): ?array
     {
         $file = $_FILES['material'] ?? $_FILES['material_file'] ?? null;
+
+        if (! is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        return $file;
+    }
+
+    private function uploadedQuizFile(): ?array
+    {
+        $file = $_FILES['quiz_file'] ?? $_FILES['quiz'] ?? null;
 
         if (! is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return null;

@@ -37,7 +37,7 @@ function Header() {
           </span>
           <span>
             <span className="block text-base font-black leading-5 text-slate-950">StudyMate</span>
-            <span className="block text-xs font-semibold leading-5 text-slate-500">Góc học tập cá nhân</span>
+            <span className="block text-xs font-semibold leading-5 text-slate-500">PLT Solutions – Học kỹ năng nghề CNTT từ doanh nghiệp</span>
           </span>
         </a>
 
@@ -109,7 +109,7 @@ function Hero() {
             Dashboard học tập thân thiện cho sinh viên
           </p>
           <h1 className="mt-6 text-4xl font-black leading-[1.05] text-slate-950 sm:text-6xl">
-            Học gọn hơn, deadline bớt đáng sợ hơn.
+            PLT Solutions – Học kỹ năng nghề CNTT từ doanh nghiệp
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
             StudyMate gom môn học, lịch học, bài tập, bài học, thông báo, điểm số và lộ trình vào một không gian học tập sáng sủa, dễ theo dõi mỗi ngày.

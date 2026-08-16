@@ -42,6 +42,12 @@ CREATE TABLE IF NOT EXISTS roadmap_template_phases (
 CREATE TABLE IF NOT EXISTS roadmap_template_tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     phase_id INT NOT NULL,
+    lesson_id INT NULL,
+    assignment_id INT NULL,
+    content_type ENUM('lesson', 'quiz', 'practice', 'project', 'reading') NOT NULL DEFAULT 'lesson',
+    branch_label VARCHAR(80) NULL,
+    is_required TINYINT(1) NOT NULL DEFAULT 1,
+    allow_skip TINYINT(1) NOT NULL DEFAULT 0,
     task_number TINYINT UNSIGNED NOT NULL,
     week_number TINYINT UNSIGNED NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -55,5 +61,7 @@ CREATE TABLE IF NOT EXISTS roadmap_template_tasks (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_roadmap_template_tasks_phase FOREIGN KEY (phase_id) REFERENCES roadmap_template_phases(id) ON DELETE CASCADE,
     UNIQUE KEY uq_roadmap_template_task_number (phase_id, task_number),
-    INDEX idx_roadmap_template_tasks_phase_order (phase_id, week_number, task_number)
+    INDEX idx_roadmap_template_tasks_phase_order (phase_id, week_number, task_number),
+    INDEX idx_roadmap_template_tasks_lesson (lesson_id),
+    INDEX idx_roadmap_template_tasks_assignment (assignment_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

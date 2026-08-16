@@ -32,6 +32,12 @@ CREATE TABLE IF NOT EXISTS learning_roadmaps (
 CREATE TABLE IF NOT EXISTS learning_roadmap_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     roadmap_id INT NOT NULL,
+    lesson_id INT NULL,
+    assignment_id INT NULL,
+    content_type ENUM('lesson', 'quiz', 'practice', 'project', 'reading') NOT NULL DEFAULT 'lesson',
+    branch_label VARCHAR(80) NULL,
+    is_required TINYINT(1) NOT NULL DEFAULT 1,
+    allow_skip TINYINT(1) NOT NULL DEFAULT 0,
     week_number INT NOT NULL,
     order_number INT NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -63,3 +69,5 @@ CREATE INDEX IF NOT EXISTS idx_learning_roadmaps_goal ON learning_roadmaps (lear
 CREATE INDEX IF NOT EXISTS idx_learning_roadmaps_deleted_at ON learning_roadmaps (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_roadmap_order ON learning_roadmap_items (roadmap_id, week_number, order_number);
 CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_status ON learning_roadmap_items (status);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_lesson ON learning_roadmap_items (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_assignment ON learning_roadmap_items (assignment_id);

@@ -1,0 +1,4 @@
+question_type,question,option_a,option_b,option_c,option_d,correct_answer,points,explanation
+single_choice,"Mục tiêu chính của bài học này là gì?","Nắm khái niệm cốt lõi","Bỏ qua thực hành","Chỉ đọc tài liệu","Không cần kiểm tra","A",1,"Chọn đáp án thể hiện đúng mục tiêu đầu ra."
+single_choice,"Khi hoàn thành bài học, sinh viên cần nộp minh chứng nào?","Không cần nộp","Quiz hoặc bài tập xác nhận","Chỉ điểm danh","Chỉ xem video","B",1,"Quiz/bài tập giúp xác nhận mức độ hoàn thành."
+short_answer,"Hãy tóm tắt nội dung quan trọng nhất của bài học trong 3-5 câu.",,,,,,2,"Giảng viên chấm theo mức độ hiểu ý chính."

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS student_subjects (
 CREATE TABLE IF NOT EXISTS assignments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     subject_id INT NOT NULL,
+    chapter VARCHAR(120) NOT NULL DEFAULT 'Chuong 1',
     title VARCHAR(255) NOT NULL,
     description TEXT NULL,
     deadline DATETIME NOT NULL,
@@ -129,6 +130,12 @@ CREATE TABLE IF NOT EXISTS learning_roadmaps (
 CREATE TABLE IF NOT EXISTS learning_roadmap_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     roadmap_id INT NOT NULL,
+    lesson_id INT NULL,
+    assignment_id INT NULL,
+    content_type ENUM('lesson', 'quiz', 'practice', 'project', 'reading') NOT NULL DEFAULT 'lesson',
+    branch_label VARCHAR(80) NULL,
+    is_required TINYINT(1) NOT NULL DEFAULT 1,
+    allow_skip TINYINT(1) NOT NULL DEFAULT 0,
     week_number INT NOT NULL,
     order_number INT NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -153,8 +160,21 @@ CREATE TABLE IF NOT EXISTS learning_roadmap_items (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_learning_roadmap_items_roadmap FOREIGN KEY (roadmap_id) REFERENCES learning_roadmaps(id),
     INDEX idx_learning_roadmap_items_roadmap_order (roadmap_id, week_number, order_number),
-    INDEX idx_learning_roadmap_items_status (status)
+    INDEX idx_learning_roadmap_items_status (status),
+    INDEX idx_learning_roadmap_items_lesson (lesson_id),
+    INDEX idx_learning_roadmap_items_assignment (assignment_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE learning_roadmap_items
+    ADD COLUMN IF NOT EXISTS lesson_id INT NULL AFTER roadmap_id,
+    ADD COLUMN IF NOT EXISTS assignment_id INT NULL AFTER lesson_id,
+    ADD COLUMN IF NOT EXISTS content_type ENUM('lesson', 'quiz', 'practice', 'project', 'reading') NOT NULL DEFAULT 'lesson' AFTER assignment_id,
+    ADD COLUMN IF NOT EXISTS branch_label VARCHAR(80) NULL AFTER content_type,
+    ADD COLUMN IF NOT EXISTS is_required TINYINT(1) NOT NULL DEFAULT 1 AFTER branch_label,
+    ADD COLUMN IF NOT EXISTS allow_skip TINYINT(1) NOT NULL DEFAULT 0 AFTER is_required;
+
+CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_lesson ON learning_roadmap_items (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_learning_roadmap_items_assignment ON learning_roadmap_items (assignment_id);
 
 COMMIT;
 
@@ -194,6 +214,9 @@ CREATE TABLE IF NOT EXISTS lessons (
     CONSTRAINT fk_lessons_created_by FOREIGN KEY (created_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+ALTER TABLE lessons
+    ADD COLUMN IF NOT EXISTS chapter VARCHAR(120) NOT NULL DEFAULT 'Chuong 1' AFTER subject_id;
+
 CREATE TABLE IF NOT EXISTS lesson_progress (
     id INT AUTO_INCREMENT PRIMARY KEY,
     lesson_id INT NOT NULL,
@@ -207,7 +230,44 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
     CONSTRAINT uq_lesson_progress_student UNIQUE (lesson_id, student_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS lesson_dependencies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subject_id INT NOT NULL,
+    lesson_id INT NOT NULL,
+    prerequisite_lesson_id INT NOT NULL,
+    relation_type ENUM('required', 'recommended', 'optional') NOT NULL DEFAULT 'required',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lesson_dependencies_subject FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+    CONSTRAINT fk_lesson_dependencies_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+    CONSTRAINT fk_lesson_dependencies_prerequisite FOREIGN KEY (prerequisite_lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_lesson_dependency_pair (lesson_id, prerequisite_lesson_id),
+    INDEX idx_lesson_dependencies_subject (subject_id),
+    INDEX idx_lesson_dependencies_prerequisite (prerequisite_lesson_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE INDEX IF NOT EXISTS idx_notification_reads_user ON notification_reads (user_id);
 CREATE INDEX IF NOT EXISTS idx_lessons_subject_status ON lessons (subject_id, status);
+CREATE INDEX IF NOT EXISTS idx_lessons_subject_chapter ON lessons (subject_id, chapter);
 CREATE INDEX IF NOT EXISTS idx_lessons_deleted_at ON lessons (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_lesson_progress_student_status ON lesson_progress (student_id, status);
+
+CREATE TABLE IF NOT EXISTS assignment_quiz_questions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    assignment_id INT NOT NULL,
+    question_type ENUM('single_choice', 'short_answer') NOT NULL DEFAULT 'single_choice',
+    question_text TEXT NOT NULL,
+    option_a TEXT NULL,
+    option_b TEXT NULL,
+    option_c TEXT NULL,
+    option_d TEXT NULL,
+    correct_answer CHAR(1) NULL,
+    points DECIMAL(6,2) NOT NULL DEFAULT 1,
+    explanation TEXT NULL,
+    order_number INT NOT NULL DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_assignment_quiz_questions_assignment FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX IF NOT EXISTS idx_assignment_quiz_questions_assignment ON assignment_quiz_questions (assignment_id, order_number);

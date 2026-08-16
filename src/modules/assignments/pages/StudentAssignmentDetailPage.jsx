@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Download, FileCheck, Send } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Download, FileCheck, Send } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Button, Card, LoadingState, PageHeader } from "../../../components/ui";
 import AssignmentStatusBadge from "../components/AssignmentStatusBadge";
@@ -74,6 +74,8 @@ export default function StudentAssignmentDetailPage() {
     );
   }
 
+  const isQuiz = Number(assignment.quiz_question_count || 0) > 0 || String(assignment.title || "").toLowerCase().includes("quiz");
+
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-6">
@@ -91,9 +93,15 @@ export default function StudentAssignmentDetailPage() {
                   <FileCheck size={16} /> Xem bài nộp
                 </Button>
               )}
-              <Button to={`/student/assignments/${assignment.id}/submit`} disabled={assignment.status === "closed"}>
-                <Send size={16} /> {assignment.submission_id ? "Cập nhật bài nộp" : "Nộp bài"}
-              </Button>
+              {isQuiz ? (
+                <Button to={`/student/assignments/${assignment.id}/quiz`} disabled={assignment.status === "closed"}>
+                  <ClipboardCheck size={16} /> {assignment.submission_id ? "Xem / làm lại quiz" : "Làm quiz"}
+                </Button>
+              ) : (
+                <Button to={`/student/assignments/${assignment.id}/submit`} disabled={assignment.status === "closed"}>
+                  <Send size={16} /> {assignment.submission_id ? "Cập nhật bài nộp" : "Nộp bài"}
+                </Button>
+              )}
             </>
           }
         />

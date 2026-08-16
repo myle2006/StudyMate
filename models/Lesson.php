@@ -2,8 +2,11 @@
 
 class Lesson extends Model
 {
+    private static bool $chapterSchemaReady = false;
+
     public function getAllAdmin(array $filters = []): array
     {
+        $this->ensureChapterSchema();
         $params = [];
         $where = ['l.deleted_at IS NULL', 's.deleted_at IS NULL'];
 
@@ -33,6 +36,7 @@ class Lesson extends Model
 
     public function findAdmin(int $id): ?array
     {
+        $this->ensureChapterSchema();
         $statement = $this->db()->prepare($this->baseSelect() . '
              WHERE l.id = :id
                AND l.deleted_at IS NULL
@@ -46,6 +50,7 @@ class Lesson extends Model
 
     public function getForStudent(int $studentId, array $filters = []): array
     {
+        $this->ensureChapterSchema();
         $params = [
             'student_id_progress' => $studentId,
             'student_id_subject' => $studentId,
@@ -81,6 +86,7 @@ class Lesson extends Model
 
     public function findForStudent(int $id, int $studentId): ?array
     {
+        $this->ensureChapterSchema();
         $statement = $this->db()->prepare($this->studentSelect() . '
              WHERE l.id = :id
                AND ss.student_id = :student_id_subject
@@ -103,11 +109,12 @@ class Lesson extends Model
 
     public function create(array $data): int
     {
+        $this->ensureChapterSchema();
         $statement = $this->db()->prepare(
             'INSERT INTO lessons
-                (subject_id, title, content, video_url, external_url, material_path, duration_minutes, status, created_by)
+                (subject_id, chapter, title, content, video_url, external_url, material_path, duration_minutes, status, created_by)
              VALUES
-                (:subject_id, :title, :content, :video_url, :external_url, :material_path, :duration_minutes, :status, :created_by)'
+                (:subject_id, :chapter, :title, :content, :video_url, :external_url, :material_path, :duration_minutes, :status, :created_by)'
         );
         $statement->execute($this->params($data));
 
@@ -116,6 +123,7 @@ class Lesson extends Model
 
     public function update(int $id, array $data): bool
     {
+        $this->ensureChapterSchema();
         $params = $this->params($data);
         unset($params['created_by']);
         $params['id'] = $id;
@@ -123,6 +131,7 @@ class Lesson extends Model
         $statement = $this->db()->prepare(
             'UPDATE lessons
              SET subject_id = :subject_id,
+                 chapter = :chapter,
                  title = :title,
                  content = :content,
                  video_url = :video_url,
@@ -138,6 +147,7 @@ class Lesson extends Model
 
     public function delete(int $id): bool
     {
+        $this->ensureChapterSchema();
         $statement = $this->db()->prepare(
             'UPDATE lessons
              SET deleted_at = NOW()
@@ -170,9 +180,20 @@ class Lesson extends Model
         return (int) $statement->fetchColumn() > 0;
     }
 
+    private function ensureChapterSchema(): void
+    {
+        if (self::$chapterSchemaReady) {
+            return;
+        }
+
+        $this->db()->exec("ALTER TABLE lessons ADD COLUMN IF NOT EXISTS chapter VARCHAR(120) NOT NULL DEFAULT 'Chuong 1' AFTER subject_id");
+        $this->db()->exec('CREATE INDEX IF NOT EXISTS idx_lessons_subject_chapter ON lessons (subject_id, chapter)');
+        self::$chapterSchemaReady = true;
+    }
+
     private function baseSelect(): string
     {
-        return 'SELECT l.id, l.subject_id, l.title, l.content, l.video_url, l.external_url,
+        return 'SELECT l.id, l.subject_id, l.chapter, l.title, l.content, l.video_url, l.external_url,
                     l.material_path, l.duration_minutes, l.status, l.created_by, l.created_at, l.updated_at,
                     s.subject_code, s.subject_name, s.color,
                     creator.full_name AS created_by_name,
@@ -184,7 +205,7 @@ class Lesson extends Model
 
     private function studentSelect(): string
     {
-        return 'SELECT l.id, l.subject_id, l.title, l.content, l.video_url, l.external_url,
+        return 'SELECT l.id, l.subject_id, l.chapter, l.title, l.content, l.video_url, l.external_url,
                     l.material_path, l.duration_minutes, l.status, l.created_at, l.updated_at,
                     s.subject_code, s.subject_name, s.color,
                     COALESCE(lp.status, \'not_started\') AS progress_status,
@@ -199,6 +220,7 @@ class Lesson extends Model
     {
         return [
             'subject_id' => (int) $data['subject_id'],
+            'chapter' => trim((string) ($data['chapter'] ?? '')),
             'title' => trim((string) $data['title']),
             'content' => self::nullableText($data['content'] ?? null),
             'video_url' => self::nullableText($data['video_url'] ?? null),

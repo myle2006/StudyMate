@@ -61,6 +61,12 @@ class LearningRoadmapValidation
         return array_values(array_map(static function (array $item, int $index): array {
             return [
                 'week_number' => max(1, (int) ($item['week_number'] ?? 1)),
+                'lesson_id' => self::nullableInt($item['lesson_id'] ?? null),
+                'assignment_id' => self::nullableInt($item['assignment_id'] ?? null),
+                'content_type' => self::contentType($item['content_type'] ?? 'lesson'),
+                'branch_label' => trim((string) ($item['branch_label'] ?? '')),
+                'is_required' => ! array_key_exists('is_required', $item) || (bool) $item['is_required'],
+                'allow_skip' => ! empty($item['allow_skip']),
                 'order_number' => max(1, (int) ($item['order_number'] ?? $index + 1)),
                 'title' => trim((string) ($item['title'] ?? '')),
                 'description' => trim((string) ($item['description'] ?? '')),
@@ -290,6 +296,13 @@ class LearningRoadmapValidation
         }
 
         return is_numeric($value) ? (int) $value : null;
+    }
+
+    private static function contentType(mixed $value): string
+    {
+        $value = trim((string) ($value ?? 'lesson'));
+
+        return in_array($value, ['lesson', 'quiz', 'practice', 'project', 'reading'], true) ? $value : 'lesson';
     }
 
     private static function textLength(string $value): int

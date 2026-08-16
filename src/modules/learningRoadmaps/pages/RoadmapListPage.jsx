@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { BookOpenCheck, Eye, Plus, Search, Trash2 } from "lucide-react";
-import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
-import { useAuth } from "../../../context/AuthContext";
+import { Eye, Search } from "lucide-react";
+import { Alert, Badge, Button, Card, EmptyState, Input, LoadingState, PageHeader, Select } from "../../../components/ui";
 import RoadmapProgressBar from "../components/RoadmapProgressBar";
-import { deleteRoadmap, getRoadmaps } from "../services/learningRoadmapService";
+import { getRoadmaps } from "../services/learningRoadmapService";
 
 const statusMap = {
   draft: { label: "Nháp", tone: "slate" },
@@ -12,27 +11,16 @@ const statusMap = {
   paused: { label: "Tạm dừng", tone: "amber" },
 };
 
-function formatDate(value) {
-  if (!value) return "-";
-  const date = new Date(String(value));
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("vi-VN");
-}
-
 function RoadmapStatusBadge({ status }) {
   const config = statusMap[status] || statusMap.draft;
   return <Badge tone={config.tone}>{config.label}</Badge>;
 }
 
 export default function RoadmapListPage() {
-  const toast = useToast();
-  const { isGuestPreview } = useAuth();
   const [roadmaps, setRoadmaps] = useState([]);
   const [filters, setFilters] = useState({ keyword: "", status: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [deletingRoadmap, setDeletingRoadmap] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   async function loadRoadmaps(nextFilters = filters) {
     setLoading(true);
@@ -53,29 +41,10 @@ export default function RoadmapListPage() {
     return () => window.clearTimeout(timer);
   }, [filters.keyword, filters.status]);
 
-  async function confirmDelete() {
-    if (!deletingRoadmap) return;
-    setDeleting(true);
-
-    try {
-      await deleteRoadmap(deletingRoadmap.id);
-      toast.success("Xóa lộ trình học thành công.");
-      setDeletingRoadmap(null);
-      await loadRoadmaps(filters);
-    } catch (err) {
-      toast.error(err.message || "Không thể xóa lộ trình học.");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
   const summary = useMemo(() => {
     const activeCount = roadmaps.filter((roadmap) => roadmap.status === "active").length;
     return `${roadmaps.length} lộ trình đang hiển thị, ${activeCount} lộ trình đang học.`;
   }, [roadmaps]);
-  const headerDescription = isGuestPreview
-    ? (roadmaps.length ? summary : "Xem nhanh lộ trình mẫu và cách StudyMate trình bày tiến độ theo từng giai đoạn.")
-    : (roadmaps.length ? summary : "Tự tạo lộ trình hoặc chọn lộ trình mẫu rồi chỉnh sửa trước khi lưu.");
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
@@ -83,19 +52,7 @@ export default function RoadmapListPage() {
         <PageHeader
           eyebrow="StudyMate Roadmap"
           title="Lộ trình học"
-          description={headerDescription}
-          actions={
-            !isGuestPreview && (
-              <div className="flex flex-wrap gap-2">
-                <Button to="/student/roadmaps/create">
-                  <Plus size={16} /> Tự tạo lộ trình
-                </Button>
-                <Button to="/student/roadmaps/generate" variant="secondary">
-                  <BookOpenCheck size={16} /> Tạo từ mẫu
-                </Button>
-              </div>
-            )
-          }
+          description={roadmaps.length ? summary : "Lộ trình được tạo bởi admin/giảng viên. Bạn chỉ cần xem mindmap, học nội dung và hoàn thành quiz xác nhận."}
         />
 
         <Card className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_240px]">
@@ -128,9 +85,7 @@ export default function RoadmapListPage() {
         ) : roadmaps.length === 0 ? (
           <EmptyState
             title="Chưa có lộ trình học"
-            description={isGuestPreview ? "Demo hiện chưa có lộ trình mẫu để hiển thị." : "Tự tạo lộ trình từ đầu hoặc chọn lộ trình mẫu rồi chỉnh sửa trước khi lưu."}
-            actionLabel={isGuestPreview ? undefined : "Tự tạo lộ trình"}
-            actionTo={isGuestPreview ? undefined : "/student/roadmaps/create"}
+            description="Bạn chưa có lộ trình được gán. Hãy liên hệ admin/giảng viên để tạo hoặc gán lộ trình cho môn học."
           />
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -149,35 +104,19 @@ export default function RoadmapListPage() {
                 <div className="mt-4 space-y-3">
                   <RoadmapProgressBar value={roadmap.progress_percent} />
                   <p className="text-xs font-bold text-slate-500">
-                    {roadmap.item_count || 0} bước · {formatDate(roadmap.start_date)} - {formatDate(roadmap.end_date)}
+                    {roadmap.item_count || 0} nội dung · {roadmap.completed_item_count || 0} đã học
                   </p>
                 </div>
-                <div className={`mt-auto grid gap-2 pt-5 ${isGuestPreview ? "" : "sm:grid-cols-2"}`}>
+                <div className="mt-auto grid gap-2 pt-5">
                   <Button to={`/student/roadmaps/${roadmap.id}`} variant="secondary">
-                    <Eye size={16} /> Chi tiết
+                    <Eye size={16} /> Xem và học
                   </Button>
-                  {!isGuestPreview && (
-                    <Button type="button" variant="danger" onClick={() => setDeletingRoadmap(roadmap)}>
-                      <Trash2 size={16} /> Xóa
-                    </Button>
-                  )}
                 </div>
               </Card>
             ))}
           </div>
         )}
       </div>
-
-      <ConfirmDialog
-        open={Boolean(deletingRoadmap)}
-        title="Xóa lộ trình học?"
-        description={deletingRoadmap ? `Lộ trình "${deletingRoadmap.title}" sẽ bị xóa khỏi danh sách của bạn.` : ""}
-        confirmLabel="Xóa lộ trình"
-        danger
-        loading={deleting}
-        onCancel={() => setDeletingRoadmap(null)}
-        onConfirm={confirmDelete}
-      />
     </main>
   );
 }

@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
-const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip", "rar", "png", "jpg", "jpeg"];
+const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "csv", "zip", "rar", "png", "jpg", "jpeg"];
+const QUIZ_TEMPLATE_URL = `${window.STUDYMATE_BASE_PATH || ""}/public/templates/quiz_template.csv`;
 
 const DEFAULT_FORM = {
   subject_id: "",
+  chapter: "",
   title: "",
   content: "",
   video_url: "",
@@ -14,11 +16,15 @@ const DEFAULT_FORM = {
   status: "draft",
 };
 
-function validateForm(form, materialFile) {
+function validateForm(form, materialFile, quizFile) {
   const errors = {};
 
   if (!form.subject_id) {
     errors.subject_id = "Môn học là bắt buộc.";
+  }
+
+  if (!form.chapter.trim()) {
+    errors.chapter = "Chương của bài học là bắt buộc.";
   }
 
   if (!form.title.trim()) {
@@ -40,18 +46,33 @@ function validateForm(form, materialFile) {
     }
   }
 
+  if (quizFile) {
+    const extension = quizFile.name.split(".").pop()?.toLowerCase() || "";
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      errors.quiz_file = "File quiz không đúng định dạng hỗ trợ.";
+    } else if (quizFile.size > 10 * 1024 * 1024) {
+      errors.quiz_file = "File quiz không được vượt quá 10MB.";
+    }
+  }
+
   return errors;
 }
 
 export default function LessonForm({ mode = "create", subjects = [], initialValues = {}, submitting = false, apiErrors = {}, onSubmit }) {
   const [form, setForm] = useState({ ...DEFAULT_FORM, ...initialValues });
   const [materialFile, setMaterialFile] = useState(null);
+  const [quizFile, setQuizFile] = useState(null);
   const [clientErrors, setClientErrors] = useState({});
   const errors = useMemo(() => ({ ...clientErrors, ...apiErrors }), [apiErrors, clientErrors]);
 
   useEffect(() => {
-    setForm({ ...DEFAULT_FORM, ...initialValues, duration_minutes: String(initialValues.duration_minutes ?? "") });
+    setForm({
+      ...DEFAULT_FORM,
+      ...initialValues,
+      duration_minutes: String(initialValues.duration_minutes ?? ""),
+    });
     setMaterialFile(null);
+    setQuizFile(null);
     setClientErrors({});
   }, [initialValues?.id]);
 
@@ -62,12 +83,13 @@ export default function LessonForm({ mode = "create", subjects = [], initialValu
 
   function handleSubmit(event) {
     event.preventDefault();
-    const nextErrors = validateForm(form, materialFile);
+    const nextErrors = validateForm(form, materialFile, quizFile);
     setClientErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     const payload = new FormData();
     payload.append("subject_id", form.subject_id);
+    payload.append("chapter", form.chapter.trim());
     payload.append("title", form.title.trim());
     payload.append("content", form.content.trim());
     payload.append("video_url", form.video_url.trim());
@@ -77,6 +99,10 @@ export default function LessonForm({ mode = "create", subjects = [], initialValu
 
     if (materialFile) {
       payload.append("material", materialFile);
+    }
+
+    if (quizFile) {
+      payload.append("quiz_file", quizFile);
     }
 
     onSubmit?.(payload);
@@ -102,6 +128,10 @@ export default function LessonForm({ mode = "create", subjects = [], initialValu
               <option value="draft">Nháp</option>
               <option value="published">Xuất bản</option>
             </Select>
+          </Field>
+
+          <Field label="Chương" error={errors.chapter} className="md:col-span-2">
+            <Input name="chapter" value={form.chapter || ""} onChange={handleChange} placeholder="Ví dụ: Chương 1 - Nền tảng kiểm thử" />
           </Field>
 
           <Field label="Tiêu đề" error={errors.title} className="md:col-span-2">
@@ -134,7 +164,7 @@ export default function LessonForm({ mode = "create", subjects = [], initialValu
         >
           <input
             type="file"
-            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.png,.jpg,.jpeg"
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.zip,.rar,.png,.jpg,.jpeg"
             onChange={(event) => setMaterialFile(event.target.files?.[0] || null)}
             className="mt-2 w-full rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700"
           />
@@ -145,6 +175,27 @@ export default function LessonForm({ mode = "create", subjects = [], initialValu
             Xem tài liệu hiện tại
           </a>
         )}
+
+        <Field
+          label="File quiz xác nhận"
+          error={errors.quiz_file}
+          hint="Tùy chọn. Khi tạo bài học, hệ thống sẽ tạo quiz xác nhận và gắn vào roadmap của môn."
+          className="mt-5"
+        >
+          <a
+            href={QUIZ_TEMPLATE_URL}
+            download
+            className="mb-3 inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700 hover:bg-emerald-100"
+          >
+            Tải file quiz mẫu CSV
+          </a>
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.zip,.rar,.png,.jpg,.jpeg"
+            onChange={(event) => setQuizFile(event.target.files?.[0] || null)}
+            className="mt-2 w-full rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-emerald-700"
+          />
+        </Field>
 
         <div className="mt-6 flex flex-col gap-3">
           <Button type="submit" size="lg" disabled={submitting}>

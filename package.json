@@ -7,6 +7,7 @@
     "dev": "vite --host 127.0.0.1 --port 5173",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test:roadmap": "node scripts/test-roadmap-visual-utils.mjs",
     "srs:agent": "node scripts/srs-testing-agent.mjs",
     "srs:agent:generate": "node scripts/srs-testing-agent.mjs --generate",
     "srs:diagrams": "node scripts/render-srs-diagrams.mjs"

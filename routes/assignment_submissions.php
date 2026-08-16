@@ -9,6 +9,8 @@ $router->get('/api/student/submissions/{id}/grade', [AssignmentSubmissionControl
 $router->get('/api/student/submissions', [AssignmentSubmissionController::class, 'index'], $student);
 $router->get('/api/student/submissions/{id}', [AssignmentSubmissionController::class, 'show'], $student);
 $router->get('/api/student/assignments/{assignmentId}/submission', [AssignmentSubmissionController::class, 'showForAssignment'], $student);
+$router->get('/api/student/assignments/{assignmentId}/quiz', [QuizController::class, 'show'], $student);
+$router->post('/api/student/assignments/{assignmentId}/quiz', [QuizController::class, 'submit'], $student);
 $router->post('/api/student/assignments/{assignmentId}/submit', [AssignmentSubmissionController::class, 'submit'], $student);
 $router->put('/api/student/submissions/{id}', [AssignmentSubmissionController::class, 'update'], $student);
 $router->post('/api/student/submissions/{id}', [AssignmentSubmissionController::class, 'update'], $student);

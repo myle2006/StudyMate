@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, CheckCircle2, Clock3, FileText, Video } from "lucide-react";
+import { BookOpen, CheckCircle2, Clock3, FileText, Layers3, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge, Button } from "../../../components/ui";
 
@@ -23,6 +23,9 @@ export default function LessonCard({ lesson, to, admin = false, onDelete }) {
       <p className="mt-3 line-clamp-3 text-sm font-semibold leading-6 text-slate-500">{lesson.content || "Chưa có mô tả nội dung."}</p>
 
       <div className="mt-4 flex flex-wrap gap-3 text-xs font-bold text-slate-500">
+        {lesson.chapter && (
+          <span className="inline-flex items-center gap-1.5"><Layers3 className="h-3.5 w-3.5" />{lesson.chapter}</span>
+        )}
         {lesson.duration_minutes && (
           <span className="inline-flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" />{lesson.duration_minutes} phút</span>
         )}

@@ -64,6 +64,17 @@ export function submitAssignment(assignmentId, formData) {
   });
 }
 
+export function getStudentQuiz(assignmentId) {
+  return request(`/student/assignments/${assignmentId}/quiz`);
+}
+
+export function submitStudentQuiz(assignmentId, answers) {
+  return request(`/student/assignments/${assignmentId}/quiz`, {
+    method: "POST",
+    body: JSON.stringify({ answers }),
+  });
+}
+
 export function updateSubmission(id, formData) {
   if (formData instanceof FormData) {
     formData.set("_method", "PUT");

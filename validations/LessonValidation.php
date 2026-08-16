@@ -3,7 +3,7 @@
 class LessonValidation
 {
     private const STATUSES = ['draft', 'published'];
-    private const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'png', 'jpg', 'jpeg'];
+    private const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'zip', 'rar', 'png', 'jpg', 'jpeg'];
     private const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
     public static function validate(array $data, ?array $file = null): array
@@ -12,6 +12,13 @@ class LessonValidation
 
         if (! ctype_digit((string) ($data['subject_id'] ?? '')) || (int) $data['subject_id'] <= 0) {
             $errors['subject_id'] = 'Môn học không hợp lệ.';
+        }
+
+        $chapter = trim((string) ($data['chapter'] ?? ''));
+        if ($chapter === '') {
+            $errors['chapter'] = 'Chương của bài học là bắt buộc.';
+        } elseif (self::textLength($chapter) > 120) {
+            $errors['chapter'] = 'Chương không được vượt quá 120 ký tự.';
         }
 
         $title = trim((string) ($data['title'] ?? ''));
@@ -62,7 +69,7 @@ class LessonValidation
 
         $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
         if (! in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
-            return ['material' => 'Tài liệu chỉ hỗ trợ pdf, doc, docx, ppt, pptx, xls, xlsx, zip, rar, png, jpg hoặc jpeg.'];
+            return ['material' => 'Tài liệu chỉ hỗ trợ pdf, doc, docx, ppt, pptx, xls, xlsx, csv, zip, rar, png, jpg hoặc jpeg.'];
         }
 
         return [];

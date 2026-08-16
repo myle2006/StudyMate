@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, Layers3, Pencil, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Card, ConfirmDialog, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
-import RoadmapPhaseMap from "../components/RoadmapPhaseMap";
 import RoadmapProgressBar from "../components/RoadmapProgressBar";
 import RoadmapStageList from "../components/RoadmapStageList";
+import RoadmapVisualExplorer from "../components/RoadmapVisualExplorer";
 import {
-  deleteRoadmap,
   getRoadmapById,
   getRoadmapProgress,
+  deleteRoadmap,
   rescheduleRoadmapItem,
   updateRoadmap,
   updateRoadmapItemResult,
@@ -19,6 +19,10 @@ import {
   buildRoadmapPhases,
   getCurrentRoadmapPhaseKey,
 } from "../utils/roadmapPhaseUtils";
+import {
+  buildRoadmapVisualModel,
+  canCompleteRoadmapNode,
+} from "../utils/roadmapVisualUtils";
 
 const levelMap = {
   beginner: "Cơ bản",
@@ -142,6 +146,15 @@ export default function RoadmapDetailPage() {
   }, []);
 
   async function handleStatusChange(item, status) {
+    if (status === "completed") {
+      const visual = buildRoadmapVisualModel(roadmap?.items || []);
+      const node = visual.nodes.find((candidate) => String(candidate.item.id) === String(item.id));
+      if (node && !canCompleteRoadmapNode(node, visual.nodes)) {
+        toast.error("Bạn cần hoàn thành nội dung tiên quyết trước khi đánh dấu node này hoàn thành.");
+        return;
+      }
+    }
+
     setUpdatingItemId(item.id);
 
     try {
@@ -336,9 +349,11 @@ export default function RoadmapDetailPage() {
     );
   }
 
-  const totalItems = roadmap.items?.length || 0;
-  const completedItems = roadmap.items?.filter((item) => item.status === "completed").length || 0;
-  const missedItems = (roadmap.items || []).filter((item) => {
+  const lessonItems = (roadmap.items || []).filter((item) => item.lesson_id || item.lesson_title || item.lesson_content);
+  const totalItems = lessonItems.length;
+  const completedItems = lessonItems.filter((item) => item.status === "completed").length;
+  const lessonProgressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const missedItems = lessonItems.filter((item) => {
     if (["completed", "not_completed"].includes(item.status)) return false;
     if (!item.planned_date || !item.start_time) return false;
     return new Date(`${item.planned_date}T${item.start_time}`) < new Date();
@@ -357,7 +372,7 @@ export default function RoadmapDetailPage() {
               <Button to="/student/roadmaps" variant="secondary">
                 <ArrowLeft size={16} /> Danh sách
               </Button>
-              {!isGuestPreview && (
+              {false && !isGuestPreview && (
                 <>
                   <Button to={`/student/roadmaps/${roadmap.id}/edit`}>
                     <Pencil size={16} /> Sửa
@@ -372,7 +387,7 @@ export default function RoadmapDetailPage() {
         />
 
         <Card className="space-y-5 p-6">
-          <RoadmapProgressBar value={roadmap.progress_percent} completed={completedItems} total={totalItems} />
+          <RoadmapProgressBar value={lessonProgressPercent} completed={completedItems} total={totalItems} />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <InfoItem icon={Clock3} label="Thời gian học" value={`${Number(roadmap.study_time_per_day).toFixed(1)} giờ/ngày`} />
             <InfoItem icon={CalendarDays} label="Bắt đầu" value={formatDate(roadmap.start_date)} />
@@ -425,7 +440,7 @@ export default function RoadmapDetailPage() {
           </Card>
         )}
 
-        {!isGuestPreview && shouldSuggestCompletion && (
+        {false && !isGuestPreview && shouldSuggestCompletion && (
           <Alert tone="success" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span>Tất cả bước học đã hoàn thành. Hãy chuyển trạng thái lộ trình sang hoàn thành.</span>
             <Button type="button" size="sm" onClick={handleCompleteRoadmap} disabled={completingRoadmap}>
@@ -435,19 +450,25 @@ export default function RoadmapDetailPage() {
           </Alert>
         )}
 
-        {!isGuestPreview && missedItems.length > 0 && (
+        {false && !isGuestPreview && missedItems.length > 0 && (
           <Alert tone="warning">
             Có {missedItems.length} nhiệm vụ đã qua giờ học. Hãy cập nhật trạng thái hoặc dời lịch để lộ trình tiếp tục chính xác.
           </Alert>
         )}
 
-        <RoadmapPhaseMap
+        <RoadmapVisualExplorer
+          roadmapId={roadmap.id}
+          rootTitle={roadmap.subject_name}
+          rootDescription={roadmap.subject_description || roadmap.overview || ""}
+          items={roadmap.items || []}
           phases={roadmapPhases}
           activePhaseKey={activePhaseKey}
-          onPhaseSelect={handlePhaseNavigate}
+          updatingItemId={updatingItemId}
+          onPhaseNavigate={handlePhaseNavigate}
+          onStatusChange={isGuestPreview ? undefined : handleStatusChange}
         />
 
-        <RoadmapStageList
+        {false && <RoadmapStageList
           phases={roadmapPhases}
           activePhaseKey={activePhaseKey}
           openPhaseKeys={openPhaseKeys}
@@ -460,10 +481,10 @@ export default function RoadmapDetailPage() {
           onOpenCurrent={handleOpenCurrentPhase}
           onStatusChange={isGuestPreview ? undefined : handleStatusChange}
           onResultSubmit={isGuestPreview ? undefined : handleResultSubmit}
-          onRescheduleSubmit={isGuestPreview ? undefined : handleRescheduleSubmit}
-        />
+          onRescheduleSubmit={undefined}
+        />}
 
-        {progressSummary && (
+        {false && progressSummary && (
           <Card className="space-y-5 p-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               <InfoItem label="Đã hoàn thành" value={`${progressSummary.completed_items || 0}/${progressSummary.total_items || 0} nhiệm vụ`} />

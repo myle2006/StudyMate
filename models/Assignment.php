@@ -2,6 +2,8 @@
 
 class Assignment extends Model
 {
+    private static bool $quizSchemaReady = false;
+
     public function getAll(array $filters = []): array
     {
         $params = [];
@@ -62,6 +64,7 @@ class Assignment extends Model
 
     public function getForStudent(int $studentId, array $filters = []): array
     {
+        $this->ensureQuizSchema();
         $params = [
             'student_id' => $studentId,
             'assignment_status' => 'active',
@@ -104,7 +107,8 @@ class Assignment extends Model
                     sub.id AS submission_id,
                     COALESCE(sub.status, \'not_submitted\') AS submission_status,
                     sub.submitted_at,
-                    sub.file_path AS submission_file_path
+                    sub.file_path AS submission_file_path,
+                    (SELECT COUNT(*) FROM assignment_quiz_questions q WHERE q.assignment_id = a.id) AS quiz_question_count
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
              INNER JOIN student_subjects ss ON ss.subject_id = s.id
@@ -120,6 +124,7 @@ class Assignment extends Model
 
     public function findForStudent(int $id, int $studentId): ?array
     {
+        $this->ensureQuizSchema();
         $statement = $this->db()->prepare(
             'SELECT a.id, a.subject_id, a.title, a.description, a.deadline, a.attachment_path,
                     a.status, a.created_at, a.updated_at,
@@ -130,7 +135,8 @@ class Assignment extends Model
                     sub.content AS submission_content,
                     sub.file_path AS submission_file_path,
                     sub.score,
-                    sub.feedback
+                    sub.feedback,
+                    (SELECT COUNT(*) FROM assignment_quiz_questions q WHERE q.assignment_id = a.id) AS quiz_question_count
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
              INNER JOIN student_subjects ss ON ss.subject_id = s.id
@@ -225,5 +231,15 @@ class Assignment extends Model
         $statement->execute(['id' => $subjectId]);
 
         return (int) $statement->fetchColumn() > 0;
+    }
+
+    private function ensureQuizSchema(): void
+    {
+        if (self::$quizSchemaReady) {
+            return;
+        }
+
+        (new AssignmentQuizQuestion())->ensureSchema();
+        self::$quizSchemaReady = true;
     }
 }

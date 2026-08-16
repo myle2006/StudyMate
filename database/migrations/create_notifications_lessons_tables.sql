@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS notification_reads (
 CREATE TABLE IF NOT EXISTS lessons (
     id INT AUTO_INCREMENT PRIMARY KEY,
     subject_id INT NOT NULL,
+    chapter VARCHAR(120) NOT NULL DEFAULT 'Chuong 1',
     title VARCHAR(255) NOT NULL,
     content TEXT NULL,
     video_url VARCHAR(500) NULL,
