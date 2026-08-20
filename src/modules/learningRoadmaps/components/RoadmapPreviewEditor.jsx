@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
 import RoadmapPhaseMap from "./RoadmapPhaseMap";
 import RoadmapProgressBar from "./RoadmapProgressBar";
+import { scheduleRoadmapItems } from "../utils/roadmapTemplatePreview";
 
 function normalizeInitial(data = {}) {
   return {
@@ -85,6 +86,7 @@ export default function RoadmapPreviewEditor({
   submitting = false,
   apiErrors = {},
   submitLabel = "Chấp nhận lộ trình",
+  onUserEdit,
   onSubmit,
 }) {
   const [form, setForm] = useState(normalizeInitial(initialData));
@@ -110,10 +112,12 @@ export default function RoadmapPreviewEditor({
   }, [allowSubjectSelect, subjects, form.subject_id]);
 
   function updateField(field, value) {
+    onUserEdit?.();
     setForm((current) => ({ ...current, [field]: value }));
   }
 
   function updateSubject(value) {
+    onUserEdit?.();
     const subject = subjects.find((item) => String(item.id) === String(value));
     setForm((current) => ({
       ...current,
@@ -125,6 +129,7 @@ export default function RoadmapPreviewEditor({
   }
 
   function updateLearningGoal(value) {
+    onUserEdit?.();
     const goal = learningGoals.find((item) => String(item.id) === String(value));
     setForm((current) => ({
       ...current,
@@ -141,6 +146,7 @@ export default function RoadmapPreviewEditor({
   }
 
   function toggleWeekday(day) {
+    onUserEdit?.();
     setForm((current) => {
       const exists = current.available_weekdays.includes(day);
       const nextDays = exists
@@ -152,6 +158,7 @@ export default function RoadmapPreviewEditor({
   }
 
   function updateItem(index, field, value) {
+    onUserEdit?.();
     setForm((current) => ({
       ...current,
       items: current.items.map((item, itemIndex) => (
@@ -161,6 +168,7 @@ export default function RoadmapPreviewEditor({
   }
 
   function addItem() {
+    onUserEdit?.();
     setForm((current) => ({
       ...current,
       items: [
@@ -183,12 +191,21 @@ export default function RoadmapPreviewEditor({
   }
 
   function removeItem(index) {
+    onUserEdit?.();
     setForm((current) => ({
       ...current,
       items: current.items.filter((_, itemIndex) => itemIndex !== index).map((item, itemIndex) => ({
         ...item,
         order_number: itemIndex + 1,
       })),
+    }));
+  }
+
+  function rescheduleItems() {
+    onUserEdit?.();
+    setForm((current) => ({
+      ...current,
+      items: scheduleRoadmapItems(current.items, current),
     }));
   }
 
@@ -339,9 +356,14 @@ export default function RoadmapPreviewEditor({
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-black text-slate-950">Các bước học</h2>
-        <Button type="button" variant="secondary" onClick={addItem}>
-          <Plus size={16} /> Thêm bước
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={rescheduleItems}>
+            <RefreshCw size={16} /> Tự xếp lại lịch
+          </Button>
+          <Button type="button" variant="secondary" onClick={addItem}>
+            <Plus size={16} /> Thêm bước
+          </Button>
+        </div>
       </div>
       {typeof errors.items === "string" && <p className="text-sm font-bold text-rose-600">{errors.items}</p>}
 

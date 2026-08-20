@@ -73,6 +73,9 @@ export default function RoadmapPreviewPage() {
         {Array.isArray(apiErrors.schedule_conflicts) && apiErrors.schedule_conflicts.length > 0 && (
           <Card className="space-y-3 border-amber-200 bg-amber-50 p-4">
             <h2 className="text-sm font-black text-amber-900">Nhiệm vụ bị trùng lịch</h2>
+            <p className="text-sm font-semibold text-amber-800">
+              Bạn có thể bấm "Tự xếp lại lịch" ở phần Các bước học để hệ thống phân bổ lại ngày và giờ theo khung học đã chọn.
+            </p>
             {apiErrors.schedule_conflicts.map((conflict, index) => (
               <div key={index} className="rounded-lg bg-white p-3 text-sm text-amber-900">
                 <p className="font-extrabold">{conflict.title}</p>
@@ -93,6 +96,10 @@ export default function RoadmapPreviewPage() {
           submitting={submitting}
           apiErrors={apiErrors}
           submitLabel="Chấp nhận lộ trình"
+          onUserEdit={() => {
+            setApiErrors({});
+            setError("");
+          }}
           onSubmit={handleSave}
         />
       </div>
