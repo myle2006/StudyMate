@@ -78,7 +78,7 @@ export default function StudyScheduleCalendarPage() {
         ) : schedules.length === 0 ? (
           <EmptyState
             title="Chưa có lịch học"
-            description="Tạo lịch học đầu tiên để StudyMate giúp bạn theo dõi kế hoạch theo ngày, tuần và tháng."
+            description="Không có lịch trong bộ lọc/chế độ xem hiện tại. Hãy kiểm tra mốc ngày, trạng thái hoặc loại lịch nếu hệ thống báo trùng khi thêm mới."
             actionLabel="Thêm lịch học"
             actionTo="/student/schedules/create"
           />

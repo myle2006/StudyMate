@@ -208,17 +208,33 @@ class StudySchedule extends Model
         ?int $excludeRoadmapId = null
     ): bool
     {
+        return $this->getTimeConflicts($userId, $studyDate, $startTime, $endTime, $excludeId, $excludeRoadmapId) !== [];
+    }
+
+    public function getTimeConflicts(
+        int $userId,
+        string $studyDate,
+        string $startTime,
+        string $endTime,
+        ?int $excludeId = null,
+        ?int $excludeRoadmapId = null
+    ): array
+    {
         $params = [
             'user_id' => $userId,
             'study_date' => $studyDate,
             'start_time' => $startTime,
             'end_time' => $endTime,
         ];
-        $sql = 'SELECT COUNT(*)
+        $sql = 'SELECT id, subject_id, title, study_date,
+                       TIME_FORMAT(start_time, "%H:%i") AS start_time,
+                       TIME_FORMAT(end_time, "%H:%i") AS end_time,
+                       schedule_type, status, roadmap_id, roadmap_item_id
                 FROM study_schedules
                 WHERE user_id = :user_id
                   AND study_date = :study_date
                   AND deleted_at IS NULL
+                  AND status <> "cancelled"
                   AND :start_time < end_time
                   AND :end_time > start_time';
 
@@ -235,7 +251,7 @@ class StudySchedule extends Model
         $statement = $this->db()->prepare($sql);
         $statement->execute($params);
 
-        return (int) $statement->fetchColumn() > 0;
+        return $statement->fetchAll();
     }
 
     public function suggestAvailableSlots(

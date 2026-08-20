@@ -55,8 +55,9 @@ class StudyScheduleController extends Controller
             return;
         }
 
-        if ($this->schedule->hasTimeConflict($userId, $data['study_date'], $data['start_time'], $data['end_time'])) {
-            $this->timeConflict();
+        $conflicts = $this->schedule->getTimeConflicts($userId, $data['study_date'], $data['start_time'], $data['end_time']);
+        if ($conflicts !== []) {
+            $this->timeConflict($conflicts);
             return;
         }
 
@@ -89,8 +90,9 @@ class StudyScheduleController extends Controller
             return;
         }
 
-        if ($this->schedule->hasTimeConflict($userId, $data['study_date'], $data['start_time'], $data['end_time'], $scheduleId)) {
-            $this->timeConflict();
+        $conflicts = $this->schedule->getTimeConflicts($userId, $data['study_date'], $data['start_time'], $data['end_time'], $scheduleId);
+        if ($conflicts !== []) {
+            $this->timeConflict($conflicts);
             return;
         }
 
@@ -172,13 +174,14 @@ class StudyScheduleController extends Controller
         ], 422);
     }
 
-    private function timeConflict(): void
+    private function timeConflict(array $conflicts = []): void
     {
         $this->json([
             'success' => false,
             'message' => 'Thời gian học bị trùng với lịch học đã tồn tại.',
             'errors' => [
                 'time' => 'Bạn đã có lịch học trong khoảng thời gian này.',
+                'time_conflicts' => $conflicts,
             ],
         ], 422);
     }

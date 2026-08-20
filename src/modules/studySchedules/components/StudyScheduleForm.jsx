@@ -66,6 +66,7 @@ export default function StudyScheduleForm({
   const [clientErrors, setClientErrors] = useState({});
   const errors = useMemo(() => ({ ...clientErrors, ...apiErrors }), [apiErrors, clientErrors]);
   const noAvailableSubjects = subjects.length === 0;
+  const timeConflicts = Array.isArray(errors.time_conflicts) ? errors.time_conflicts : [];
 
   useEffect(() => {
     setForm({ ...DEFAULT_FORM, ...initialValues });
@@ -157,7 +158,25 @@ export default function StudyScheduleForm({
           <Textarea name="description" value={form.description} onChange={handleChange} rows={5} placeholder="Ghi chú nội dung cần học" />
         </Field>
 
-        {errors.time && <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{errors.time}</div>}
+        {errors.time && (
+          <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+            <p>{errors.time}</p>
+            {timeConflicts.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {timeConflicts.map((conflict) => (
+                  <div key={conflict.id} className="rounded-lg bg-white/80 px-3 py-2 text-rose-800">
+                    <p className="font-black">{conflict.title || "Lịch học đã tồn tại"}</p>
+                    <p className="mt-1 text-xs">
+                      {conflict.study_date} · {conflict.start_time} - {conflict.end_time}
+                      {conflict.schedule_type ? ` · ${conflict.schedule_type}` : ""}
+                      {conflict.status ? ` · ${conflict.status}` : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {noAvailableSubjects && (
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
             Bạn chưa được gán môn học đang hoạt động, nên chưa thể tạo lịch học mới.
