@@ -425,9 +425,9 @@ export default function App() {
         <Route path="/student/learning-goals/:id" element={<StudentRoute><LearningGoalDetailPage /></StudentRoute>} />
         <Route path="/student/learning-goals/:id/edit" element={<StudentRoute><GuestPreviewDashboardRedirect><LearningGoalEditPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/roadmaps" element={<StudentRoute><RoadmapListPage /></StudentRoute>} />
-        <Route path="/student/roadmaps/create" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
-        <Route path="/student/roadmaps/generate" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
-        <Route path="/student/roadmaps/preview" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
+        <Route path="/student/roadmaps/create" element={<StudentRoute><GuestPreviewDashboardRedirect><RoadmapCreatePage /></GuestPreviewDashboardRedirect></StudentRoute>} />
+        <Route path="/student/roadmaps/generate" element={<StudentRoute><GuestPreviewDashboardRedirect><RoadmapGeneratePage /></GuestPreviewDashboardRedirect></StudentRoute>} />
+        <Route path="/student/roadmaps/preview" element={<StudentRoute><GuestPreviewDashboardRedirect><RoadmapPreviewPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/student/roadmaps/:id" element={<StudentRoute><RoadmapDetailPage /></StudentRoute>} />
         <Route path="/student/roadmaps/:id/edit" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
         <Route path="/student/schedules" element={<StudentRoute><StudyScheduleCalendarPage /></StudentRoute>} />

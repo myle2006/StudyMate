@@ -8,13 +8,11 @@ class RoadmapTemplate extends Model
             'student_id' => $studentId,
             'assignment_status' => 'active',
             'template_status' => 'active',
-            'subject_status' => 'studying',
         ];
         $where = [
             'ss.student_id = :student_id',
             'ss.status = :assignment_status',
             't.status = :template_status',
-            's.status = :subject_status',
             's.deleted_at IS NULL',
         ];
 

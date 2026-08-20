@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Eye, Search } from "lucide-react";
+import { Eye, Plus, Search } from "lucide-react";
 import { Alert, Badge, Button, Card, EmptyState, Input, LoadingState, PageHeader, Select } from "../../../components/ui";
 import RoadmapProgressBar from "../components/RoadmapProgressBar";
 import { getRoadmaps } from "../services/learningRoadmapService";
@@ -53,6 +53,11 @@ export default function RoadmapListPage() {
           eyebrow="StudyMate Roadmap"
           title="Lộ trình học"
           description={roadmaps.length ? summary : "Lộ trình được tạo bởi admin/giảng viên. Bạn chỉ cần xem mindmap, học nội dung và hoàn thành quiz xác nhận."}
+          actions={
+            <Button to="/student/roadmaps/generate">
+              <Plus size={16} /> Tạo lộ trình từ mẫu
+            </Button>
+          }
         />
 
         <Card className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_240px]">
@@ -85,7 +90,9 @@ export default function RoadmapListPage() {
         ) : roadmaps.length === 0 ? (
           <EmptyState
             title="Chưa có lộ trình học"
-            description="Bạn chưa có lộ trình được gán. Hãy liên hệ admin/giảng viên để tạo hoặc gán lộ trình cho môn học."
+            description="Database hiện mới có lộ trình mẫu. Hãy chọn môn học và mẫu 1, 3 hoặc 6 tháng để tạo lộ trình học cá nhân."
+            actionLabel="Tạo lộ trình từ mẫu"
+            actionTo="/student/roadmaps/generate"
           />
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
