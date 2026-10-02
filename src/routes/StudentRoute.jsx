@@ -21,5 +21,9 @@ export default function StudentRoute({ children }) {
     return <Navigate to="/admin" replace />;
   }
 
+  if (user?.must_change_password) {
+    return <Navigate to="/change-password" replace />;
+  }
+
   return children || <Outlet />;
 }

@@ -9,8 +9,8 @@ function validate(form) {
 
   if (!form.email.trim()) {
     errors.email = "Email là bắt buộc.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = "Email không đúng định dạng.";
+  } else if (form.email.trim().length < 3) {
+    errors.email = "Vui lòng nhập email hoặc mã sinh viên hợp lệ.";
   }
 
   if (!form.password) {
@@ -21,6 +21,7 @@ function validate(form) {
 }
 
 function redirectByRole(user, fallback) {
+  if (user?.must_change_password) return "/change-password";
   if (user?.role === "admin") return "/admin";
   if (user?.role === "student") return "/dashboard";
 
@@ -86,12 +87,12 @@ export default function Login() {
           </Alert>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <Field label="Email" error={errors.email}>
+            <Field label="Email hoặc mã sinh viên" error={errors.email}>
               <Input
-                type="email"
+                type="text"
                 value={form.email}
                 onChange={(event) => updateField("email", event.target.value)}
-                placeholder="student@example.com"
+                placeholder="student@example.com hoặc MSSV"
               />
             </Field>
 

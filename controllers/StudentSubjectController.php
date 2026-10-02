@@ -199,6 +199,59 @@ class StudentSubjectController extends Controller
         ], 201);
     }
 
+    public function importClass(string|int $subjectId, string|int $classId): void
+    {
+        $subjectId = (int) $subjectId;
+        $classId = (int) $classId;
+        if (! $this->validSubject($subjectId)) {
+            return;
+        }
+
+        $file = $_FILES['file'] ?? null;
+        if (! is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            $this->validationFailed(['file' => 'Vui lòng chọn file import.']);
+            return;
+        }
+        if (($file['size'] ?? 0) > 5 * 1024 * 1024) {
+            $this->validationFailed(['file' => 'File import không được vượt quá 5MB.']);
+            return;
+        }
+
+        $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
+        if (! in_array($extension, ['csv', 'xlsx', 'xls'], true)) {
+            $this->validationFailed(['file' => 'File import chỉ hỗ trợ CSV, XLS hoặc XLSX.']);
+            return;
+        }
+
+        $uploadDir = BASE_PATH . '/public/uploads/imports';
+        if (! is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        $storedPath = $uploadDir . '/class_students_' . date('YmdHis') . '_' . bin2hex(random_bytes(6)) . '.' . $extension;
+        if (! move_uploaded_file($file['tmp_name'], $storedPath)) {
+            $this->validationFailed(['file' => 'Không thể lưu file import.']);
+            return;
+        }
+
+        try {
+            $service = new ImportStudentService();
+            $result = $service->importToClass($storedPath, $extension, $subjectId, $classId, $this->currentUserId());
+        } catch (RuntimeException $exception) {
+            @unlink($storedPath);
+            $this->validationFailed(['file' => $exception->getMessage()]);
+            return;
+        } finally {
+            @unlink($storedPath);
+        }
+
+        $this->json([
+            'success' => true,
+            'message' => 'Import sinh viên vào lớp học phần hoàn tất. Mật khẩu mặc định của tài khoản mới là MSSV và bắt buộc đổi sau lần đăng nhập đầu tiên.',
+            'summary' => $result['summary'],
+            'errors' => $result['errors'],
+        ]);
+    }
+
     public function destroy(string|int $subjectId, string|int $studentId): void
     {
         $subjectId = (int) $subjectId;

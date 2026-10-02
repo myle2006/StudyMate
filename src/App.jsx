@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { Activity, BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
 import Login from "./pages/auth/Login";
+import ChangePassword from "./pages/auth/ChangePassword";
 import Register from "./pages/auth/Register";
 import LandingPage from "./pages/LandingPage";
 import GuestPreviewPage from "./pages/preview/GuestPreviewPage";
@@ -387,6 +388,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/preview" element={<GuestPreviewPage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/change-password" element={<PrivateRoute><ChangePassword /></PrivateRoute>} />
         <Route path="/register" element={<Register />} />
 
         <Route path="/admin" element={<AdminRoute><Navigate to="/admin/dashboard" replace /></AdminRoute>} />

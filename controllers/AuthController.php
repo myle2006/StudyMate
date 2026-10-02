@@ -72,7 +72,7 @@ class AuthController extends Controller
             return;
         }
 
-        $user = $this->user->findByEmail($data['email']);
+        $user = $this->user->findByLogin($data['login']);
 
         if ($user === null || ! $this->passwordMatches($data['password'], (string) $user['password'])) {
             $this->invalidCredentials();
@@ -117,8 +117,41 @@ class AuthController extends Controller
                 'full_name' => $user['full_name'],
                 'email' => $user['email'],
                 'role' => $roleName,
+                'must_change_password' => (bool) ($user['must_change_password'] ?? false),
                 'redirect_url' => $this->redirectUrl($roleName),
             ],
+        ]);
+    }
+
+    public function changePassword(): void
+    {
+        $user = $this->currentUser();
+        $data = $this->input();
+        $newPassword = (string) ($data['new_password'] ?? '');
+        $confirmPassword = (string) ($data['confirm_password'] ?? '');
+        $errors = [];
+
+        if (strlen($newPassword) < 6) {
+            $errors['new_password'] = 'Mật khẩu mới phải có ít nhất 6 ký tự.';
+        }
+        if ($newPassword !== $confirmPassword) {
+            $errors['confirm_password'] = 'Mật khẩu nhập lại không khớp.';
+        }
+        if ($newPassword !== '' && isset($user['student_code']) && hash_equals(strtolower((string) $user['student_code']), strtolower($newPassword))) {
+            $errors['new_password'] = 'Mật khẩu mới không được tiếp tục là mã sinh viên.';
+        }
+
+        if ($errors !== []) {
+            $this->validationFailed($errors);
+            return;
+        }
+
+        $this->user->changePassword((int) ($user['id'] ?? 0), $newPassword);
+
+        $this->json([
+            'success' => true,
+            'message' => 'Đổi mật khẩu thành công.',
+            'data' => $this->publicUser($this->user->getUserWithRole((int) ($user['id'] ?? 0))),
         ]);
     }
 
@@ -184,7 +217,7 @@ class AuthController extends Controller
     {
         return [
             'full_name' => trim((string) ($input['full_name'] ?? '')),
-            'email' => strtolower(trim((string) ($input['email'] ?? ''))),
+            'login' => strtolower(trim((string) ($input['login'] ?? $input['email'] ?? ''))),
             'password' => (string) ($input['password'] ?? ''),
             'confirm_password' => (string) ($input['confirm_password'] ?? ''),
             'phone' => trim((string) ($input['phone'] ?? '')),
@@ -213,10 +246,8 @@ class AuthController extends Controller
             $errors['full_name'] = 'Họ tên không được vượt quá 150 ký tự.';
         }
 
-        if ($data['email'] === '') {
-            $errors['email'] = 'Email là bắt buộc.';
-        } elseif (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Email không đúng định dạng.';
+        if ($data['login'] === '') {
+            $errors['email'] = 'Email hoặc mã sinh viên là bắt buộc.';
         }
 
         if ($data['password'] === '') {
@@ -294,6 +325,7 @@ class AuthController extends Controller
             'phone' => $user['phone'] ?? null,
             'student_code' => $user['student_code'] ?? null,
             'status' => $user['status'],
+            'must_change_password' => (bool) ($user['must_change_password'] ?? false),
         ];
     }
 

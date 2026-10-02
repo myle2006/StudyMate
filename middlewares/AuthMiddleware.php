@@ -33,6 +33,23 @@ class AuthMiddleware
         self::$user = $user;
         self::$token = $token;
 
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+        $basePath = base_url_path();
+        if ($basePath !== '' && strncmp($path, $basePath, strlen($basePath)) === 0) {
+            $path = substr($path, strlen($basePath)) ?: '/';
+        }
+        $allowedDuringPasswordChange = [
+            '/api/me',
+            '/api/change-password',
+            '/api/logout',
+        ];
+        if ((bool) ($user['must_change_password'] ?? false) && ! in_array($path, $allowedDuringPasswordChange, true)) {
+            $this->unauthorized('Bạn phải đổi mật khẩu trước khi tiếp tục sử dụng hệ thống.', 403, [
+                'code' => 'PASSWORD_CHANGE_REQUIRED',
+            ]);
+            return false;
+        }
+
         return true;
     }
 
@@ -62,13 +79,13 @@ class AuthMiddleware
         return trim($matches[1]);
     }
 
-    private function unauthorized(string $message, int $statusCode): void
+    private function unauthorized(string $message, int $statusCode, array $extra = []): void
     {
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
+        echo json_encode(array_merge([
             'success' => false,
             'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
+        ], $extra), JSON_UNESCAPED_UNICODE);
     }
 }

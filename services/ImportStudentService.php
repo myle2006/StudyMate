@@ -11,6 +11,99 @@ class ImportStudentService
         $this->role = new Role();
     }
 
+    public function importToClass(string $filePath, string $extension, int $subjectId, int $classId, int $assignedBy): array
+    {
+        $rows = $this->readRows($filePath, $extension);
+        $studentRole = $this->role->findByName('student');
+        $studentSubject = new StudentSubject();
+        $subjectClass = new SubjectClass();
+        $errors = [];
+        $successCount = 0;
+        $seenCodes = [];
+
+        if ($studentRole === null) {
+            return ['summary' => ['total_rows' => count($rows), 'success_count' => 0, 'failed_count' => 1], 'errors' => [['row' => 0, 'student_code' => '', 'message' => 'Vai trò sinh viên chưa được cấu hình.']]];
+        }
+
+        if (! $subjectClass->belongsToSubject($classId, $subjectId)) {
+            throw new RuntimeException('Lớp học phần không thuộc môn học đã chọn hoặc đã bị khóa.');
+        }
+
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+            $fullName = trim((string) ($row['full_name'] ?? $row['name'] ?? ''));
+            $studentCode = trim((string) ($row['student_code'] ?? $row['mssv'] ?? ''));
+            $email = strtolower(trim((string) ($row['email'] ?? '')));
+            $phone = trim((string) ($row['phone'] ?? ''));
+            $rowErrors = [];
+
+            if ($fullName === '' || $this->textLength($fullName) < 3) {
+                $rowErrors[] = 'Họ tên là bắt buộc và phải có ít nhất 3 ký tự.';
+            }
+            if ($studentCode === '') {
+                $rowErrors[] = 'Mã sinh viên là bắt buộc.';
+            } elseif (! preg_match('/^[A-Za-z0-9]+$/', $studentCode)) {
+                $rowErrors[] = 'Mã sinh viên chỉ được chứa chữ cái và số.';
+            } elseif (in_array(strtolower($studentCode), $seenCodes, true)) {
+                $rowErrors[] = 'Mã sinh viên bị trùng trong file import.';
+            }
+
+            if ($rowErrors !== []) {
+                $errors[] = ['row' => $rowNumber, 'student_code' => $studentCode, 'message' => implode(' ', $rowErrors)];
+                continue;
+            }
+            $seenCodes[] = strtolower($studentCode);
+
+            $student = $this->student->findByStudentCode($studentCode);
+            if ($student !== null && strtolower((string) ($student['role'] ?? '')) !== 'student') {
+                $errors[] = ['row' => $rowNumber, 'student_code' => $studentCode, 'message' => 'MSSV đã thuộc tài khoản không phải sinh viên.'];
+                continue;
+            }
+            if ($student !== null && $student['status'] !== 'active') {
+                $errors[] = ['row' => $rowNumber, 'student_code' => $studentCode, 'message' => 'Tài khoản sinh viên đang bị vô hiệu hóa hoặc khóa.'];
+                continue;
+            }
+
+            if ($student === null) {
+                $email = $email !== '' ? $email : strtolower($studentCode) . '@student.local';
+                if ($this->student->isEmailExists($email)) {
+                    $errors[] = ['row' => $rowNumber, 'student_code' => $studentCode, 'message' => 'Email đã tồn tại; hãy cung cấp email khác.'];
+                    continue;
+                }
+                if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $errors[] = ['row' => $rowNumber, 'student_code' => $studentCode, 'message' => 'Email không hợp lệ.'];
+                    continue;
+                }
+
+                $studentId = $this->student->create([
+                    'role_id' => (int) $studentRole['id'],
+                    'full_name' => $fullName,
+                    'email' => $email,
+                    'password' => password_hash($studentCode, PASSWORD_DEFAULT),
+                    'phone' => $phone,
+                    'student_code' => $studentCode,
+                    'status' => 'active',
+                    'must_change_password' => true,
+                ]);
+            } else {
+                $studentId = (int) $student['id'];
+            }
+
+            $result = $studentSubject->assignStudent($subjectId, $studentId, $assignedBy, $classId);
+            if ($result['duplicate'] && (int) ($result['active_class_id'] ?? 0) !== $classId) {
+                $activeClass = trim((string) ($result['active_class_code'] ?? ''));
+                $errors[] = ['row' => $rowNumber, 'student_code' => $studentCode, 'message' => 'Sinh viên đã ở lớp ' . ($activeClass ?: 'khác') . ' trong môn học này.'];
+                continue;
+            }
+            $successCount++;
+        }
+
+        return [
+            'summary' => ['total_rows' => count($rows), 'success_count' => $successCount, 'failed_count' => count($errors)],
+            'errors' => $errors,
+        ];
+    }
+
     public function import(string $filePath, string $extension): array
     {
         $rows = $this->readRows($filePath, $extension);

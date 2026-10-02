@@ -52,6 +52,13 @@ export function login(data) {
   });
 }
 
+export function changePassword(data) {
+  return request("/change-password", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export function getMe(token = getStoredToken()) {
   return request("/me", { token });
 }

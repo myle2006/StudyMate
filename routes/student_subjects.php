@@ -8,4 +8,5 @@ $router->post('/api/admin/subjects/{subjectId}/classes', [StudentSubjectControll
 $router->get('/api/admin/subjects/{subjectId}/students', [StudentSubjectController::class, 'index'], $admin);
 $router->get('/api/admin/subjects/{subjectId}/available-students', [StudentSubjectController::class, 'availableStudents'], $admin);
 $router->post('/api/admin/subjects/{subjectId}/students', [StudentSubjectController::class, 'store'], $admin);
+$router->post('/api/admin/subjects/{subjectId}/classes/{classId}/students/import', [StudentSubjectController::class, 'importClass'], $admin);
 $router->delete('/api/admin/subjects/{subjectId}/students/{studentId}', [StudentSubjectController::class, 'destroy'], $admin);

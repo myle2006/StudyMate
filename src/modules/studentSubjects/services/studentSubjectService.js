@@ -89,3 +89,28 @@ export function removeStudentFromSubject(subjectId, studentId, classId) {
     method: "DELETE",
   });
 }
+
+export function importStudentsToClass(subjectId, classId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const token = getToken();
+
+  return fetch(`${API_BASE_URL}/admin/subjects/${subjectId}/classes/${classId}/students/import`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  }).then(async (response) => {
+    const payload = await response.json().catch(() => ({ success: false, message: "Không thể đọc phản hồi từ máy chủ." }));
+    if (!response.ok || payload.success === false) {
+      const error = new Error(payload.message || "Import thất bại.");
+      error.status = response.status;
+      error.errors = payload.errors || {};
+      error.payload = payload;
+      throw error;
+    }
+    return payload;
+  });
+}

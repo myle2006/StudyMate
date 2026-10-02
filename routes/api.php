@@ -7,6 +7,7 @@ $student = [AuthMiddleware::class, [RoleMiddleware::class, 'student']];
 $router->post('/api/register', [AuthController::class, 'register']);
 $router->post('/api/login', [AuthController::class, 'login']);
 $router->get('/api/me', [AuthController::class, 'me'], $auth);
+$router->post('/api/change-password', [AuthController::class, 'changePassword'], $auth);
 $router->post('/api/logout', [AuthController::class, 'logout'], $auth);
 $router->get('/api/files/{category}/{filename}', [FileController::class, 'download'], $auth);
 $router->get('/api/admin/dashboard', [AdminDashboardController::class, 'index'], $admin);

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { ArrowLeft, Plus, Search, UploadCloud } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Alert, Button, Card, ConfirmDialog, Field, Input, LoadingState, Modal, PageHeader, Select, useToast } from "../../../components/ui";
 import { getSubjectById } from "../../subjects/services/subjectService";
@@ -9,6 +9,7 @@ import {
   getAssignedStudents,
   getAvailableStudents,
   getSubjectClasses,
+  importStudentsToClass,
   removeStudentFromSubject,
 } from "../services/studentSubjectService";
 import AssignedStudentTable from "../components/AssignedStudentTable";
@@ -37,6 +38,11 @@ export default function AdminSubjectStudentsPage() {
   const [classForm, setClassForm] = useState({ class_code: "", class_name: "" });
   const [classError, setClassError] = useState("");
   const [creatingClass, setCreatingClass] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importError, setImportError] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
 
   async function loadPage(nextKeyword = keyword) {
     setLoading(true);
@@ -142,6 +148,47 @@ export default function AdminSubjectStudentsPage() {
     }
   }
 
+  function openImportModal() {
+    if (!selectedClassId) {
+      toast.error("Vui lòng chọn một lớp học phần trước khi import.");
+      return;
+    }
+    setImportFile(null);
+    setImportError("");
+    setImportResult(null);
+    setImportModalOpen(true);
+  }
+
+  async function handleImport(event) {
+    event.preventDefault();
+    if (!importFile) {
+      setImportError("Vui lòng chọn file CSV hoặc XLSX.");
+      return;
+    }
+    const extension = importFile.name.split(".").pop()?.toLowerCase();
+    if (!["csv", "xlsx", "xls"].includes(extension)) {
+      setImportError("File import chỉ hỗ trợ CSV, XLS hoặc XLSX.");
+      return;
+    }
+    if (importFile.size > 5 * 1024 * 1024) {
+      setImportError("File import không được vượt quá 5MB.");
+      return;
+    }
+
+    setImporting(true);
+    setImportError("");
+    try {
+      const response = await importStudentsToClass(subjectId, selectedClassId, importFile);
+      setImportResult(response);
+      toast.success(response.message || "Import sinh viên thành công.");
+      await loadPage(keyword);
+    } catch (err) {
+      setImportError(err.errors?.file || err.message || "Import thất bại.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   async function confirmRemove() {
     if (!selectedStudent) return;
 
@@ -184,6 +231,9 @@ export default function AdminSubjectStudentsPage() {
             </Button>
             <Button type="button" onClick={openAssignModal}>
               <Plus size={16} /> Thêm sinh viên
+            </Button>
+            <Button type="button" variant="secondary" onClick={openImportModal}>
+              <UploadCloud size={16} /> Import lớp
             </Button>
             <Button type="button" variant="secondary" onClick={() => setClassModalOpen(true)}>
               <Plus size={16} /> Thêm lớp
@@ -253,6 +303,40 @@ export default function AdminSubjectStudentsPage() {
         onCancel={() => setSelectedStudent(null)}
         onConfirm={confirmRemove}
       />
+
+      <Modal
+        open={importModalOpen}
+        title="Import sinh viên vào lớp học phần"
+        description="Cột bắt buộc: full_name, student_code. Email và phone là tùy chọn."
+        onClose={() => setImportModalOpen(false)}
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setImportModalOpen(false)} disabled={importing}>Hủy</Button>
+            <Button type="submit" form="class-student-import-form" disabled={importing}>
+              {importing ? "Đang import..." : "Import sinh viên"}
+            </Button>
+          </>
+        }
+      >
+        <form id="class-student-import-form" onSubmit={handleImport} className="space-y-4">
+          <Alert tone="error">{importError}</Alert>
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm leading-6 text-blue-900">
+            Tài khoản mới đăng nhập bằng MSSV, mật khẩu mặc định là MSSV và bắt buộc đổi mật khẩu ngay lần đầu.
+          </div>
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center hover:border-blue-300 hover:bg-blue-50">
+            <UploadCloud className="text-blue-600" size={30} />
+            <span className="mt-2 text-sm font-bold text-slate-800">{importFile ? importFile.name : "Chọn file CSV, XLS hoặc XLSX"}</span>
+            <span className="mt-1 text-xs text-slate-500">Ví dụ header: full_name,student_code,email,phone</span>
+            <input type="file" accept=".csv,.xls,.xlsx" className="sr-only" onChange={(event) => { setImportFile(event.target.files?.[0] || null); setImportError(""); }} />
+          </label>
+          {importResult && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+              Đã xử lý {importResult.summary?.success_count || 0} sinh viên; lỗi {importResult.summary?.failed_count || 0} dòng.
+              {importResult.errors?.length > 0 && <div className="mt-2 text-rose-700">{importResult.errors.slice(0, 3).map((item) => <div key={`${item.row}-${item.student_code}`}>Dòng {item.row}: {item.message}</div>)}</div>}
+            </div>
+          )}
+        </form>
+      </Modal>
 
       <Modal
         open={classModalOpen}

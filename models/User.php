@@ -2,18 +2,18 @@
 
 class User extends Model
 {
-    public function findByEmail(string $email): ?array
+    public function findByLogin(string $login): ?array
     {
         $statement = $this->db()->prepare(
             'SELECT u.id, u.role_id, u.full_name, u.email, u.password, u.avatar, u.phone,
-                    u.student_code, u.status, u.last_login_at, u.created_at, u.updated_at,
+                    u.student_code, u.status, u.must_change_password, u.last_login_at, u.created_at, u.updated_at,
                     r.name AS role
              FROM users u
              INNER JOIN roles r ON r.id = u.role_id
-             WHERE LOWER(u.email) = :email
+             WHERE LOWER(u.email) = :login OR LOWER(u.student_code) = :login
              LIMIT 1'
         );
-        $statement->execute(['email' => strtolower(trim($email))]);
+        $statement->execute(['login' => strtolower(trim($login))]);
         $user = $statement->fetch();
 
         return $user ?: null;
@@ -23,7 +23,7 @@ class User extends Model
     {
         $statement = $this->db()->prepare(
             'SELECT id, role_id, full_name, email, avatar, phone, student_code,
-                    status, last_login_at, created_at, updated_at
+                    status, must_change_password, last_login_at, created_at, updated_at
              FROM users
              WHERE id = :id
              LIMIT 1'
@@ -74,11 +74,25 @@ class User extends Model
         ]);
     }
 
+    public function changePassword(int $id, string $password): bool
+    {
+        $statement = $this->db()->prepare(
+            'UPDATE users
+             SET password = :password, must_change_password = 0, updated_at = NOW()
+             WHERE id = :id'
+        );
+
+        return $statement->execute([
+            'id' => $id,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+        ]);
+    }
+
     public function getUserWithRole(int $id): ?array
     {
         $statement = $this->db()->prepare(
             'SELECT u.id, u.role_id, u.full_name, u.email, u.avatar, u.phone,
-                    u.student_code, u.status, u.last_login_at, u.created_at, u.updated_at,
+                    u.student_code, u.status, u.must_change_password, u.last_login_at, u.created_at, u.updated_at,
                     r.name AS role
              FROM users u
              INNER JOIN roles r ON r.id = u.role_id

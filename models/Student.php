@@ -34,7 +34,7 @@ class Student extends Model
 
         $statement = $this->db()->prepare(
             'SELECT u.id, u.full_name, u.email, u.avatar, u.phone, u.student_code,
-                    u.status, u.last_login_at, u.created_at, u.updated_at
+                    u.status, u.must_change_password, u.last_login_at, u.created_at, u.updated_at
              FROM users u
              INNER JOIN roles r ON r.id = u.role_id'
              . $whereSql .
@@ -64,7 +64,7 @@ class Student extends Model
     {
         $statement = $this->db()->prepare(
             'SELECT u.id, u.full_name, u.email, u.avatar, u.phone, u.student_code,
-                    u.status, u.last_login_at, u.created_at, u.updated_at,
+                    u.status, u.must_change_password, u.last_login_at, u.created_at, u.updated_at,
                     r.name AS role
              FROM users u
              INNER JOIN roles r ON r.id = u.role_id
@@ -83,14 +83,15 @@ class Student extends Model
     public function create(array $data): int
     {
         $statement = $this->db()->prepare(
-            'INSERT INTO users (role_id, full_name, email, password, phone, student_code, status)
-             VALUES (:role_id, :full_name, :email, :password, :phone, :student_code, :status)'
+            'INSERT INTO users (role_id, full_name, email, password, must_change_password, phone, student_code, status)
+             VALUES (:role_id, :full_name, :email, :password, :must_change_password, :phone, :student_code, :status)'
         );
         $statement->execute([
             'role_id' => (int) $data['role_id'],
             'full_name' => $data['full_name'],
             'email' => strtolower(trim($data['email'])),
             'password' => $data['password'],
+            'must_change_password' => (int) ($data['must_change_password'] ?? false),
             'phone' => $data['phone'] ?: null,
             'student_code' => $data['student_code'],
             'status' => $data['status'] ?: 'active',
@@ -143,7 +144,7 @@ class Student extends Model
 
     public function resetPassword(int $id, string $newPassword): bool
     {
-        $statement = $this->db()->prepare('UPDATE users SET password = :password WHERE id = :id');
+        $statement = $this->db()->prepare('UPDATE users SET password = :password, must_change_password = 1 WHERE id = :id');
 
         return $statement->execute([
             'id' => $id,
@@ -165,6 +166,21 @@ class Student extends Model
         $statement->execute($params);
 
         return (int) $statement->fetchColumn() > 0;
+    }
+
+    public function findByStudentCode(string $studentCode): ?array
+    {
+        $statement = $this->db()->prepare(
+            'SELECT u.id, u.full_name, u.email, u.phone, u.student_code, u.status, r.name AS role
+             FROM users u
+             INNER JOIN roles r ON r.id = u.role_id
+             WHERE LOWER(u.student_code) = :student_code
+             LIMIT 1'
+        );
+        $statement->execute(['student_code' => strtolower(trim($studentCode))]);
+        $student = $statement->fetch();
+
+        return $student ?: null;
     }
 
     public function isStudentCodeExists(string $studentCode, ?int $excludeId = null): bool
