@@ -70,14 +70,14 @@ export default function StudentImport() {
         title="Import sinh viên"
         description="Tải lên CSV hoặc Excel để tạo nhiều tài khoản sinh viên cùng lúc."
         actions={
-          <div className="flex flex-wrap gap-3">
+          <>
             <Button to="/admin/students" variant="secondary">
               <ArrowLeft size={16} /> Quay lại
             </Button>
             <Button type="button" variant="secondary" onClick={handleDownloadTemplate}>
               <Download size={16} /> File mẫu
             </Button>
-          </div>
+          </>
         }
       />
 

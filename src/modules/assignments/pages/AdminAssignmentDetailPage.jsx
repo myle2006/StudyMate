@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Download, Edit3, Inbox } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Badge, Button, Card, LoadingState, PageHeader } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import { getAssignmentById } from "../services/assignmentService";
 
 const statusConfig = {
@@ -132,14 +133,13 @@ export default function AdminAssignmentDetailPage() {
           </div>
 
           {assignment.attachment_path && (
-            <a
-              href={assignment.attachment_path}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => downloadProtectedFile(assignment.attachment_path)}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700"
             >
               <Download size={16} /> Tải file đính kèm
-            </a>
+            </button>
           )}
         </Card>
       </div>

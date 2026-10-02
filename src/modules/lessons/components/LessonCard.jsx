@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, CheckCircle2, Clock3, FileText, Layers3, Video } from "lucide-react";
+import { BookOpen, CheckCircle2, Clock3, Edit3, FileText, Layers3, Trash2, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge, Button } from "../../../components/ui";
 
@@ -40,15 +40,21 @@ export default function LessonCard({ lesson, to, admin = false, onDelete }) {
         )}
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Button to={to} variant="secondary" size="sm">
+      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+        <Button to={to} variant="secondary" size="sm" className="w-full">
           <BookOpen className="h-4 w-4" />
           Xem
         </Button>
         {admin && (
           <>
-            <Button to={`/admin/lessons/${lesson.id}/edit`} variant="secondary" size="sm">Sửa</Button>
-            <Button type="button" variant="danger" size="sm" onClick={() => onDelete?.(lesson)}>Xóa</Button>
+            <Button to={`/admin/lessons/${lesson.id}/edit`} variant="secondary" size="sm" className="w-full">
+              <Edit3 className="h-4 w-4" />
+              Sửa
+            </Button>
+            <Button type="button" variant="danger" size="sm" className="w-full sm:col-span-2" onClick={() => onDelete?.(lesson)}>
+              <Trash2 className="h-4 w-4" />
+              Xóa
+            </Button>
           </>
         )}
       </div>

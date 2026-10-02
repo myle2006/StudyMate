@@ -5,6 +5,7 @@ class LearningRoadmapController extends Controller
     private LearningRoadmap $roadmap;
     private LearningRoadmapItem $item;
     private LearningGoal $learningGoal;
+    private const QUIZ_PASSING_SCORE = 7.0;
 
     public function __construct()
     {
@@ -84,13 +85,35 @@ class LearningRoadmapController extends Controller
             return;
         }
 
-        $this->roadmap->recalculateProgress($roadmapId);
+        try {
+            $this->roadmap->recalculateProgress($roadmapId);
+            $summary = $this->roadmap->getProgressSummary($roadmapId);
+        } catch (Throwable $exception) {
+            error_log($exception);
+            $summary = [
+                'roadmap_id' => $roadmapId,
+                'total_items' => 0,
+                'completed_items' => 0,
+                'not_completed_items' => 0,
+                'rescheduled_items' => 0,
+                'pending_items' => 0,
+                'progress_percent' => (float) ($roadmap['progress_percent'] ?? 0),
+                'planned_minutes' => 0,
+                'actual_study_minutes' => 0,
+                'remaining_minutes' => 0,
+                'goal_achievement_percent' => (float) ($roadmap['progress_percent'] ?? 0),
+                'average_self_assessment' => 0,
+                'daily' => [],
+                'weekly' => [],
+                'is_completed' => ($roadmap['status'] ?? '') === 'completed',
+            ];
+        }
 
         $this->json([
             'success' => true,
             'message' => 'Lấy tiến độ lộ trình học thành công.',
             'data' => [
-                ...$this->roadmap->getProgressSummary($roadmapId),
+                ...$summary,
                 'roadmap_status' => $roadmap['status'],
             ],
         ]);
@@ -173,7 +196,14 @@ class LearningRoadmapController extends Controller
             return;
         }
 
-        $this->item->updateStatus((int) $id, $studentId, trim((string) $data['status']));
+        $status = trim((string) $data['status']);
+        $transitionErrors = $this->validateItemTransition($item, $studentId, $status);
+        if ($transitionErrors !== []) {
+            $this->validationFailed($transitionErrors);
+            return;
+        }
+
+        $this->item->updateStatus((int) $id, $studentId, $status);
         $progress = $this->roadmap->recalculateProgress((int) $item['roadmap_id']);
         $summary = $this->roadmap->getProgressSummary((int) $item['roadmap_id']);
 
@@ -212,6 +242,12 @@ class LearningRoadmapController extends Controller
         if ((float) $data['completion_percent'] >= 100) {
             $data['status'] = 'completed';
             $data['completion_percent'] = 100;
+        }
+
+        $transitionErrors = $this->validateItemTransition($item, $studentId, (string) $data['status']);
+        if ($transitionErrors !== []) {
+            $this->validationFailed($transitionErrors);
+            return;
         }
 
         $this->item->updateResult((int) $id, $studentId, $data);
@@ -324,6 +360,77 @@ class LearningRoadmapController extends Controller
             'status' => trim((string) ($input['status'] ?? $current['status'] ?? 'active')),
             'progress_percent' => $current['progress_percent'] ?? 0,
         ];
+    }
+
+    private function validateItemTransition(array $item, int $studentId, string $nextStatus): array
+    {
+        if (! in_array($nextStatus, ['in_progress', 'completed'], true)) {
+            return [];
+        }
+
+        $items = $this->item->getForRoadmap((int) $item['roadmap_id'], $studentId);
+        $currentIndex = null;
+        $itemsById = [];
+        foreach ($items as $index => $roadmapItem) {
+            $itemId = (int) $roadmapItem['id'];
+            $itemsById[$itemId] = $roadmapItem;
+            if ($itemId === (int) $item['id']) {
+                $currentIndex = $index;
+            }
+        }
+
+        if ($currentIndex === null) {
+            return ['status' => 'Không tìm thấy bước học trong lộ trình.'];
+        }
+
+        $blockers = [];
+        foreach (array_slice($items, 0, $currentIndex) as $previousItem) {
+            $isRequired = (int) ($previousItem['is_required'] ?? 1) === 1;
+            $allowSkip = (int) ($previousItem['allow_skip'] ?? 0) === 1;
+            if ($isRequired && ! $allowSkip && ! $this->itemIsEffectivelyCompleted($previousItem)) {
+                $blockers[] = (string) ($previousItem['title'] ?? 'Bước học trước đó');
+            }
+        }
+
+        foreach (($items[$currentIndex]['prerequisite_item_ids'] ?? []) as $prerequisiteItemId) {
+            $prerequisite = $itemsById[(int) $prerequisiteItemId] ?? null;
+            if ($prerequisite !== null && ! $this->itemIsEffectivelyCompleted($prerequisite)) {
+                $blockers[] = (string) ($prerequisite['title'] ?? 'Bài học tiên quyết');
+            }
+        }
+
+        if ($blockers !== []) {
+            return [
+                'status' => 'Bạn cần hoàn thành các bước trước đó trước khi cập nhật bước này.',
+                'blocked_by' => array_values(array_unique($blockers)),
+            ];
+        }
+
+        if ($nextStatus === 'completed' && ! empty($item['assignment_id'])) {
+            $score = $item['assignment_score'] ?? null;
+            if ($score === null || (float) $score < self::QUIZ_PASSING_SCORE) {
+                return [
+                    'status' => 'Bước có quiz/bài xác nhận chỉ được hoàn thành sau khi đạt điểm yêu cầu.',
+                    'assignment' => 'Bạn cần đạt tối thiểu ' . self::QUIZ_PASSING_SCORE . '/10 trước khi hoàn thành bước này.',
+                ];
+            }
+        }
+
+        return [];
+    }
+
+    private function itemIsEffectivelyCompleted(array $item): bool
+    {
+        if (($item['status'] ?? '') !== 'completed') {
+            return false;
+        }
+
+        if (! empty($item['assignment_id'])) {
+            $score = $item['assignment_score'] ?? null;
+            return $score !== null && (float) $score >= self::QUIZ_PASSING_SCORE;
+        }
+
+        return true;
     }
 
     private function mergeLearningGoalData(array &$data, int $studentId): void

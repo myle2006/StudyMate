@@ -96,7 +96,7 @@ class NotificationService
             'SELECT a.id, a.title, a.deadline, s.subject_code, s.subject_name
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
              LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id AND sub.student_id = :student_id_submission
              WHERE ss.student_id = :student_id_subject
                AND ss.status = :student_subject_status
@@ -214,7 +214,7 @@ class NotificationService
                     COUNT(DISTINCT sub.id) AS submitted_count
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.status = :student_subject_status
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id AND ss.status = :student_subject_status
              LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id AND sub.student_id = ss.student_id
              WHERE a.status = :assignment_status
                AND a.deadline BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 3 DAY)

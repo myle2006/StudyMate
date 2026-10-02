@@ -35,9 +35,20 @@ class StudySchedule extends Model
                     TIME_FORMAT(ss.end_time, "%H:%i") AS end_time,
                     ss.location, ss.schedule_type, ss.status, ss.roadmap_id, ss.roadmap_item_id,
                     ss.reminder_minutes_before, ss.created_at, ss.updated_at,
-                    s.subject_code, s.subject_name, s.color, s.image, s.credits
+                    s.subject_code, s.subject_name, s.color, s.image, s.credits,
+                    lr.learning_goal_id,
+                    lg.title AS learning_goal_title,
+                    l.id AS related_lesson_id,
+                    COALESCE(l.title, ri.title) AS related_lesson_title
              FROM study_schedules ss
              INNER JOIN subjects s ON s.id = ss.subject_id
+             LEFT JOIN learning_roadmap_items ri ON ri.id = ss.roadmap_item_id
+             LEFT JOIN learning_roadmaps lr
+                ON lr.id = COALESCE(ss.roadmap_id, ri.roadmap_id)
+               AND lr.user_id = ss.user_id
+               AND lr.deleted_at IS NULL
+             LEFT JOIN learning_goals lg ON lg.id = lr.learning_goal_id AND lg.deleted_at IS NULL
+             LEFT JOIN lessons l ON l.id = ri.lesson_id AND lr.id IS NOT NULL AND l.deleted_at IS NULL
              WHERE ' . implode(' AND ', $where) . '
              ORDER BY ss.study_date ASC, ss.start_time ASC, ss.id ASC'
         );
@@ -54,9 +65,20 @@ class StudySchedule extends Model
                     TIME_FORMAT(ss.end_time, "%H:%i") AS end_time,
                     ss.location, ss.schedule_type, ss.status, ss.roadmap_id, ss.roadmap_item_id,
                     ss.reminder_minutes_before, ss.created_at, ss.updated_at,
-                    s.subject_code, s.subject_name, s.color, s.image, s.credits
+                    s.subject_code, s.subject_name, s.color, s.image, s.credits,
+                    lr.learning_goal_id,
+                    lg.title AS learning_goal_title,
+                    l.id AS related_lesson_id,
+                    COALESCE(l.title, ri.title) AS related_lesson_title
              FROM study_schedules ss
              INNER JOIN subjects s ON s.id = ss.subject_id
+             LEFT JOIN learning_roadmap_items ri ON ri.id = ss.roadmap_item_id
+             LEFT JOIN learning_roadmaps lr
+                ON lr.id = COALESCE(ss.roadmap_id, ri.roadmap_id)
+               AND lr.user_id = ss.user_id
+               AND lr.deleted_at IS NULL
+             LEFT JOIN learning_goals lg ON lg.id = lr.learning_goal_id AND lg.deleted_at IS NULL
+             LEFT JOIN lessons l ON l.id = ri.lesson_id AND lr.id IS NOT NULL AND l.deleted_at IS NULL
              WHERE ss.id = :id AND ss.user_id = :user_id AND ss.deleted_at IS NULL
              LIMIT 1'
         );

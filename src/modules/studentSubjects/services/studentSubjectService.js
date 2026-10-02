@@ -65,15 +65,27 @@ export function getAvailableStudents(subjectId, params = {}) {
   return request(`/admin/subjects/${subjectId}/available-students${buildQuery(params)}`);
 }
 
-export function assignStudentToSubject(subjectId, studentId) {
-  return request(`/admin/subjects/${subjectId}/students`, {
+export function getSubjectClasses(subjectId) {
+  return request(`/admin/subjects/${subjectId}/classes`);
+}
+
+export function createSubjectClass(subjectId, data) {
+  return request(`/admin/subjects/${subjectId}/classes`, {
     method: "POST",
-    body: JSON.stringify({ student_id: Number(studentId) }),
+    body: JSON.stringify(data),
   });
 }
 
-export function removeStudentFromSubject(subjectId, studentId) {
-  return request(`/admin/subjects/${subjectId}/students/${studentId}`, {
+export function assignStudentToSubject(subjectId, studentId, classId) {
+  return request(`/admin/subjects/${subjectId}/students`, {
+    method: "POST",
+    body: JSON.stringify({ student_id: Number(studentId), class_id: Number(classId) }),
+  });
+}
+
+export function removeStudentFromSubject(subjectId, studentId, classId) {
+  const query = classId ? `?class_id=${encodeURIComponent(classId)}` : "";
+  return request(`/admin/subjects/${subjectId}/students/${studentId}${query}`, {
     method: "DELETE",
   });
 }

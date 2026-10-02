@@ -6,7 +6,7 @@ export function Modal({ open, title, description, children, onClose, footer }) {
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
+      <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-black text-slate-950">{title}</h2>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Download, Edit3 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Button, Card, LoadingState, PageHeader } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import AssignmentStatusBadge from "../components/AssignmentStatusBadge";
 import { getSubmissionById } from "../services/submissionService";
 
@@ -26,6 +27,10 @@ function InfoItem({ label, value, children }) {
       <div className="mt-2 text-sm font-bold text-slate-950">{children || value || "-"}</div>
     </div>
   );
+}
+
+function scoreLabel(score) {
+  return score !== null && score !== undefined ? `${Number(score).toFixed(1)}/10` : "-";
 }
 
 export default function StudentSubmissionDetailPage() {
@@ -112,20 +117,19 @@ export default function StudentSubmissionDetailPage() {
           </div>
 
           {submission.file_path && (
-            <a
-              href={submission.file_path}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => downloadProtectedFile(submission.file_path)}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700"
             >
               <Download size={16} /> Tải file bài nộp
-            </a>
+            </button>
           )}
 
           {(submission.score || submission.feedback) && (
             <div className="rounded-xl bg-blue-50 p-4">
               <p className="text-xs font-extrabold uppercase text-blue-600">Kết quả chấm</p>
-              <p className="mt-2 text-sm font-black text-blue-800">Điểm: {submission.score ?? "-"}</p>
+              <p className="mt-2 text-sm font-black text-blue-800">Điểm: {scoreLabel(submission.score)}</p>
               <p className="mt-3 whitespace-pre-line text-sm leading-7 text-blue-900">{submission.feedback || "Chưa có nhận xét."}</p>
             </div>
           )}

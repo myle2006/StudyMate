@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Download, ExternalLink, Video } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Alert, Badge, Button, Card, LoadingState, PageHeader, useToast } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import { completeLesson, getStudentLessonById } from "../services/lessonService";
 
 export default function StudentLessonDetailPage() {
@@ -88,7 +89,7 @@ export default function StudentLessonDetailPage() {
           <p className="mt-6 whitespace-pre-line text-sm leading-7 text-slate-700">{lesson.content || "Chưa có nội dung."}</p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {lesson.material_path && <Button as="a" href={lesson.material_path} target="_blank" rel="noreferrer" variant="secondary"><Download className="h-4 w-4" />Tải tài liệu</Button>}
+            {lesson.material_path && <Button type="button" variant="secondary" onClick={() => downloadProtectedFile(lesson.material_path)}><Download className="h-4 w-4" />Tải tài liệu</Button>}
             {lesson.video_url && <Button as="a" href={lesson.video_url} target="_blank" rel="noreferrer" variant="secondary"><Video className="h-4 w-4" />Mở video</Button>}
             {lesson.external_url && <Button as="a" href={lesson.external_url} target="_blank" rel="noreferrer" variant="secondary"><ExternalLink className="h-4 w-4" />Link tham khảo</Button>}
           </div>

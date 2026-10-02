@@ -137,6 +137,7 @@ export default function RoadmapGenerateForm({
   subjects = [],
   learningGoals = [],
   roadmapTemplates = [],
+  initialGoalId = "",
   submitting = false,
   apiErrors = {},
   onSubmit,
@@ -162,6 +163,29 @@ export default function RoadmapGenerateForm({
       }));
     }
   }, [subjects, roadmapTemplates, form.subject_id]);
+
+  useEffect(() => {
+    if (!initialGoalId || form.learning_goal_id || learningGoals.length === 0) return;
+
+    const nextGoal = learningGoals.find((goal) => String(goal.id) === String(initialGoalId));
+    if (!nextGoal) return;
+
+    const nextSubject = subjects.find((subject) => String(subject.id) === String(nextGoal.subject_id));
+    const goalPatch = {
+      subject_id: String(nextGoal.subject_id),
+      goal: nextGoal.goal_description,
+      current_level: nextGoal.current_level,
+      study_time_per_day: String(nextGoal.study_time_per_day),
+      start_date: nextGoal.start_date,
+      end_date: nextGoal.end_date,
+    };
+
+    setForm((current) => ({
+      ...current,
+      learning_goal_id: String(nextGoal.id),
+      ...applyTemplate(nextSubject, current.duration_months, nextGoal.start_date, goalPatch),
+    }));
+  }, [initialGoalId, learningGoals, subjects, form.learning_goal_id]);
 
   function applyTemplate(subject, durationMonths, startDate, extra = {}) {
     const template = findTemplate(roadmapTemplates, subject?.id, durationMonths);

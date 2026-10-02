@@ -85,13 +85,30 @@ class LessonRoadmapSyncService
         $deleteDependencies->execute(['lesson_id' => $lessonId]);
         $dependencyCount = $deleteDependencies->rowCount();
 
-        $deleteTemplateTasks = $this->db->prepare('DELETE FROM roadmap_template_tasks WHERE lesson_id = :lesson_id');
-        $deleteTemplateTasks->execute(['lesson_id' => $lessonId]);
-        $templateCount = $deleteTemplateTasks->rowCount();
+        $detachTemplateTasks = $this->db->prepare(
+            'UPDATE roadmap_template_tasks
+             SET lesson_id = NULL,
+                 title = CASE
+                    WHEN title LIKE "[Bài học đã xóa] %" THEN title
+                    ELSE CONCAT("[Bài học đã xóa] ", title)
+                 END
+             WHERE lesson_id = :lesson_id'
+        );
+        $detachTemplateTasks->execute(['lesson_id' => $lessonId]);
+        $templateCount = $detachTemplateTasks->rowCount();
 
-        $deleteRoadmapItems = $this->db->prepare('DELETE FROM learning_roadmap_items WHERE lesson_id = :lesson_id');
-        $deleteRoadmapItems->execute(['lesson_id' => $lessonId]);
-        $roadmapCount = $deleteRoadmapItems->rowCount();
+        $detachRoadmapItems = $this->db->prepare(
+            'UPDATE learning_roadmap_items
+             SET lesson_id = NULL,
+                 title = CASE
+                    WHEN title LIKE "[Bài học đã xóa] %" THEN title
+                    ELSE CONCAT("[Bài học đã xóa] ", title)
+                 END,
+                 note = TRIM(CONCAT(COALESCE(note, ""), CASE WHEN note IS NULL OR note = "" THEN "" ELSE "\n" END, "Bài học gốc đã bị xóa; tiến độ lịch sử được giữ lại."))
+             WHERE lesson_id = :lesson_id'
+        );
+        $detachRoadmapItems->execute(['lesson_id' => $lessonId]);
+        $roadmapCount = $detachRoadmapItems->rowCount();
 
         $roadmapModel = new LearningRoadmap();
         foreach ($roadmapIds as $roadmap) {
@@ -519,7 +536,7 @@ class LessonRoadmapSyncService
     private function storeQuizFile(array $file): string
     {
         $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
-        $uploadDir = BASE_PATH . '/public/uploads/assignments';
+        $uploadDir = BASE_PATH . '/storage/uploads/assignments';
 
         if (! is_dir($uploadDir) && ! mkdir($uploadDir, 0755, true)) {
             throw new RuntimeException('Khong the tao thu muc luu file quiz.');
@@ -532,7 +549,7 @@ class LessonRoadmapSyncService
             throw new RuntimeException('Khong the luu file quiz.');
         }
 
-        return public_url_path() . '/uploads/assignments/' . $fileName;
+        return public_url_path() . '/api/files/assignments/' . $fileName;
     }
 
     private function importQuizQuestionsFromFile(int $assignmentId, array $file): int

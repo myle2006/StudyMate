@@ -5,7 +5,7 @@ class StudyScheduleValidation
     private const TYPES = ['class', 'self_study', 'review', 'assignment', 'exam'];
     private const STATUSES = ['upcoming', 'completed', 'cancelled'];
 
-    public static function validate(array $data): array
+    public static function validate(array $data, bool $enforceUpcomingNotPast = true): array
     {
         $errors = [];
         $title = trim((string) ($data['title'] ?? ''));
@@ -72,7 +72,7 @@ class StudyScheduleValidation
             }
         }
 
-        if ($status === 'upcoming' && self::isValidDate($studyDate) && self::isValidTime($startTime)) {
+        if ($enforceUpcomingNotPast && $status === 'upcoming' && self::isValidDate($studyDate) && self::isValidTime($startTime)) {
             $scheduledAt = strtotime($studyDate . ' ' . $startTime);
             if ($scheduledAt !== false && $scheduledAt < time()) {
                 $errors['study_date'] = 'Không thể tạo lịch sắp diễn ra ở thời điểm quá khứ.';

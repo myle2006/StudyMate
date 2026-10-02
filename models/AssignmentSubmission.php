@@ -31,7 +31,7 @@ class AssignmentSubmission extends Model
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
              INNER JOIN student_subjects ss
-                    ON ss.subject_id = s.id AND ss.status = :student_subject_status
+                    ON ss.subject_id = s.id AND ss.class_id = a.class_id AND ss.status = :student_subject_status
              INNER JOIN users u ON u.id = ss.student_id
              LEFT JOIN assignment_submissions sub
                     ON sub.assignment_id = a.id AND sub.student_id = u.id
@@ -83,7 +83,7 @@ class AssignmentSubmission extends Model
              FROM assignment_submissions sub
              INNER JOIN assignments a ON a.id = sub.assignment_id
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
              WHERE sub.student_id = :student_id
                AND ss.student_id = :student_id
                AND ss.status = :student_subject_status
@@ -111,7 +111,7 @@ class AssignmentSubmission extends Model
              FROM assignment_submissions sub
              INNER JOIN assignments a ON a.id = sub.assignment_id
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
              LEFT JOIN users grader ON grader.id = sub.graded_by
              WHERE sub.student_id = :student_id
                AND ss.student_id = :student_id
@@ -141,7 +141,7 @@ class AssignmentSubmission extends Model
              FROM assignment_submissions sub
              INNER JOIN assignments a ON a.id = sub.assignment_id
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
              LEFT JOIN users grader ON grader.id = sub.graded_by
              WHERE sub.id = :id
                AND sub.student_id = :student_id
@@ -173,7 +173,7 @@ class AssignmentSubmission extends Model
              FROM assignment_submissions sub
              INNER JOIN assignments a ON a.id = sub.assignment_id
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
              WHERE sub.id = :id
                AND sub.student_id = :student_id
                AND ss.student_id = :student_id
@@ -203,7 +203,7 @@ class AssignmentSubmission extends Model
              FROM assignment_submissions sub
              INNER JOIN assignments a ON a.id = sub.assignment_id
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
              WHERE sub.assignment_id = :assignment_id
                AND sub.student_id = :student_id
                AND ss.student_id = :student_id

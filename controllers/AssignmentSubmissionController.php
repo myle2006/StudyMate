@@ -48,6 +48,11 @@ class AssignmentSubmissionController extends Controller
             return;
         }
 
+        $submission['security_events'] = (new QuizSecurityEvent())->getForAssignmentStudent(
+            (int) ($submission['assignment_id'] ?? 0),
+            (int) ($submission['student_id'] ?? 0)
+        );
+
         $this->json([
             'success' => true,
             'message' => 'Lấy chi tiết bài nộp thành công.',
@@ -329,7 +334,7 @@ class AssignmentSubmissionController extends Controller
     private function storeSubmissionFile(array $file): string
     {
         $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
-        $uploadDir = BASE_PATH . '/public/uploads/submissions';
+        $uploadDir = BASE_PATH . '/storage/uploads/submissions';
 
         if (! is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
@@ -342,7 +347,7 @@ class AssignmentSubmissionController extends Controller
             throw new RuntimeException('Không thể lưu file bài nộp.');
         }
 
-        return public_url_path() . '/uploads/submissions/' . $fileName;
+        return public_url_path() . '/api/files/submissions/' . $fileName;
     }
 
     private function submissionStatus(array $assignment): string

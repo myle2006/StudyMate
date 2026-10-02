@@ -3,13 +3,14 @@
 class AssignmentValidation
 {
     private const STATUSES = ['open', 'closed', 'draft'];
-    private const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'zip', 'rar', 'png', 'jpg', 'jpeg'];
+    private const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'zip', 'rar', 'png', 'jpg', 'jpeg', 'csv'];
     private const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     public static function validate(array $data, ?array $file = null): array
     {
         $errors = [];
         $subjectId = trim((string) ($data['subject_id'] ?? ''));
+        $classId = trim((string) ($data['class_id'] ?? ''));
         $title = trim((string) ($data['title'] ?? ''));
         $deadline = trim((string) ($data['deadline'] ?? ''));
         $status = trim((string) ($data['status'] ?? 'draft'));
@@ -18,6 +19,12 @@ class AssignmentValidation
             $errors['subject_id'] = 'Môn học là bắt buộc.';
         } elseif (! ctype_digit($subjectId) || (int) $subjectId <= 0) {
             $errors['subject_id'] = 'Môn học không hợp lệ.';
+        }
+
+        if ($classId === '') {
+            $errors['class_id'] = 'Lớp là bắt buộc.';
+        } elseif (! ctype_digit($classId) || (int) $classId <= 0) {
+            $errors['class_id'] = 'Lớp không hợp lệ.';
         }
 
         if ($title === '') {
@@ -64,7 +71,7 @@ class AssignmentValidation
 
         $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
         if (! in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
-            return ['attachment' => 'File đính kèm chỉ hỗ trợ pdf, doc, docx, zip, rar, png, jpg hoặc jpeg.'];
+            return ['attachment' => 'File đính kèm chỉ hỗ trợ pdf, doc, docx, zip, rar, png, jpg, jpeg hoặc csv.'];
         }
 
         return [];

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { getSubjects } from "../../subjects/services/subjectService";
+import { getSubjectClasses } from "../../studentSubjects/services/studentSubjectService";
 import { getAssignmentById, updateAssignment } from "../services/assignmentService";
 import AssignmentForm from "../components/AssignmentForm";
 
@@ -11,6 +12,7 @@ export default function AdminAssignmentEditPage() {
   const toast = useToast();
   const [assignment, setAssignment] = useState(null);
   const [subjects, setSubjects] = useState([]);
+  const [subjectClasses, setSubjectClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [apiErrors, setApiErrors] = useState({});
@@ -27,7 +29,10 @@ export default function AdminAssignmentEditPage() {
           getSubjects(),
         ]);
         setAssignment(assignmentResponse.data);
-        setSubjects(subjectsResponse.data || []);
+        const nextSubjects = subjectsResponse.data || [];
+        setSubjects(nextSubjects);
+        const classResponses = await Promise.all(nextSubjects.map((subject) => getSubjectClasses(subject.id).catch(() => ({ data: [] }))));
+        setSubjectClasses(classResponses.flatMap((item) => item.data || []));
       } catch (err) {
         setError(err.message || "Không thể tải bài tập.");
       } finally {
@@ -70,6 +75,7 @@ export default function AdminAssignmentEditPage() {
             <AssignmentForm
               mode="edit"
               subjects={subjects}
+              subjectClasses={subjectClasses}
               initialValues={assignment}
               submitting={submitting}
               apiErrors={apiErrors}

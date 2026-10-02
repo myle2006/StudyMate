@@ -68,12 +68,34 @@ function StatusSwitch({ student, onEnable, onDisable }) {
   );
 }
 
-export default function StudentTable({ students, pagination, onDisable, onEnable, onLock, onResetPassword, onDelete }) {
+export default function StudentTable({
+  students,
+  pagination,
+  selectedIds = [],
+  onToggleStudent,
+  onToggleAll,
+  onDisable,
+  onEnable,
+  onLock,
+  onResetPassword,
+  onDelete,
+}) {
+  const allSelected = students.length > 0 && students.every((student) => selectedIds.includes(Number(student.id)));
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         <thead className="bg-slate-50">
           <tr>
+            <th className="w-12 px-4 py-3 text-left">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(event) => onToggleAll?.(event.target.checked)}
+                aria-label="Chọn tất cả sinh viên đang hiển thị"
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+            </th>
             {["STT", "Họ tên", "Email", "Mã sinh viên", "Số điện thoại", "Trạng thái", "Lần đăng nhập", "Ngày tạo", "Thao tác"].map(
               (column) => (
                 <th key={column} className="px-4 py-3 text-left font-black text-slate-600">
@@ -89,6 +111,15 @@ export default function StudentTable({ students, pagination, onDisable, onEnable
 
             return (
               <tr key={student.id} className="align-middle transition hover:bg-slate-50/80">
+                <td className="px-4 py-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(Number(student.id))}
+                    onChange={(event) => onToggleStudent?.(student.id, event.target.checked)}
+                    aria-label={`Chọn sinh viên ${student.full_name}`}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </td>
                 <td className="px-4 py-4 font-semibold text-slate-500">
                   {(pagination.page - 1) * pagination.limit + index + 1}
                 </td>
@@ -121,7 +152,7 @@ export default function StudentTable({ students, pagination, onDisable, onEnable
                     <IconActionButton label="Khóa tài khoản" onClick={() => onLock(student)} className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100">
                       <LockKeyhole size={16} strokeWidth={2.4} />
                     </IconActionButton>
-                    <IconActionButton label="Xóa sinh viên" onClick={() => onDelete(student)} className="border-rose-200 bg-white text-rose-600 hover:bg-rose-50">
+                    <IconActionButton label="Vô hiệu hóa sinh viên" onClick={() => onDelete(student)} className="border-rose-200 bg-white text-rose-600 hover:bg-rose-50">
                       <Trash2 size={16} strokeWidth={2.4} />
                     </IconActionButton>
                   </div>

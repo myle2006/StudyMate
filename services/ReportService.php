@@ -199,7 +199,7 @@ class ReportService
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
              LEFT JOIN users creator ON creator.id = a.created_by
-             LEFT JOIN student_subjects ss ON ss.subject_id = s.id AND ss.status = :active_assignment_status
+             LEFT JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id AND ss.status = :active_assignment_status
              LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id
              WHERE ' . implode(' AND ', $where) . '
              GROUP BY a.id, a.subject_id, s.subject_code, s.subject_name, a.title, a.description, a.deadline, a.status, creator.full_name, a.created_at, a.updated_at
@@ -424,6 +424,95 @@ class ReportService
                 $row['created_at'],
                 $row['updated_at'],
             ], $statement->fetchAll()),
+        ];
+    }
+
+    public function learningGoals(array $filters): array
+    {
+        $params = [];
+        $where = ['lg.deleted_at IS NULL', 's.deleted_at IS NULL'];
+
+        if (! empty($filters['subject_id']) && ctype_digit((string) $filters['subject_id'])) {
+            $where[] = 'lg.subject_id = :subject_id';
+            $params['subject_id'] = (int) $filters['subject_id'];
+        }
+
+        if (! empty($filters['student_id']) && ctype_digit((string) $filters['student_id'])) {
+            $where[] = 'lg.user_id = :student_id';
+            $params['student_id'] = (int) $filters['student_id'];
+        }
+
+        if (! empty($filters['status']) && in_array($filters['status'], ['active', 'completed', 'paused', 'cancelled'], true)) {
+            $where[] = 'lg.status = :status';
+            $params['status'] = $filters['status'];
+        }
+
+        $this->applyDateRange($filters, $where, $params, 'lg.created_at');
+
+        $statement = $this->db->prepare(
+            'SELECT lg.id, lg.user_id, u.full_name, u.email, u.student_code,
+                    lg.subject_id, s.subject_code, s.subject_name,
+                    lg.title, lg.goal_description, lg.current_level, lg.study_time_per_day,
+                    lg.start_date, lg.end_date, lg.status,
+                    COUNT(DISTINCT r.id) AS roadmap_count,
+                    SUM(CASE WHEN r.status = "active" THEN 1 ELSE 0 END) AS active_roadmap_count,
+                    AVG(r.progress_percent) AS average_progress_percent,
+                    lg.created_at, lg.updated_at
+             FROM learning_goals lg
+             INNER JOIN users u ON u.id = lg.user_id
+             INNER JOIN subjects s ON s.id = lg.subject_id
+             LEFT JOIN learning_roadmaps r
+                    ON r.learning_goal_id = lg.id
+                   AND r.user_id = lg.user_id
+                   AND r.deleted_at IS NULL
+             WHERE ' . implode(' AND ', $where) . '
+             GROUP BY lg.id, lg.user_id, u.full_name, u.email, u.student_code,
+                      lg.subject_id, s.subject_code, s.subject_name,
+                      lg.title, lg.goal_description, lg.current_level, lg.study_time_per_day,
+                      lg.start_date, lg.end_date, lg.status, lg.created_at, lg.updated_at
+             ORDER BY FIELD(lg.status, "active", "paused", "completed", "cancelled"), lg.end_date ASC, lg.updated_at DESC'
+        );
+        $statement->execute($params);
+
+        return [
+            'filename' => $this->filename('learning_goals'),
+            'headers' => ['ID mục tiêu', 'ID sinh viên', 'Họ tên', 'Email', 'Mã sinh viên', 'ID môn', 'Mã môn', 'Tên môn', 'Tiêu đề', 'Mô tả mục tiêu', 'Trình độ', 'Giờ học/ngày', 'Ngày bắt đầu', 'Ngày kết thúc', 'Trạng thái', 'Tình trạng deadline', 'Có lộ trình?', 'Số lộ trình', 'Lộ trình active', 'Tiến độ TB %', 'Ngày tạo', 'Ngày cập nhật'],
+            'rows' => array_map(static function (array $row): array {
+                $hasRoadmap = (int) ($row['roadmap_count'] ?? 0) > 0;
+                $deadlineState = 'normal';
+                if (($row['status'] ?? '') === 'completed') {
+                    $deadlineState = 'completed';
+                } elseif (($row['status'] ?? '') === 'active' && ! empty($row['end_date']) && $row['end_date'] < date('Y-m-d')) {
+                    $deadlineState = 'overdue';
+                } elseif (($row['status'] ?? '') === 'active' && ! empty($row['end_date']) && $row['end_date'] <= date('Y-m-d', strtotime('+7 days'))) {
+                    $deadlineState = 'near_deadline';
+                }
+
+                return [
+                    $row['id'],
+                    $row['user_id'],
+                    $row['full_name'],
+                    $row['email'],
+                    $row['student_code'],
+                    $row['subject_id'],
+                    $row['subject_code'],
+                    $row['subject_name'],
+                    $row['title'],
+                    $row['goal_description'],
+                    $row['current_level'],
+                    $row['study_time_per_day'],
+                    $row['start_date'],
+                    $row['end_date'],
+                    $row['status'],
+                    $deadlineState,
+                    $hasRoadmap ? 'yes' : 'no',
+                    (int) ($row['roadmap_count'] ?? 0),
+                    (int) ($row['active_roadmap_count'] ?? 0),
+                    round((float) ($row['average_progress_percent'] ?? 0), 2),
+                    $row['created_at'],
+                    $row['updated_at'],
+                ];
+            }, $statement->fetchAll()),
         ];
     }
 

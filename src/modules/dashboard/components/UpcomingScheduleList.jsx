@@ -1,5 +1,5 @@
 import React from "react";
-import { CalendarDays, Clock3, MapPin } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function formatDate(value) {
@@ -25,7 +25,7 @@ export default function UpcomingScheduleList({ title, schedules = [], emptyText,
             <Link
               key={schedule.id}
               to={`/student/schedules/${schedule.id}`}
-              className="block rounded-lg border border-slate-200 p-4 transition hover:border-blue-300 hover:bg-blue-50/40"
+              className="block rounded-lg border border-slate-200 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/40 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -45,6 +45,12 @@ export default function UpcomingScheduleList({ title, schedules = [], emptyText,
                   <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{schedule.location || "Chưa có địa điểm/link"}</span>
                 </span>
+                {schedule.learning_goal_title && (
+                  <span className="inline-flex min-w-0 items-center gap-1.5 text-blue-700">
+                    <Target className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{schedule.learning_goal_title}</span>
+                  </span>
+                )}
               </div>
             </Link>
           ))}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, CalendarDays, Clock3, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, Clock3, Pencil, Route, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button, Card, ConfirmDialog, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { LearningGoalStatusBadge, learningGoalLevelLabel } from "../components/LearningGoalCard";
@@ -104,6 +104,12 @@ export default function LearningGoalDetailPage() {
             <>
               <Button to="/student/learning-goals" variant="secondary">
                 <ArrowLeft size={16} /> Danh sách
+              </Button>
+              <Button to={`/student/roadmaps/generate?goal_id=${goal.id}`}>
+                <Route size={16} /> Tạo lộ trình
+              </Button>
+              <Button to={`/student/schedules/create?goal_id=${goal.id}`} variant="secondary">
+                <CalendarDays size={16} /> Tạo lịch
               </Button>
               <Button to={`/student/learning-goals/${goal.id}/edit`}>
                 <Pencil size={16} /> Sửa

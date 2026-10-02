@@ -226,7 +226,7 @@ const initialState = {
       end_time: "10:00",
       location: "Phòng B204",
       schedule_type: "class",
-      status: "scheduled",
+      status: "upcoming",
     },
     {
       id: 2,
@@ -239,7 +239,7 @@ const initialState = {
       end_time: "20:30",
       location: "Tự học",
       schedule_type: "self_study",
-      status: "scheduled",
+      status: "upcoming",
     },
   ],
   goals: [

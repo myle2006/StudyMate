@@ -1,6 +1,7 @@
 import React from "react";
-import { Download, Edit3, Eye, Inbox, Trash2 } from "lucide-react";
+import { Copy, Download, Edit3, Eye, Inbox, Trash2 } from "lucide-react";
 import { Badge, Button, Card, EmptyState } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 
 const statusConfig = {
   open: { label: "Đang mở", tone: "green" },
@@ -23,7 +24,7 @@ function formatDateTime(value) {
   });
 }
 
-export default function AssignmentTable({ assignments, onDelete }) {
+export default function AssignmentTable({ assignments, onDelete, onDuplicate }) {
   if (assignments.length === 0) {
     return (
       <EmptyState
@@ -39,11 +40,12 @@ export default function AssignmentTable({ assignments, onDelete }) {
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+          <thead className="bg-slate-50 text-left text-xs font-black uppercase text-slate-500">
             <tr>
               <th className="w-16 px-4 py-3">STT</th>
               <th className="px-4 py-3">Bài tập</th>
               <th className="px-4 py-3">Môn học</th>
+              <th className="px-4 py-3">Lớp</th>
               <th className="px-4 py-3">Deadline</th>
               <th className="px-4 py-3">Trạng thái</th>
               <th className="px-4 py-3">File</th>
@@ -65,26 +67,26 @@ export default function AssignmentTable({ assignments, onDelete }) {
                     <p className="font-bold text-slate-800">{assignment.subject_name}</p>
                     <p className="mt-1 text-xs font-black uppercase text-blue-600">{assignment.subject_code}</p>
                   </td>
+                  <td className="px-4 py-4 font-bold text-slate-700">{assignment.class_code || "DEFAULT"}</td>
                   <td className="px-4 py-4 font-semibold text-slate-600">{formatDateTime(assignment.deadline)}</td>
                   <td className="px-4 py-4">
                     <Badge tone={status.tone}>{status.label}</Badge>
                   </td>
                   <td className="px-4 py-4">
                     {assignment.attachment_path ? (
-                      <a
-                        href={assignment.attachment_path}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => downloadProtectedFile(assignment.attachment_path)}
                         className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700"
                       >
                         <Download size={14} /> Tải file
-                      </a>
+                      </button>
                     ) : (
                       <span className="text-slate-400">-</span>
                     )}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex min-w-[420px] flex-wrap justify-end gap-2">
                       <Button to={`/admin/assignments/${assignment.id}`} variant="secondary" size="sm">
                         <Eye size={15} /> Xem
                       </Button>
@@ -93,6 +95,9 @@ export default function AssignmentTable({ assignments, onDelete }) {
                       </Button>
                       <Button to={`/admin/assignments/${assignment.id}/edit`} variant="secondary" size="sm">
                         <Edit3 size={15} /> Sửa
+                      </Button>
+                      <Button type="button" variant="secondary" size="sm" onClick={() => onDuplicate?.(assignment)}>
+                        <Copy size={15} /> Duplicate
                       </Button>
                       <Button type="button" variant="danger" size="sm" onClick={() => onDelete(assignment)}>
                         <Trash2 size={15} /> Xóa

@@ -123,9 +123,7 @@ class Student extends Model
 
     public function delete(int $id): bool
     {
-        $statement = $this->db()->prepare('DELETE FROM users WHERE id = :id');
-
-        return $statement->execute(['id' => $id]);
+        return $this->disable($id);
     }
 
     public function disable(int $id): bool

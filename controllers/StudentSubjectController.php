@@ -3,10 +3,12 @@
 class StudentSubjectController extends Controller
 {
     private StudentSubject $studentSubject;
+    private SubjectClass $subjectClass;
 
     public function __construct()
     {
         $this->studentSubject = new StudentSubject();
+        $this->subjectClass = new SubjectClass();
     }
 
     public function mySubjects(): void
@@ -65,6 +67,7 @@ class StudentSubjectController extends Controller
 
         $students = $this->studentSubject->getAssignedStudents($subjectId, [
             'keyword' => trim((string) ($_GET['keyword'] ?? '')),
+            'class_id' => trim((string) ($_GET['class_id'] ?? '')),
         ]);
 
         $this->json([
@@ -72,6 +75,57 @@ class StudentSubjectController extends Controller
             'message' => 'Lấy danh sách sinh viên trong môn học thành công.',
             'data' => $students,
         ]);
+    }
+
+    public function classes(string|int $subjectId): void
+    {
+        $subjectId = (int) $subjectId;
+        if (! $this->validSubject($subjectId)) {
+            return;
+        }
+
+        $this->subjectClass->ensureDefaultForSubject($subjectId, $this->currentUserId());
+        $classes = $this->subjectClass->getForSubject($subjectId);
+
+        $this->json([
+            'success' => true,
+            'message' => 'Lấy danh sách lớp thành công.',
+            'data' => $classes,
+        ]);
+    }
+
+    public function storeClass(string|int $subjectId): void
+    {
+        $subjectId = (int) $subjectId;
+        if (! $this->validSubject($subjectId)) {
+            return;
+        }
+
+        $input = $this->input();
+        $classCode = strtoupper(trim((string) ($input['class_code'] ?? '')));
+        $className = trim((string) ($input['class_name'] ?? ''));
+        $errors = [];
+
+        if ($classCode === '') {
+            $errors['class_code'] = 'Mã lớp là bắt buộc.';
+        } elseif (strlen($classCode) > 50) {
+            $errors['class_code'] = 'Mã lớp không được vượt quá 50 ký tự.';
+        } elseif ($this->subjectClass->codeExists($subjectId, $classCode)) {
+            $errors['class_code'] = 'Mã lớp đã tồn tại trong môn học này.';
+        }
+
+        if ($errors !== []) {
+            $this->validationFailed($errors);
+            return;
+        }
+
+        $classId = $this->subjectClass->create($subjectId, $classCode, $className, $this->currentUserId());
+
+        $this->json([
+            'success' => true,
+            'message' => 'Tạo lớp thành công.',
+            'data' => $this->subjectClass->findById($classId),
+        ], 201);
     }
 
     public function availableStudents(string|int $subjectId): void
@@ -108,24 +162,33 @@ class StudentSubjectController extends Controller
         }
 
         $studentId = (int) $data['student_id'];
+        $classId = (int) $data['class_id'];
+
+        if (! $this->subjectClass->belongsToSubject($classId, $subjectId)) {
+            $this->validationFailed(['class_id' => 'Lớp không thuộc môn học này hoặc đã bị khóa.']);
+            return;
+        }
+
         if (! $this->studentSubject->studentExists($studentId)) {
             $this->validationFailed(['student_id' => 'Sinh viên không tồn tại hoặc không ở trạng thái active.']);
             return;
         }
 
         $currentUser = $this->currentUser();
-        $result = $this->studentSubject->assignStudent($subjectId, $studentId, (int) ($currentUser['id'] ?? 0));
+        $result = $this->studentSubject->assignStudent($subjectId, $studentId, (int) ($currentUser['id'] ?? 0), $classId);
 
         if ($result['duplicate']) {
+            $activeClass = trim((string) ($result['active_class_code'] ?? ''));
+            $classMessage = $activeClass !== '' ? ' Sinh viên hiện đang ở lớp ' . $activeClass . '.' : '';
             $this->json([
                 'success' => false,
-                'message' => 'Sinh viên đã được gán vào môn học này.',
-                'errors' => ['student_id' => 'Không thể gán trùng sinh viên vào cùng một môn học.'],
+                'message' => 'Sinh viên đã được gán active vào môn học này.' . $classMessage,
+                'errors' => ['student_id' => 'Mỗi sinh viên chỉ được active ở một lớp trong cùng một môn học.'],
             ], 409);
             return;
         }
 
-        $assignment = $this->studentSubject->findActiveAssignment($subjectId, $studentId);
+        $assignment = $this->studentSubject->findActiveAssignment($subjectId, $studentId, $classId);
 
         $this->json([
             'success' => true,
@@ -151,7 +214,8 @@ class StudentSubjectController extends Controller
             return;
         }
 
-        if (! $this->studentSubject->removeStudent($subjectId, $studentId)) {
+        $classId = isset($_GET['class_id']) && ctype_digit((string) $_GET['class_id']) ? (int) $_GET['class_id'] : null;
+        if (! $this->studentSubject->removeStudent($subjectId, $studentId, $classId)) {
             $this->json([
                 'success' => false,
                 'message' => 'Không tìm thấy sinh viên đang được gán trong môn học này.',

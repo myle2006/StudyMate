@@ -74,7 +74,7 @@ export default function LearningGoalListPage() {
           }
         />
 
-        <Card className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_260px]">
+        <Card className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_240px]">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
@@ -106,7 +106,7 @@ export default function LearningGoalListPage() {
             actionTo="/student/learning-goals/create"
           />
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {goals.map((goal) => (
               <LearningGoalCard key={goal.id} goal={goal} onDelete={setDeletingGoal} />
             ))}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Users } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Edit3, Eye, Plus, Trash2, Users } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
 import { deleteSubject, getSubjects } from "../services/subjectService";
 
@@ -94,7 +94,11 @@ export default function SubjectListPage() {
       <PageHeader
         title="Quản lý môn học"
         description={`${subjects.length} môn học đang hiển thị. Môn học là dữ liệu gốc để liên kết lịch học và các module sau.`}
-        actions={<Button to="/admin/subjects/create">Thêm môn học</Button>}
+        actions={
+          <Button to="/admin/subjects/create">
+            <Plus size={16} /> Thêm môn học
+          </Button>
+        }
       />
 
       <Card className="mt-6 grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_220px]">
@@ -130,7 +134,7 @@ export default function SubjectListPage() {
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-left text-xs font-black uppercase text-slate-500">
                   <tr>
                     <th className="px-4 py-3">STT</th>
                     <th className="px-4 py-3">Ảnh/Màu</th>
@@ -157,13 +161,19 @@ export default function SubjectListPage() {
                       </td>
                       <td className="px-4 py-4 text-slate-500">{subject.created_at || "-"}</td>
                       <td className="px-4 py-4">
-                        <div className="flex justify-end gap-2">
-                          <Button to={`/admin/subjects/${subject.id}`} variant="secondary" size="sm">Xem</Button>
+                        <div className="flex min-w-[360px] flex-wrap justify-end gap-2">
+                          <Button to={`/admin/subjects/${subject.id}`} variant="secondary" size="sm">
+                            <Eye size={15} /> Xem
+                          </Button>
                           <Button to={`/admin/subjects/${subject.id}/students`} variant="secondary" size="sm">
                             <Users size={15} /> Quản lý sinh viên
                           </Button>
-                          <Button to={`/admin/subjects/${subject.id}/edit`} variant="secondary" size="sm">Sửa</Button>
-                          <Button type="button" variant="danger" size="sm" onClick={() => setSelectedSubject(subject)}>Xóa</Button>
+                          <Button to={`/admin/subjects/${subject.id}/edit`} variant="secondary" size="sm">
+                            <Edit3 size={15} /> Sửa
+                          </Button>
+                          <Button type="button" variant="danger" size="sm" onClick={() => setSelectedSubject(subject)}>
+                            <Trash2 size={15} /> Xóa
+                          </Button>
                         </div>
                       </td>
                     </tr>

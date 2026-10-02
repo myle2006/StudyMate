@@ -11,12 +11,15 @@ import {
   Grip,
   Layers3,
   Lock,
+  Maximize2,
+  Minimize2,
   Play,
   RotateCcw,
   Search,
   X,
 } from "lucide-react";
 import { Badge, Button, Card, Input, Select } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import {
   ROADMAP_NODE_STATUS,
   ROADMAP_NODE_TYPES,
@@ -88,14 +91,14 @@ function getLessonLinks(item) {
   return [
     item.lesson_video_url ? { label: "Video bài học", href: item.lesson_video_url, icon: BookOpen } : null,
     item.lesson_external_url ? { label: "Link bài học", href: item.lesson_external_url, icon: ExternalLink } : null,
-    item.lesson_material_path ? { label: "File tài liệu", href: item.lesson_material_path, icon: FileText } : null,
-    item.assignment_attachment_path ? { label: "File quiz", href: item.assignment_attachment_path, icon: ClipboardCheck } : null,
+    item.lesson_material_path ? { label: "File tài liệu", href: item.lesson_material_path, icon: FileText, protected: true } : null,
+    item.assignment_attachment_path ? { label: "File quiz", href: item.assignment_attachment_path, icon: ClipboardCheck, protected: true } : null,
   ].filter(Boolean);
 }
 
 function isQuizCompleted(item) {
   if ((item.assignment_submission_status || "") !== "graded") return false;
-  return Number(item.assignment_score || 0) >= 70;
+  return Number(item.assignment_score || 0) >= 7;
 }
 
 function RoadmapLegend() {
@@ -141,7 +144,7 @@ function RoadmapNode({ node, selected, hidden, onSelect, onPhaseNavigate }) {
       onDoubleClick={() => node.phaseKey && onPhaseNavigate?.(node.phaseKey)}
       className={`absolute ${widthClass} rounded-lg border-2 p-3 text-left shadow-sm transition focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 ${toneClass} ${
         !structural && node.type === "optional" ? "border-dashed" : "border-solid"
-      } ${selected ? "ring-4" : ""} ${hidden ? "opacity-20 grayscale" : "hover:-translate-y-0.5 hover:shadow-md"}`}
+      } ${selected ? "ring-4 ring-amber-300" : ""} ${hidden ? "opacity-20 grayscale" : "hover:-translate-y-0.5 hover:shadow-md"}`}
       style={{ transform: `translate(${node.x}px, ${node.y}px)` }}
       aria-label={structural ? `${node.contentType}: ${node.title}` : `${node.title}, ${statusConfig.label}, ${typeConfig.label}`}
     >
@@ -239,10 +242,15 @@ function LessonDetail({ node, nodes, updating, onClose, onStart, onComplete }) {
               {links.map((link) => {
                 const Icon = link.icon;
                 return (
-                  <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-black text-blue-700 hover:border-blue-200 hover:bg-blue-100">
+                  <button
+                    key={link.href}
+                    type="button"
+                    onClick={() => link.protected ? downloadProtectedFile(link.href) : window.open(link.href, "_blank", "noopener,noreferrer")}
+                    className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-black text-blue-700 hover:border-blue-200 hover:bg-blue-100"
+                  >
                     <Icon size={15} />
                     {link.label}
-                  </a>
+                  </button>
                 );
               })}
             </div>
@@ -313,6 +321,7 @@ export default function RoadmapVisualExplorer({
   rootDescription,
   items = [],
   phases = [],
+  focusItemId = "",
   updatingItemId,
   onStatusChange,
   onPhaseNavigate,
@@ -330,7 +339,9 @@ export default function RoadmapVisualExplorer({
   const [collapsedBranches, setCollapsedBranches] = useState([]);
   const [transform, setTransform] = useState({ x: 24, y: 24, scale: 0.9 });
   const [dragging, setDragging] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const dragRef = useRef({ x: 0, y: 0 });
+  const focusedItemRef = useRef("");
 
   useEffect(() => {
     try {
@@ -344,6 +355,34 @@ export default function RoadmapVisualExplorer({
   useEffect(() => {
     localStorage.setItem(getStorageKey(roadmapId), JSON.stringify(collapsedBranches));
   }, [roadmapId, collapsedBranches]);
+
+  useEffect(() => {
+    if (!focusItemId || String(focusedItemRef.current) === String(focusItemId)) return;
+    const focusNode = visual.lessonNodes.find((node) => String(node.item.id) === String(focusItemId));
+    if (focusNode) {
+      setSelectedId(focusNode.id);
+      focusedItemRef.current = focusItemId;
+    }
+  }, [focusItemId, visual.lessonNodes]);
+
+  useEffect(() => {
+    if (!isFullscreen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setIsFullscreen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isFullscreen]);
 
   const filteredNodes = useMemo(() => filterRoadmapNodes(visual.nodes, filters), [visual.nodes, filters]);
   const visibleIds = new Set(filteredNodes.filter((node) => node.kind !== "lesson" || !collapsedBranches.includes(node.branch)).map((node) => node.id));
@@ -401,9 +440,9 @@ export default function RoadmapVisualExplorer({
   }
 
   return (
-    <section className="space-y-4" data-testid="roadmap-visual-explorer">
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-slate-200 bg-white p-4 sm:p-5">
+    <section id="roadmap-mindmap" className={isFullscreen ? "fixed inset-0 z-[80] bg-slate-950/30 p-0" : "space-y-4"} data-testid="roadmap-visual-explorer">
+      <Card className={`overflow-hidden p-0 ${isFullscreen ? "flex h-screen flex-col rounded-none border-0 shadow-none" : ""}`}>
+        <div className={`border-b border-slate-200 bg-white p-4 sm:p-5 ${isFullscreen ? "shrink-0" : ""}`}>
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
               <p className="inline-flex items-center gap-2 text-xs font-black uppercase text-blue-600">
@@ -413,15 +452,21 @@ export default function RoadmapVisualExplorer({
               <h2 className="mt-2 text-xl font-black text-slate-950">Môn học → Chương → Bài học</h2>
               <p className="mt-1 text-sm font-semibold text-slate-500">Kéo để di chuyển, Ctrl + cuộn hoặc nút +/- để phóng to thu nhỏ. Chọn bài học để xem nội dung và quiz ở sidebar.</p>
             </div>
-            <div className="grid min-w-0 gap-2 sm:min-w-72">
-              <div className="flex items-center justify-between gap-3 text-xs font-black uppercase text-slate-500">
-                <span>Tiến độ bài học</span>
-                <span>{visual.progress}%</span>
+            <div className="grid min-w-0 gap-3 sm:min-w-72">
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between gap-3 text-xs font-black uppercase text-slate-500">
+                  <span>Tiến độ bài học</span>
+                  <span>{visual.progress}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${visual.progress}%` }} />
+                </div>
+                <p className="text-xs font-bold text-slate-500">{visual.completed}/{visual.total} bài học hoàn thành</p>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${visual.progress}%` }} />
-              </div>
-              <p className="text-xs font-bold text-slate-500">{visual.completed}/{visual.total} bài học hoàn thành</p>
+              <Button type="button" variant="secondary" onClick={() => setIsFullscreen((current) => !current)}>
+                {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                {isFullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"}
+              </Button>
             </div>
           </div>
 
@@ -453,9 +498,9 @@ export default function RoadmapVisualExplorer({
           </div>
         </div>
 
-        <div className="grid gap-0 bg-slate-50 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className={`grid gap-0 bg-slate-50 lg:grid-cols-[minmax(0,1fr)_380px] ${isFullscreen ? "min-h-0 flex-1 overflow-hidden" : ""}`}>
           <div
-            className={`relative min-h-[620px] overflow-hidden border-b border-slate-200 lg:border-b-0 lg:border-r ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+            className={`relative overflow-hidden border-b border-slate-200 lg:border-b-0 lg:border-r ${isFullscreen ? "h-full min-h-[calc(100vh-18rem)] lg:min-h-0" : "min-h-[620px]"} ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
             onMouseDown={startDrag}
             onMouseMove={moveDrag}
             onMouseUp={() => setDragging(false)}
@@ -469,8 +514,9 @@ export default function RoadmapVisualExplorer({
                 <Focus size={15} /> Reset
               </button>
             </div>
-            <div className="absolute right-4 top-4 z-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 shadow-sm">
-              <Grip size={14} className="mr-1 inline" /> {Math.round(transform.scale * 100)}%
+            <div className="absolute right-4 top-4 z-10 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 shadow-sm">
+              <Grip size={14} /> {Math.round(transform.scale * 100)}%
+              {isFullscreen && <span className="hidden text-slate-400 sm:inline">Esc để thoát</span>}
             </div>
 
             <div className="absolute left-0 top-0 origin-top-left transition-transform" style={{ width, height, transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})` }}>

@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FileSpreadsheet,
   FileText,
+  Target,
   UserRoundCheck,
   Users,
 } from "lucide-react";
@@ -42,6 +43,13 @@ const roadmapStatuses = [
   { value: "active", label: "Đang học" },
   { value: "completed", label: "Hoàn thành" },
   { value: "paused", label: "Tạm dừng" },
+];
+
+const learningGoalStatuses = [
+  { value: "active", label: "Đang thực hiện" },
+  { value: "completed", label: "Hoàn thành" },
+  { value: "paused", label: "Tạm dừng" },
+  { value: "cancelled", label: "Đã hủy" },
 ];
 
 export default function AdminReportsPage() {
@@ -137,6 +145,15 @@ export default function AdminReportsPage() {
       icon: BarChart3,
       filters: ["date", "subject", "student", "status"],
       statusOptions: roadmapStatuses,
+    },
+    {
+      title: "Mục tiêu học tập",
+      description: "Xuất mục tiêu đã hoàn thành, mục tiêu trễ hạn và mục tiêu chưa có lộ trình.",
+      endpoint: "/admin/reports/learning-goals/export",
+      filename: "learning_goals.csv",
+      icon: Target,
+      filters: ["date", "subject", "student", "status"],
+      statusOptions: learningGoalStatuses,
     },
   ], []);
 

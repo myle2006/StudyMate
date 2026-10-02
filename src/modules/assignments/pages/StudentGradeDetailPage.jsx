@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, CalendarCheck2, Clock3, Download, FileText, Star } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Alert, Button, Card, LoadingState, PageHeader } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import AssignmentStatusBadge from "../components/AssignmentStatusBadge";
 import GradeStatusBadge from "../components/GradeStatusBadge";
 import { getStudentGradeBySubmissionId } from "../services/submissionService";
@@ -156,14 +157,13 @@ export default function StudentGradeDetailPage() {
                 <p>Trạng thái bài tập: <AssignmentStatusBadge value={submission.assignment_status} /></p>
               </div>
               {submission.file_path && (
-                <a
-                  href={submission.file_path}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => downloadProtectedFile(submission.file_path)}
                   className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700"
                 >
                   <Download size={16} /> Tải file bài nộp
-                </a>
+                </button>
               )}
             </div>
           </div>

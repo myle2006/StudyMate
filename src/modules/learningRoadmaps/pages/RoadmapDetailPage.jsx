@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, Layers3, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Clock3, Layers3, Map, Pencil, PlayCircle, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Card, ConfirmDialog, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
@@ -23,6 +23,7 @@ import {
   buildRoadmapVisualModel,
   canCompleteRoadmapNode,
 } from "../utils/roadmapVisualUtils";
+import { findNextStudyNode, getStudentFacingStatus, getStudyActionLabel } from "../utils/roadmapStudyFlow";
 
 const levelMap = {
   beginner: "Cơ bản",
@@ -73,6 +74,60 @@ function InfoItem({ icon: Icon, label, value, children }) {
   );
 }
 
+function StudyFocusCard({ node, nodes, progressPercent, updating, onStart, onComplete, onShowMap }) {
+  if (!node) return null;
+
+  const item = node.item;
+  const hasQuiz = Boolean(item.assignment_id);
+  const statusText = getStudentFacingStatus(node);
+  const completeAllowed = canCompleteRoadmapNode(node, nodes);
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-blue-200 bg-white shadow-sm">
+      <div className="grid gap-0 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.7fr)]">
+        <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-emerald-600 p-6 text-white">
+          <p className="inline-flex items-center gap-2 text-xs font-black uppercase text-blue-100">
+            <PlayCircle className="h-4 w-4" />
+            Bài nên học tiếp theo
+          </p>
+          <h2 className="mt-3 text-2xl font-black">{item.lesson_title || node.title}</h2>
+          <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-blue-50">
+            {node.branch} · {formatMinutes(item.lesson_duration_minutes || item.duration_minutes)}. Hoàn thành bài này để mở bước tiếp theo trong lộ trình.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {hasQuiz ? (
+              <Button to={`/student/assignments/${item.assignment_id}/quiz`} variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50">
+                <ClipboardCheck size={16} />
+                Làm quiz xác nhận
+              </Button>
+            ) : (
+              <Button type="button" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50" onClick={() => onStart(node)} disabled={updating || node.rawStatus === "completed"}>
+                <PlayCircle size={16} />
+                {getStudyActionLabel(item)}
+              </Button>
+            )}
+            <Button type="button" variant="secondary" className="border-white/60 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={onShowMap}>
+              <Map size={16} />
+              Xem trên bản đồ
+            </Button>
+          </div>
+        </div>
+        <div className="grid gap-3 p-5">
+          <InfoItem label="Trạng thái" value={statusText} />
+          <InfoItem label="Tiến độ lộ trình" value={`${progressPercent}%`} />
+          <InfoItem label="Quiz xác nhận" value={hasQuiz ? (item.assignment_submission_status === "graded" ? "Đã làm" : "Cần làm") : "Không yêu cầu"} />
+          {!hasQuiz && (
+            <Button type="button" onClick={() => onComplete(node)} disabled={updating || !completeAllowed || node.rawStatus === "completed"}>
+              <CheckCircle2 size={16} />
+              Đánh dấu hoàn thành
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function buildRoadmapStatusPayload(roadmap, status) {
   return {
     subject_id: roadmap.subject_id,
@@ -120,14 +175,18 @@ export default function RoadmapDetailPage() {
   async function loadRoadmap() {
     setLoading(true);
     setError("");
+    setProgressSummary(null);
 
     try {
-      const [roadmapResponse, progressResponse] = await Promise.all([
-        getRoadmapById(id),
-        getRoadmapProgress(id),
-      ]);
+      const roadmapResponse = await getRoadmapById(id);
       setRoadmap(roadmapResponse.data);
-      setProgressSummary(progressResponse.data);
+
+      try {
+        const progressResponse = await getRoadmapProgress(id);
+        setProgressSummary(progressResponse.data);
+      } catch (progressError) {
+        console.warn("Không thể tải thống kê tiến độ lộ trình.", progressError);
+      }
     } catch (err) {
       setError(err.message || "Không thể tải chi tiết lộ trình học.");
     } finally {
@@ -268,6 +327,18 @@ export default function RoadmapDetailPage() {
 
   const roadmapPhases = useMemo(() => buildRoadmapPhases(roadmap?.items || []), [roadmap?.items]);
   const currentPhaseKey = useMemo(() => getCurrentRoadmapPhaseKey(roadmapPhases), [roadmapPhases]);
+  const phaseByItemId = useMemo(() => {
+    const map = new Map();
+    roadmapPhases.forEach((phase) => {
+      phase.items.forEach((item) => map.set(item.id, phase.key));
+    });
+    return map;
+  }, [roadmapPhases]);
+  const studyFlow = useMemo(() => findNextStudyNode(roadmap?.items || [], {
+    phaseByItemId,
+    rootTitle: roadmap?.subject_name,
+    rootDescription: roadmap?.subject_description || roadmap?.overview || "",
+  }), [roadmap?.items, phaseByItemId, roadmap?.subject_name, roadmap?.subject_description, roadmap?.overview]);
 
   useEffect(() => {
     if (!roadmapPhases.length) return;
@@ -328,6 +399,10 @@ export default function RoadmapDetailPage() {
     if (phase) handlePhaseNavigate(phase);
   }
 
+  function handleShowCurrentOnMap() {
+    document.getElementById("roadmap-mindmap")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   if (loading) {
     return <LoadingState label="Đang tải lộ trình học..." />;
   }
@@ -372,7 +447,7 @@ export default function RoadmapDetailPage() {
               <Button to="/student/roadmaps" variant="secondary">
                 <ArrowLeft size={16} /> Danh sách
               </Button>
-              {false && !isGuestPreview && (
+              {!isGuestPreview && (
                 <>
                   <Button to={`/student/roadmaps/${roadmap.id}/edit`}>
                     <Pencil size={16} /> Sửa
@@ -385,6 +460,13 @@ export default function RoadmapDetailPage() {
             </>
           }
         />
+
+        {roadmap.learning_goal_title && (
+          <Card className="border-blue-200 bg-blue-50 p-4">
+            <p className="text-xs font-extrabold uppercase text-blue-700">Đang phục vụ mục tiêu</p>
+            <p className="mt-1 text-base font-black text-blue-950">{roadmap.learning_goal_title}</p>
+          </Card>
+        )}
 
         <Card className="space-y-5 p-6">
           <RoadmapProgressBar value={lessonProgressPercent} completed={completedItems} total={totalItems} />
@@ -404,7 +486,17 @@ export default function RoadmapDetailPage() {
           </div>
         </Card>
 
-        {false && progressSummary && (
+        <StudyFocusCard
+          node={studyFlow.node}
+          nodes={studyFlow.visual.nodes}
+          progressPercent={lessonProgressPercent}
+          updating={Boolean(updatingItemId)}
+          onStart={(node) => handleStatusChange(node.item, "in_progress")}
+          onComplete={(node) => handleStatusChange(node.item, "completed")}
+          onShowMap={handleShowCurrentOnMap}
+        />
+
+        {progressSummary && (
           <Card className="space-y-5 p-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               <InfoItem label="Đã hoàn thành" value={`${progressSummary.completed_items || 0}/${progressSummary.total_items || 0} nhiệm vụ`} />
@@ -440,7 +532,7 @@ export default function RoadmapDetailPage() {
           </Card>
         )}
 
-        {false && !isGuestPreview && shouldSuggestCompletion && (
+        {!isGuestPreview && shouldSuggestCompletion && (
           <Alert tone="success" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span>Tất cả bước học đã hoàn thành. Hãy chuyển trạng thái lộ trình sang hoàn thành.</span>
             <Button type="button" size="sm" onClick={handleCompleteRoadmap} disabled={completingRoadmap}>
@@ -450,7 +542,7 @@ export default function RoadmapDetailPage() {
           </Alert>
         )}
 
-        {false && !isGuestPreview && missedItems.length > 0 && (
+        {!isGuestPreview && missedItems.length > 0 && (
           <Alert tone="warning">
             Có {missedItems.length} nhiệm vụ đã qua giờ học. Hãy cập nhật trạng thái hoặc dời lịch để lộ trình tiếp tục chính xác.
           </Alert>
@@ -462,13 +554,14 @@ export default function RoadmapDetailPage() {
           rootDescription={roadmap.subject_description || roadmap.overview || ""}
           items={roadmap.items || []}
           phases={roadmapPhases}
+          focusItemId={studyFlow.node?.item?.id}
           activePhaseKey={activePhaseKey}
           updatingItemId={updatingItemId}
           onPhaseNavigate={handlePhaseNavigate}
           onStatusChange={isGuestPreview ? undefined : handleStatusChange}
         />
 
-        {false && <RoadmapStageList
+        <RoadmapStageList
           phases={roadmapPhases}
           activePhaseKey={activePhaseKey}
           openPhaseKeys={openPhaseKeys}
@@ -482,59 +575,8 @@ export default function RoadmapDetailPage() {
           onStatusChange={isGuestPreview ? undefined : handleStatusChange}
           onResultSubmit={isGuestPreview ? undefined : handleResultSubmit}
           onRescheduleSubmit={undefined}
-        />}
+        />
 
-        {false && progressSummary && (
-          <Card className="space-y-5 p-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <InfoItem label="Đã hoàn thành" value={`${progressSummary.completed_items || 0}/${progressSummary.total_items || 0} nhiệm vụ`} />
-              <InfoItem label="Chưa hoàn thành" value={`${progressSummary.not_completed_items || 0} nhiệm vụ`} />
-              <InfoItem label="Đã học" value={formatMinutes(progressSummary.actual_study_minutes)} />
-              <InfoItem label="Còn lại" value={formatMinutes(progressSummary.remaining_minutes)} />
-              <InfoItem label="Đạt mục tiêu" value={`${Number(progressSummary.goal_achievement_percent || 0).toFixed(0)}%`} />
-            </div>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <h3 className="text-sm font-black text-slate-950">Tiến độ theo ngày</h3>
-                <div className="mt-3 space-y-2">
-                  {(progressSummary.daily || []).slice(0, 5).map((day) => (
-                    <div key={day.planned_date} className="flex items-center justify-between gap-3 text-sm font-bold text-slate-600">
-                      <span>{formatDate(day.planned_date)}</span>
-                      <span>{day.completed_items}/{day.total_items} · {Number(day.progress_percent || 0).toFixed(0)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-xl bg-slate-50 p-4">
-                <h3 className="text-sm font-black text-slate-950">Tiến độ theo tuần</h3>
-                <div className="mt-3 space-y-2">
-                  {(progressSummary.weekly || []).slice(0, 5).map((week) => (
-                    <div key={week.week_key} className="flex items-center justify-between gap-3 text-sm font-bold text-slate-600">
-                      <span>{formatDate(week.week_start)} - {formatDate(week.week_end)}</span>
-                      <span>{week.completed_items}/{week.total_items} · {Number(week.progress_percent || 0).toFixed(0)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {false && (<>
-          <h2 className="text-xl font-black text-slate-950">Các bước học</h2>
-          {roadmap.items.map((item) => (
-            <RoadmapItemCard
-              key={item.id}
-              item={item}
-              updating={updatingItemId === item.id}
-              savingResult={savingResultItemId === item.id}
-              rescheduling={reschedulingItemId === item.id}
-              onStatusChange={isGuestPreview ? undefined : handleStatusChange}
-              onResultSubmit={isGuestPreview ? undefined : handleResultSubmit}
-              onRescheduleSubmit={isGuestPreview ? undefined : handleRescheduleSubmit}
-            />
-          ))}
-        </>)}
       </div>
 
       <ConfirmDialog

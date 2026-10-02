@@ -26,6 +26,10 @@ function sameDate(a, b) {
   return a === b;
 }
 
+function today() {
+  return formatDate(new Date());
+}
+
 function weekDays(dateValue) {
   const date = toDate(dateValue);
   const day = date.getDay() || 7;
@@ -52,18 +56,23 @@ function monthDays(dateValue) {
   return days;
 }
 
-function ScheduleBucket({ date, schedules }) {
+function ScheduleBucket({ date, schedules, onScheduleSelect }) {
+  const isToday = sameDate(date, today());
+
   return (
-    <div className="min-h-40 rounded-lg border border-slate-200 bg-white p-3">
+    <div className={`min-h-40 rounded-lg border p-3 ${isToday ? "border-blue-300 bg-blue-50/70 shadow-sm shadow-blue-100" : "border-slate-200 bg-white"}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-sm font-extrabold text-slate-900">{dateLabel(date)}</p>
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-500">{schedules.length}</span>
+        <div className="min-w-0">
+          <p className={`text-sm font-extrabold ${isToday ? "text-blue-800" : "text-slate-900"}`}>{dateLabel(date)}</p>
+          {isToday && <span className="mt-1 inline-flex rounded-full bg-blue-600 px-2 py-0.5 text-[11px] font-black text-white">Hôm nay</span>}
+        </div>
+        <span className={`rounded-full px-2 py-1 text-xs font-bold ${isToday ? "bg-white text-blue-700 ring-1 ring-blue-200" : "bg-slate-100 text-slate-500"}`}>{schedules.length}</span>
       </div>
       <div className="space-y-2">
         {schedules.length === 0 ? (
           <p className="rounded-lg bg-slate-50 px-3 py-4 text-center text-xs font-semibold text-slate-400">Trống</p>
         ) : (
-          schedules.map((schedule) => <StudyScheduleCard key={schedule.id} schedule={schedule} compact />)
+          schedules.map((schedule) => <StudyScheduleCard key={schedule.id} schedule={schedule} compact onSelect={onScheduleSelect} />)
         )}
       </div>
     </div>
@@ -91,20 +100,24 @@ function ScheduleLegend() {
   );
 }
 
-export default function StudyScheduleCalendar({ view, date, schedules }) {
+export default function StudyScheduleCalendar({ view, date, schedules, onScheduleSelect }) {
   if (view === "day") {
     const daySchedules = schedules.filter((schedule) => sameDate(schedule.study_date, date));
+    const isToday = sameDate(date, today());
 
     return (
       <div>
         <ScheduleLegend />
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-extrabold text-slate-950">Lịch ngày {dateLabel(date)}</h2>
+        <div className={`rounded-lg border p-4 shadow-sm ${isToday ? "border-blue-300 bg-blue-50/70 shadow-blue-100" : "border-slate-200 bg-white"}`}>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className={`text-lg font-extrabold ${isToday ? "text-blue-900" : "text-slate-950"}`}>Lịch ngày {dateLabel(date)}</h2>
+            {isToday && <span className="rounded-full bg-blue-600 px-2.5 py-1 text-xs font-black text-white">Hôm nay</span>}
+          </div>
           <div className="mt-4 grid gap-3">
           {daySchedules.length === 0 ? (
             <div className="grid min-h-40 place-items-center rounded-lg bg-slate-50 text-sm font-bold text-slate-500">Không có lịch học trong ngày này.</div>
           ) : (
-            daySchedules.map((schedule) => <StudyScheduleCard key={schedule.id} schedule={schedule} />)
+            daySchedules.map((schedule) => <StudyScheduleCard key={schedule.id} schedule={schedule} onSelect={onScheduleSelect} />)
           )}
           </div>
         </div>
@@ -123,6 +136,7 @@ export default function StudyScheduleCalendar({ view, date, schedules }) {
             key={currentDate}
             date={currentDate}
             schedules={schedules.filter((schedule) => sameDate(schedule.study_date, currentDate))}
+            onScheduleSelect={onScheduleSelect}
           />
         ))}
       </div>

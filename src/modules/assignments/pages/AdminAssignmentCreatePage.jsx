@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { getSubjects } from "../../subjects/services/subjectService";
+import { getSubjectClasses } from "../../studentSubjects/services/studentSubjectService";
 import { createAssignment } from "../services/assignmentService";
 import AssignmentForm from "../components/AssignmentForm";
 
@@ -9,6 +10,7 @@ export default function AdminAssignmentCreatePage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [subjects, setSubjects] = useState([]);
+  const [subjectClasses, setSubjectClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [apiErrors, setApiErrors] = useState({});
@@ -21,7 +23,10 @@ export default function AdminAssignmentCreatePage() {
 
       try {
         const response = await getSubjects();
-        setSubjects(response.data || []);
+        const nextSubjects = response.data || [];
+        setSubjects(nextSubjects);
+        const classResponses = await Promise.all(nextSubjects.map((subject) => getSubjectClasses(subject.id).catch(() => ({ data: [] }))));
+        setSubjectClasses(classResponses.flatMap((item) => item.data || []));
       } catch (err) {
         setError(err.message || "Không thể tải danh sách môn học.");
       } finally {
@@ -58,7 +63,7 @@ export default function AdminAssignmentCreatePage() {
         {loading ? (
           <LoadingState label="Đang tải dữ liệu form..." />
         ) : (
-          <AssignmentForm mode="create" subjects={subjects} submitting={submitting} apiErrors={apiErrors} onSubmit={handleSubmit} />
+          <AssignmentForm mode="create" subjects={subjects} subjectClasses={subjectClasses} submitting={submitting} apiErrors={apiErrors} onSubmit={handleSubmit} />
         )}
       </div>
     </main>

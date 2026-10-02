@@ -1,14 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Route } from "lucide-react";
+import { PlayCircle, Route } from "lucide-react";
 
 function ProgressBar({ value }) {
   const percent = Math.min(100, Math.max(0, Number(value) || 0));
 
   return (
     <div>
-      <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${percent}%` }} />
+      <div className="h-2.5 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200/70">
+        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-500" style={{ width: `${percent}%` }} />
       </div>
       <p className="mt-2 text-xs font-extrabold text-slate-500">{percent.toFixed(0)}%</p>
     </div>
@@ -44,7 +44,7 @@ export default function RoadmapProgressWidget({ progress }) {
             <Link
               key={roadmap.id}
               to={`/student/roadmaps/${roadmap.id}`}
-              className="block rounded-lg border border-slate-200 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/40"
+              className="block rounded-lg border border-slate-200 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/40 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -53,8 +53,9 @@ export default function RoadmapProgressWidget({ progress }) {
                   </p>
                   <h3 className="mt-1 truncate text-sm font-black text-slate-950">{roadmap.title}</h3>
                 </div>
-                <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-600">
-                  {roadmap.status}
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-600">
+                  {roadmap.status === "active" && <PlayCircle size={12} />}
+                  {roadmap.status === "active" ? "Đang học" : roadmap.status}
                 </span>
               </div>
               <div className="mt-4">

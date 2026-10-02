@@ -1,34 +1,72 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, Button, LoadingState, PageHeader, useToast } from "../../../components/ui";
+import { getLearningGoals } from "../../learningGoals/services/learningGoalService";
 import { getMySubjects } from "../../studentSubjects/services/studentSubjectService";
 import StudyScheduleForm from "../components/StudyScheduleForm";
 import { createStudySchedule } from "../services/studyScheduleService";
 
+function localToday() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function buildGoalInitialValues(goal) {
+  if (!goal) return {};
+
+  const today = localToday();
+  const startDate = goal.start_date && goal.start_date >= today ? goal.start_date : today;
+
+  return {
+    subject_id: String(goal.subject_id || ""),
+    title: `Học cho mục tiêu: ${goal.title}`,
+    description: goal.goal_description || "",
+    study_date: startDate,
+    start_time: "19:00",
+    end_time: "20:00",
+    schedule_type: "self_study",
+    status: "upcoming",
+  };
+}
+
 export default function StudyScheduleCreatePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const goalId = searchParams.get("goal_id") || "";
   const toast = useToast();
   const [subjects, setSubjects] = useState([]);
+  const [initialValues, setInitialValues] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [apiErrors, setApiErrors] = useState({});
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadSubjects() {
+    async function loadData() {
       try {
-        const response = await getMySubjects();
-        setSubjects(response.data || []);
+        const [subjectResponse, goalResponse] = await Promise.all([
+          getMySubjects(),
+          goalId ? getLearningGoals() : Promise.resolve({ data: [] }),
+        ]);
+        const goals = goalResponse.data || [];
+        const selectedGoal = goals.find((goal) => String(goal.id) === String(goalId));
+
+        setSubjects(subjectResponse.data || []);
+        setInitialValues(buildGoalInitialValues(selectedGoal));
       } catch (err) {
-        setError(err.message || "Không thể tải danh sách môn học.");
+        setError(err.message || "Không thể tải dữ liệu tạo lịch học.");
       } finally {
         setLoading(false);
       }
     }
 
-    loadSubjects();
-  }, []);
+    loadData();
+  }, [goalId]);
 
   async function handleSubmit(data) {
     setSubmitting(true);
@@ -64,7 +102,13 @@ export default function StudyScheduleCreatePage() {
       {loading ? (
         <LoadingState label="Đang tải dữ liệu..." />
       ) : (
-        <StudyScheduleForm subjects={subjects} submitting={submitting} apiErrors={apiErrors} onSubmit={handleSubmit} />
+        <StudyScheduleForm
+          subjects={subjects}
+          initialValues={initialValues}
+          submitting={submitting}
+          apiErrors={apiErrors}
+          onSubmit={handleSubmit}
+        />
       )}
     </div>
   );

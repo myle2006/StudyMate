@@ -75,7 +75,7 @@ class AdminDashboardController extends Controller
             'SELECT COUNT(*)
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
              LEFT JOIN assignment_submissions sub
                     ON sub.assignment_id = a.id AND sub.student_id = ss.student_id
              WHERE ss.status = :student_subject_status
@@ -110,7 +110,7 @@ class AdminDashboardController extends Controller
                     GREATEST(COUNT(DISTINCT ss.student_id) - COUNT(DISTINCT sub.id), 0) AS missing_count
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.status = :student_subject_status
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id AND ss.status = :student_subject_status
              LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id AND sub.student_id = ss.student_id
              WHERE a.status = :assignment_status
                AND a.deadline >= NOW()

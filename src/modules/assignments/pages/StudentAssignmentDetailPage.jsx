@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, ClipboardCheck, Download, FileCheck, Send } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Button, Card, LoadingState, PageHeader } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import AssignmentStatusBadge from "../components/AssignmentStatusBadge";
 import { getStudentAssignmentById } from "../services/assignmentService";
 
@@ -27,6 +28,12 @@ function InfoItem({ label, value, children }) {
       <div className="mt-2 text-sm font-bold text-slate-950">{children || value || "-"}</div>
     </div>
   );
+}
+
+function isCsvAttachment(value) {
+  if (!value) return false;
+  const path = String(value).split("?")[0].toLowerCase();
+  return path.endsWith(".csv");
 }
 
 export default function StudentAssignmentDetailPage() {
@@ -74,7 +81,7 @@ export default function StudentAssignmentDetailPage() {
     );
   }
 
-  const isQuiz = Number(assignment.quiz_question_count || 0) > 0 || String(assignment.title || "").toLowerCase().includes("quiz");
+  const isQuiz = Number(assignment.quiz_question_count || 0) > 0 || isCsvAttachment(assignment.attachment_path);
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
@@ -138,14 +145,13 @@ export default function StudentAssignmentDetailPage() {
           </div>
 
           {assignment.attachment_path && (
-            <a
-              href={assignment.attachment_path}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => downloadProtectedFile(assignment.attachment_path)}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700"
             >
               <Download size={16} /> Tải file đính kèm
-            </a>
+            </button>
           )}
         </Card>
       </div>

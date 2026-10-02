@@ -3,21 +3,26 @@ import { Plus } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { Alert, Button, ConfirmDialog, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { getSubjects } from "../../subjects/services/subjectService";
-import { deleteAssignment, getAssignments } from "../services/assignmentService";
+import { getSubjectClasses } from "../../studentSubjects/services/studentSubjectService";
+import { deleteAssignment, duplicateAssignment, getAssignments } from "../services/assignmentService";
 import AssignmentFilter from "../components/AssignmentFilter";
 import AssignmentTable from "../components/AssignmentTable";
+import AssignmentDuplicateModal from "../components/AssignmentDuplicateModal";
 
 export default function AdminAssignmentListPage() {
   const location = useLocation();
   const toast = useToast();
   const [assignments, setAssignments] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [filters, setFilters] = useState({ keyword: "", subject_id: "", status: "" });
+  const [subjectClasses, setSubjectClasses] = useState([]);
+  const [filters, setFilters] = useState({ keyword: "", subject_id: "", class_id: "", status: "" });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(location.state?.message || "");
   const [error, setError] = useState("");
   const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [duplicateTarget, setDuplicateTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
 
   async function loadData(nextFilters = filters) {
     setLoading(true);
@@ -29,7 +34,10 @@ export default function AdminAssignmentListPage() {
         getSubjects(),
       ]);
       setAssignments(assignmentsResponse.data || []);
-      setSubjects(subjectsResponse.data || []);
+      const nextSubjects = subjectsResponse.data || [];
+      setSubjects(nextSubjects);
+      const classResponses = await Promise.all(nextSubjects.map((subject) => getSubjectClasses(subject.id).catch(() => ({ data: [] }))));
+      setSubjectClasses(classResponses.flatMap((item) => item.data || []));
     } catch (err) {
       setError(err.message || "Không thể tải danh sách bài tập.");
     } finally {
@@ -47,10 +55,32 @@ export default function AdminAssignmentListPage() {
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [filters.keyword, filters.subject_id, filters.status]);
+  }, [filters.keyword, filters.subject_id, filters.class_id, filters.status]);
 
   function updateFilter(field, value) {
-    setFilters((current) => ({ ...current, [field]: value }));
+    setFilters((current) => ({ ...current, [field]: value, ...(field === "subject_id" ? { class_id: "" } : {}) }));
+  }
+
+  async function handleDuplicate(data) {
+    if (!duplicateTarget) return;
+    setDuplicating(true);
+    setError("");
+
+    try {
+      const response = await duplicateAssignment(duplicateTarget.id, data);
+      const count = Array.isArray(response.data) ? response.data.length : 1;
+      const successMessage = response.message || `Đã duplicate ${count} bài tập.`;
+      setMessage(successMessage);
+      toast.success(successMessage);
+      setDuplicateTarget(null);
+      await loadData(filters);
+    } catch (err) {
+      const nextError = err.message || "Không thể duplicate bài tập.";
+      setError(nextError);
+      toast.error(nextError);
+    } finally {
+      setDuplicating(false);
+    }
   }
 
   async function confirmDelete() {
@@ -79,7 +109,7 @@ export default function AdminAssignmentListPage() {
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <PageHeader
         title="Quản lý bài tập"
-        description={`${assignments.length} bài tập đang hiển thị. Admin có thể giao deadline theo từng môn học.`}
+        description={`${assignments.length} bài tập đang hiển thị. Admin có thể giao deadline theo từng lớp.`}
         actions={
           <Button to="/admin/assignments/create">
             <Plus size={16} /> Tạo bài tập
@@ -88,7 +118,7 @@ export default function AdminAssignmentListPage() {
       />
 
       <div className="mt-6">
-        <AssignmentFilter filters={filters} subjects={subjects} onChange={updateFilter} />
+        <AssignmentFilter filters={filters} subjects={subjects} subjectClasses={subjectClasses} onChange={updateFilter} />
       </div>
 
       <Alert tone="success" className="mt-4">{message}</Alert>
@@ -98,7 +128,7 @@ export default function AdminAssignmentListPage() {
         {loading ? (
           <LoadingState label="Đang tải danh sách bài tập..." />
         ) : (
-          <AssignmentTable assignments={assignments} onDelete={setSelectedAssignment} />
+          <AssignmentTable assignments={assignments} onDelete={setSelectedAssignment} onDuplicate={setDuplicateTarget} />
         )}
       </div>
 
@@ -111,6 +141,15 @@ export default function AdminAssignmentListPage() {
         loading={deleting}
         onCancel={() => setSelectedAssignment(null)}
         onConfirm={confirmDelete}
+      />
+
+      <AssignmentDuplicateModal
+        open={Boolean(duplicateTarget)}
+        assignment={duplicateTarget}
+        classes={subjectClasses.filter((item) => String(item.subject_id) === String(duplicateTarget?.subject_id))}
+        loading={duplicating}
+        onClose={() => setDuplicateTarget(null)}
+        onSubmit={handleDuplicate}
       />
     </main>
   );

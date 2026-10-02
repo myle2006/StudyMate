@@ -1,5 +1,8 @@
 const API_BASE_URL =
-  window.STUDYMATE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || "/api";
+  window.STUDYMATE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "/api";
 
 function getStoredToken() {
   return localStorage.getItem("token") || "";

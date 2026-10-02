@@ -6,10 +6,12 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  PlayCircle,
   Route as RouteIcon,
+  Target,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Alert, LoadingState, PageHeader } from "../../../components/ui";
+import { Alert, Button, LoadingState, PageHeader } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
 import DashboardStatCard from "../components/DashboardStatCard";
 import UpcomingScheduleList from "../components/UpcomingScheduleList";
@@ -52,6 +54,147 @@ function LatestGrade({ grade }) {
             <span className="text-xs font-bold text-slate-500">{formatDateTime(grade.graded_at || grade.submitted_at)}</span>
           </div>
           {grade.feedback && <p className="mt-4 line-clamp-3 text-sm font-semibold leading-6 text-slate-600">{grade.feedback}</p>}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function formatStudyDate(step) {
+  if (!step?.planned_date) return "Chưa xếp lịch";
+  const date = new Date(String(step.planned_date));
+  const dateText = Number.isNaN(date.getTime()) ? step.planned_date : date.toLocaleDateString("vi-VN");
+  return step.start_time ? `${dateText} · ${step.start_time}` : dateText;
+}
+
+function ContinueLearningCard({ step, progress }) {
+  const fallbackRoadmap = progress?.roadmaps?.[0];
+  const roadmapId = step?.roadmap_id || fallbackRoadmap?.id;
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-blue-200 bg-white shadow-sm">
+      <div className="grid gap-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
+        <div className="bg-gradient-to-br from-blue-600 via-blue-600 to-emerald-600 p-6 text-white">
+          <p className="inline-flex items-center gap-2 text-xs font-black uppercase text-blue-100">
+            <PlayCircle className="h-4 w-4" />
+            Học tiếp ngay
+          </p>
+          <h2 className="mt-3 text-2xl font-black">
+            {step ? (step.lesson_title || step.title || "Bài học tiếp theo") : "Bạn chưa có bài học tiếp theo"}
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-blue-50">
+            {step
+              ? `${step.subject_code} · ${step.subject_name}. StudyMate đã chọn bài phù hợp nhất để bạn tiếp tục lộ trình.`
+              : "Khi có lộ trình đang học, StudyMate sẽ đưa bài cần học tiếp theo lên đây để bạn không phải tự tìm trong mindmap."}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {roadmapId ? (
+              <Button to={`/student/roadmaps/${roadmapId}`} variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50">
+                <RouteIcon className="h-4 w-4" />
+                {step ? "Tiếp tục học" : "Mở lộ trình"}
+              </Button>
+            ) : (
+              <Button to="/student/roadmaps/generate" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50">
+                Tạo lộ trình
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="grid gap-3 p-5">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-black uppercase text-slate-500">Lộ trình</p>
+            <h3 className="mt-2 line-clamp-2 text-base font-black text-slate-950">
+              {step?.roadmap_title || fallbackRoadmap?.title || "Chưa có lộ trình đang học"}
+            </h3>
+            <p className="mt-2 text-sm font-semibold text-slate-600">
+              {Number(step?.progress_percent ?? fallbackRoadmap?.progress_percent ?? progress?.overall_percent ?? 0).toFixed(0)}% tiến độ
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-black uppercase text-slate-500">Việc cần làm</p>
+            <h3 className="mt-2 line-clamp-2 text-base font-black text-slate-950">
+              {step?.assignment_id ? "Học nội dung và làm quiz xác nhận" : "Học nội dung và đánh dấu hoàn thành"}
+            </h3>
+            <p className="mt-2 text-sm font-semibold text-slate-600">{formatStudyDate(step)}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LearningGoalOverviewCard({ overview }) {
+  const goals = overview?.goals || [];
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase text-blue-600">Mục tiêu đang theo đuổi</p>
+          <h2 className="mt-1 text-xl font-black text-slate-950">
+            {overview?.active_count || 0} mục tiêu active
+          </h2>
+        </div>
+        <Target className="h-5 w-5 text-blue-600" />
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs font-black uppercase text-slate-500">Gần deadline</p>
+          <p className="mt-1 text-lg font-black text-amber-700">{overview?.near_deadline_count || 0}</p>
+        </div>
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs font-black uppercase text-slate-500">Chưa có lộ trình</p>
+          <p className="mt-1 text-lg font-black text-rose-700">{overview?.without_roadmap_count || 0}</p>
+        </div>
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs font-black uppercase text-slate-500">Hoàn thành TB</p>
+          <p className="mt-1 text-lg font-black text-emerald-700">
+            {Number(overview?.average_progress_percent || 0).toFixed(0)}%
+          </p>
+        </div>
+      </div>
+
+      {goals.length === 0 ? (
+        <div className="mt-5 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm font-semibold text-slate-500">
+          Bạn chưa có mục tiêu học tập nào.
+        </div>
+      ) : (
+        <div className="mt-5 space-y-3">
+          {goals.slice(0, 3).map((goal) => (
+            <div key={goal.id} className="rounded-lg border border-slate-200 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-extrabold uppercase text-blue-600">
+                    {goal.subject_code} · {goal.subject_name}
+                  </p>
+                  <h3 className="mt-1 line-clamp-2 text-sm font-black text-slate-950">{goal.title}</h3>
+                  <p className="mt-1 text-xs font-bold text-slate-500">
+                    Deadline: {goal.end_date || "Chưa đặt"} · {Number(goal.average_progress_percent || 0).toFixed(0)}%
+                  </p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${goal.is_overdue ? "bg-rose-100 text-rose-700" : goal.is_near_deadline ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+                  {goal.is_overdue ? "Trễ" : goal.is_near_deadline ? "Sắp hạn" : goal.has_roadmap ? "Có lộ trình" : "Thiếu lộ trình"}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {goal.primary_roadmap_id ? (
+                  <Button to={`/student/roadmaps/${goal.primary_roadmap_id}`} variant="secondary" size="sm">
+                    <RouteIcon className="h-4 w-4" />
+                    Mở lộ trình
+                  </Button>
+                ) : (
+                  <Button to={`/student/roadmaps/generate?goal_id=${goal.id}`} size="sm">
+                    <RouteIcon className="h-4 w-4" />
+                    Tạo lộ trình
+                  </Button>
+                )}
+                <Button to={`/student/learning-goals/${goal.id}`} variant="secondary" size="sm">
+                  Chi tiết
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>
@@ -174,6 +317,13 @@ export default function StudentDashboardPage() {
         icon: BarChart3,
         tone: "violet",
       },
+      {
+        title: "Mục tiêu active",
+        value: summary.active_learning_goal_count,
+        helper: `${summary.near_deadline_learning_goal_count || 0} mục tiêu gần deadline`,
+        icon: Target,
+        tone: "blue",
+      },
     ];
 
     return isGuestPreview ? [allStats[0], allStats[1], allStats[5]] : allStats;
@@ -203,6 +353,9 @@ export default function StudentDashboardPage() {
         ) : (
           <>
             {isGuestPreview && <GuestDemoSpotlight dashboard={dashboard} />}
+            {!isGuestPreview && (
+              <ContinueLearningCard step={dashboard.next_learning_step} progress={dashboard.roadmap_progress} />
+            )}
 
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {stats.map((stat) => (
@@ -223,6 +376,7 @@ export default function StudentDashboardPage() {
             ) : (
               <>
                 <section className="grid gap-5 xl:grid-cols-2">
+                  <LearningGoalOverviewCard overview={dashboard.learning_goal_overview} />
                   <UpcomingScheduleList
                     title="Lịch học hôm nay"
                     schedules={dashboard.today_schedules || []}

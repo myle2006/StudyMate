@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
+import { Activity, BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import LandingPage from "./pages/LandingPage";
 import GuestPreviewPage from "./pages/preview/GuestPreviewPage";
 import AdminDashboardPage from "./modules/dashboard/pages/AdminDashboardPage";
 import AdminReportsPage from "./modules/reports/pages/AdminReportsPage";
+import AdminHealthPage from "./modules/system/pages/AdminHealthPage";
 import NotificationListPage from "./modules/notifications/pages/NotificationListPage";
 import AdminLessonListPage from "./modules/lessons/pages/AdminLessonListPage";
 import AdminLessonFormPage from "./modules/lessons/pages/AdminLessonFormPage";
@@ -70,6 +71,7 @@ const adminMenu = [
   { label: "Bài tập", to: "/admin/assignments", icon: ClipboardList },
   { label: "Thông báo", to: "/notifications", icon: Bell, badgeKey: "notifications" },
   { label: "Báo cáo", to: "/admin/reports", icon: FileDown },
+  { label: "Kiểm tra hệ thống", to: "/admin/health", icon: Activity },
   { label: "Bài học", to: "/admin/lessons", icon: ClipboardList },
 ];
 
@@ -113,17 +115,24 @@ function Sidebar({ user, onLogout, unreadCount = 0, isGuestPreview = false }) {
   const menu = isGuestPreview ? guestPreviewMenu : user?.role === "admin" ? adminMenu : studentMenu;
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 border-r border-slate-200/80 bg-white/95 backdrop-blur lg:flex lg:flex-col">
-      <div className="border-b border-slate-200/80 px-5 py-5">
+    <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 border-r border-slate-200/80 bg-white/95 shadow-xl shadow-slate-200/70 backdrop-blur lg:flex lg:flex-col">
+      <div className="border-b border-slate-200/80 px-5 py-4">
         <Link to={user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard"} className="flex items-center gap-3">
           <BrandLogo subtitle={brandSlogan} />
         </Link>
       </div>
 
-      <div className="mx-3 mt-3 rounded-xl border border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-4">
-        <p className="text-xs font-bold uppercase text-slate-400">{isGuestPreview ? "Bản dùng thử" : "Tài khoản"}</p>
-        <p className="mt-2 truncate text-sm font-extrabold text-slate-800">{user?.full_name}</p>
-        <p className="truncate text-xs font-semibold text-slate-500">{user?.email}</p>
+      <div className="mx-3 mt-3 rounded-lg border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-emerald-50 p-3">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-600 text-sm font-black text-white">
+            {(user?.full_name || user?.email || "S").charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase text-slate-400">{isGuestPreview ? "Bản dùng thử" : "Tài khoản"}</p>
+            <p className="truncate text-sm font-extrabold text-slate-800">{user?.full_name}</p>
+            <p className="truncate text-xs font-semibold text-slate-500">{user?.email}</p>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
@@ -137,10 +146,10 @@ function Sidebar({ user, onLogout, unreadCount = 0, isGuestPreview = false }) {
               end={item.to === "/admin/dashboard" || item.to === "/student/dashboard"}
               className={({ isActive }) =>
                 [
-                  "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition",
+                  "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition duration-200",
                   isActive
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-600/20"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-blue-700",
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-r-full before:bg-white/90"
+                    : "text-slate-600 hover:translate-x-0.5 hover:bg-slate-100 hover:text-blue-700",
                 ].join(" ")
               }
             >
@@ -160,7 +169,7 @@ function Sidebar({ user, onLogout, unreadCount = 0, isGuestPreview = false }) {
         <button
           type="button"
           onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-xl border border-rose-200 bg-white px-3 py-3 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50"
+          className="flex w-full items-center gap-3 rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50"
         >
           <LogOut className="h-4 w-4" />
           {isGuestPreview ? "Thoát dùng thử" : "Đăng xuất"}
@@ -175,23 +184,23 @@ function MobileNav({ user, onLogout, unreadCount = 0, isGuestPreview = false }) 
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm shadow-slate-200/70 backdrop-blur lg:hidden">
       <div className="flex items-center justify-between gap-3">
         <Link to={user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard"} className="flex items-center gap-2">
           <BrandLogo compact />
           <span className="text-sm font-extrabold text-slate-950">StudyMate</span>
         </Link>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setMenuOpen((current) => !current)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700">
+          <button type="button" onClick={() => setMenuOpen((current) => !current)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
             {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
-          <button type="button" onClick={onLogout} className="rounded-lg border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600">
+          <button type="button" onClick={onLogout} className="rounded-lg border border-rose-200 px-3 py-2 text-sm font-bold text-rose-600 transition hover:bg-rose-50">
             {isGuestPreview ? "Thoát" : "Đăng xuất"}
           </button>
         </div>
       </div>
       {menuOpen && (
-        <nav className="mt-3 grid gap-2 sm:grid-cols-2">
+        <nav className="mt-3 grid max-h-[70vh] gap-2 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/80 sm:grid-cols-2">
           {menu.map((item) => {
             const Icon = item.icon;
 
@@ -203,8 +212,8 @@ function MobileNav({ user, onLogout, unreadCount = 0, isGuestPreview = false }) 
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   [
-                    "flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold",
-                    isActive ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700",
+                    "flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition",
+                    isActive ? "bg-blue-600 text-white shadow-sm shadow-blue-600/20" : "bg-slate-50 text-slate-700 hover:bg-blue-50 hover:text-blue-700",
                   ].join(" ")
                 }
               >
@@ -285,7 +294,7 @@ function AppLayout({ children }) {
           unreadCount={unreadCount}
           isGuestPreview={isGuestPreview}
         />
-        <div className="min-h-screen w-full lg:pl-72">
+        <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_34rem),linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] lg:pl-72">
           {isGuestPreview && (
             <div className="border-b border-amber-200 bg-amber-50">
               <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3 px-4 py-3 text-sm font-semibold text-amber-900 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
@@ -400,6 +409,7 @@ export default function App() {
         <Route path="/admin/assignments/:assignmentId/submissions" element={<AdminRoute><AdminAssignmentSubmissionsPage /></AdminRoute>} />
         <Route path="/admin/submissions/:id" element={<AdminRoute><AdminSubmissionDetailPage /></AdminRoute>} />
         <Route path="/admin/reports" element={<AdminRoute><AdminReportsPage /></AdminRoute>} />
+        <Route path="/admin/health" element={<AdminRoute><AdminHealthPage /></AdminRoute>} />
         <Route path="/admin/lessons" element={<AdminRoute><AdminLessonListPage /></AdminRoute>} />
         <Route path="/admin/lessons/create" element={<AdminRoute><AdminLessonFormPage /></AdminRoute>} />
         <Route path="/admin/lessons/:id" element={<AdminRoute><AdminLessonDetailPage /></AdminRoute>} />

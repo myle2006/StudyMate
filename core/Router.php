@@ -27,9 +27,7 @@ class Router
     public function dispatch(string $method, string $requestUri): void
     {
         if ($method === 'OPTIONS') {
-            header('Access-Control-Allow-Origin: *');
-            header('Access-Control-Allow-Headers: Content-Type, Authorization');
-            header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+            emit_cors_headers();
             http_response_code(204);
             return;
         }
@@ -48,6 +46,7 @@ class Router
             http_response_code(404);
             if (str_starts_with($path, '/api/')) {
                 header('Content-Type: application/json; charset=utf-8');
+                emit_cors_headers();
                 echo json_encode([
                     'success' => false,
                     'message' => 'Không tìm thấy API.',

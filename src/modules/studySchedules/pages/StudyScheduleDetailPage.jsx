@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Edit3, Trash2 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Badge, Button, Card, ConfirmDialog, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { deleteStudySchedule, getStudyScheduleById } from "../services/studyScheduleService";
 
@@ -99,8 +100,15 @@ export default function StudyScheduleDetailPage() {
         description={`${schedule.study_date} · ${schedule.start_time} - ${schedule.end_time}`}
         actions={
           <>
-            <Button to={`/student/schedules/${schedule.id}/edit`}>Sửa</Button>
-            <Button type="button" variant="danger" onClick={() => setConfirmOpen(true)}>Xóa</Button>
+            <Button to="/student/schedules" variant="secondary">
+              <ArrowLeft size={16} /> Quay lại
+            </Button>
+            <Button to={`/student/schedules/${schedule.id}/edit`}>
+              <Edit3 size={16} /> Sửa
+            </Button>
+            <Button type="button" variant="danger" onClick={() => setConfirmOpen(true)}>
+              <Trash2 size={16} /> Xóa
+            </Button>
           </>
         }
       />
@@ -124,10 +132,6 @@ export default function StudyScheduleDetailPage() {
           <p className="text-xs font-extrabold uppercase text-slate-500">Mô tả</p>
           <p className="mt-2 whitespace-pre-line leading-7 text-slate-700">{schedule.description || "Chưa có mô tả."}</p>
         </div>
-
-        <Link to="/student/schedules" className="mt-6 inline-flex text-sm font-extrabold text-blue-600 hover:text-blue-700">
-          Quay lại lịch học
-        </Link>
       </Card>
 
       <ConfirmDialog

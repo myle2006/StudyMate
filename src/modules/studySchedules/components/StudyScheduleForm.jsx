@@ -22,7 +22,7 @@ function localToday() {
   return `${year}-${month}-${day}`;
 }
 
-function validateForm(form) {
+function validateForm(form, mode = "create") {
   const errors = {};
 
   if (!form.subject_id) errors.subject_id = "Vui lòng chọn môn học.";
@@ -44,7 +44,7 @@ function validateForm(form) {
     }
   }
 
-  if (form.status === "upcoming" && form.study_date && form.start_time) {
+  if (mode === "create" && form.status === "upcoming" && form.study_date && form.start_time) {
     const scheduledAt = new Date(`${form.study_date}T${form.start_time}`);
     if (scheduledAt.getTime() < Date.now()) {
       errors.study_date = "Không thể tạo lịch sắp diễn ra ở thời điểm quá khứ.";
@@ -61,6 +61,9 @@ export default function StudyScheduleForm({
   submitting = false,
   apiErrors = {},
   onSubmit,
+  onCancel,
+  cancelTo = "/student/schedules",
+  cancelLabel = "Hủy",
 }) {
   const [form, setForm] = useState({ ...DEFAULT_FORM, ...initialValues });
   const [clientErrors, setClientErrors] = useState({});
@@ -71,7 +74,7 @@ export default function StudyScheduleForm({
   useEffect(() => {
     setForm({ ...DEFAULT_FORM, ...initialValues });
     setClientErrors({});
-  }, [initialValues?.id]);
+  }, [initialValues]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -80,7 +83,7 @@ export default function StudyScheduleForm({
 
   function handleSubmit(event) {
     event.preventDefault();
-    const nextErrors = validateForm(form);
+    const nextErrors = validateForm(form, mode);
     setClientErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) return;
@@ -95,6 +98,8 @@ export default function StudyScheduleForm({
       location: form.location.trim(),
       schedule_type: form.schedule_type,
       status: form.status,
+      roadmap_id: form.roadmap_id || null,
+      roadmap_item_id: form.roadmap_item_id || null,
     });
   }
 
@@ -192,9 +197,15 @@ export default function StudyScheduleForm({
           <Button type="submit" size="lg" disabled={submitting || noAvailableSubjects}>
             {submitting ? "Đang lưu..." : mode === "edit" ? "Cập nhật lịch học" : "Thêm lịch học"}
           </Button>
-          <Button to="/student/schedules" variant="secondary" size="lg">
-            Hủy
-          </Button>
+          {onCancel ? (
+            <Button type="button" variant="secondary" size="lg" onClick={onCancel}>
+              {cancelLabel}
+            </Button>
+          ) : (
+            <Button to={cancelTo} variant="secondary" size="lg">
+              {cancelLabel}
+            </Button>
+          )}
         </div>
       </form>
     </Card>

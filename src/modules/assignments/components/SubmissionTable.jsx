@@ -1,6 +1,7 @@
 import React from "react";
 import { Download, Eye } from "lucide-react";
 import { Button, Card, EmptyState } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import SubmissionStatusBadge from "./SubmissionStatusBadge";
 
 function formatDateTime(value) {
@@ -16,6 +17,10 @@ function formatDateTime(value) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function scoreLabel(score) {
+  return score !== null && score !== undefined ? `${Number(score).toFixed(1)}/10` : "-";
 }
 
 export default function SubmissionTable({ submissions }) {
@@ -55,18 +60,17 @@ export default function SubmissionTable({ submissions }) {
                   <SubmissionStatusBadge status={item.submission_status} />
                 </td>
                 <td className="px-4 py-4 font-semibold text-slate-600">{formatDateTime(item.submitted_at)}</td>
-                <td className="px-4 py-4 font-bold text-slate-700">{item.score ?? "-"}</td>
+                <td className="px-4 py-4 font-bold text-slate-700">{scoreLabel(item.score)}</td>
                 <td className="px-4 py-4">
                   <div className="flex justify-end gap-2">
                     {item.file_path && (
-                      <a
-                        href={item.file_path}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => downloadProtectedFile(item.file_path)}
                         className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-extrabold text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
                       >
                         <Download size={14} /> File
-                      </a>
+                      </button>
                     )}
                     {item.submission_id ? (
                       <Button to={`/admin/submissions/${item.submission_id}`} variant="secondary" size="sm">

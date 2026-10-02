@@ -20,18 +20,25 @@ class Assignment extends Model
             $params['subject_id'] = (int) $filters['subject_id'];
         }
 
+        if (! empty($filters['class_id']) && ctype_digit((string) $filters['class_id'])) {
+            $where[] = 'a.class_id = :class_id';
+            $params['class_id'] = (int) $filters['class_id'];
+        }
+
         if (! empty($filters['status']) && in_array($filters['status'], ['open', 'closed', 'draft'], true)) {
             $where[] = 'a.status = :status';
             $params['status'] = $filters['status'];
         }
 
         $statement = $this->db()->prepare(
-            'SELECT a.id, a.subject_id, a.title, a.description, a.deadline, a.attachment_path,
+            'SELECT a.id, a.subject_id, a.class_id, a.title, a.description, a.deadline, a.attachment_path,
                     a.status, a.created_by, a.created_at, a.updated_at,
+                    sc.class_code, sc.class_name,
                     s.subject_code, s.subject_name, s.color, s.image,
                     u.full_name AS created_by_name
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
+             LEFT JOIN subject_classes sc ON sc.id = a.class_id
              INNER JOIN users u ON u.id = a.created_by
              WHERE ' . implode(' AND ', $where) . '
              ORDER BY a.deadline ASC, a.created_at DESC, a.id DESC'
@@ -44,12 +51,14 @@ class Assignment extends Model
     public function findById(int $id): ?array
     {
         $statement = $this->db()->prepare(
-            'SELECT a.id, a.subject_id, a.title, a.description, a.deadline, a.attachment_path,
+            'SELECT a.id, a.subject_id, a.class_id, a.title, a.description, a.deadline, a.attachment_path,
                     a.status, a.created_by, a.created_at, a.updated_at,
+                    sc.class_code, sc.class_name,
                     s.subject_code, s.subject_name, s.color, s.image,
                     u.full_name AS created_by_name
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
+             LEFT JOIN subject_classes sc ON sc.id = a.class_id
              INNER JOIN users u ON u.id = a.created_by
              WHERE a.id = :id
                AND a.deleted_at IS NULL
@@ -103,6 +112,7 @@ class Assignment extends Model
         $statement = $this->db()->prepare(
             'SELECT a.id, a.subject_id, a.title, a.description, a.deadline, a.attachment_path,
                     a.status, a.created_at, a.updated_at,
+                    a.class_id, sc.class_code, sc.class_name,
                     s.subject_code, s.subject_name, s.color, s.image,
                     sub.id AS submission_id,
                     COALESCE(sub.status, \'not_submitted\') AS submission_status,
@@ -111,7 +121,8 @@ class Assignment extends Model
                     (SELECT COUNT(*) FROM assignment_quiz_questions q WHERE q.assignment_id = a.id) AS quiz_question_count
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
+             LEFT JOIN subject_classes sc ON sc.id = a.class_id
              LEFT JOIN assignment_submissions sub
                     ON sub.assignment_id = a.id AND sub.student_id = :student_id
              WHERE ' . implode(' AND ', $where) . '
@@ -128,6 +139,7 @@ class Assignment extends Model
         $statement = $this->db()->prepare(
             'SELECT a.id, a.subject_id, a.title, a.description, a.deadline, a.attachment_path,
                     a.status, a.created_at, a.updated_at,
+                    a.class_id, sc.class_code, sc.class_name,
                     s.subject_code, s.subject_name, s.color, s.image,
                     sub.id AS submission_id,
                     COALESCE(sub.status, \'not_submitted\') AS submission_status,
@@ -139,7 +151,8 @@ class Assignment extends Model
                     (SELECT COUNT(*) FROM assignment_quiz_questions q WHERE q.assignment_id = a.id) AS quiz_question_count
              FROM assignments a
              INNER JOIN subjects s ON s.id = a.subject_id
-             INNER JOIN student_subjects ss ON ss.subject_id = s.id
+             INNER JOIN student_subjects ss ON ss.subject_id = s.id AND ss.class_id = a.class_id
+             LEFT JOIN subject_classes sc ON sc.id = a.class_id
              LEFT JOIN assignment_submissions sub
                     ON sub.assignment_id = a.id AND sub.student_id = :student_id
              WHERE a.id = :id
@@ -165,12 +178,13 @@ class Assignment extends Model
     {
         $statement = $this->db()->prepare(
             'INSERT INTO assignments
-                (subject_id, title, description, deadline, attachment_path, status, created_by)
+                (subject_id, class_id, title, description, deadline, attachment_path, status, created_by)
              VALUES
-                (:subject_id, :title, :description, :deadline, :attachment_path, :status, :created_by)'
+                (:subject_id, :class_id, :title, :description, :deadline, :attachment_path, :status, :created_by)'
         );
         $statement->execute([
             'subject_id' => (int) $data['subject_id'],
+            'class_id' => (int) $data['class_id'],
             'title' => $data['title'],
             'description' => $data['description'] !== '' ? $data['description'] : null,
             'deadline' => $data['deadline'],
@@ -186,6 +200,7 @@ class Assignment extends Model
     {
         $fields = [
             'subject_id = :subject_id',
+            'class_id = :class_id',
             'title = :title',
             'description = :description',
             'deadline = :deadline',
@@ -194,6 +209,7 @@ class Assignment extends Model
         $params = [
             'id' => $id,
             'subject_id' => (int) $data['subject_id'],
+            'class_id' => (int) $data['class_id'],
             'title' => $data['title'],
             'description' => $data['description'] !== '' ? $data['description'] : null,
             'deadline' => $data['deadline'],
@@ -231,6 +247,47 @@ class Assignment extends Model
         $statement->execute(['id' => $subjectId]);
 
         return (int) $statement->fetchColumn() > 0;
+    }
+
+    public function classBelongsToSubject(int $classId, int $subjectId): bool
+    {
+        return (new SubjectClass())->belongsToSubject($classId, $subjectId);
+    }
+
+    public function duplicate(int $sourceId, array $data, int $createdBy): array
+    {
+        $source = $this->findById($sourceId);
+        if ($source === null) {
+            return [];
+        }
+
+        $created = [];
+        $questionModel = new AssignmentQuizQuestion();
+        $questions = $questionModel->getForAssignment($sourceId, true);
+
+        foreach ($data['class_ids'] as $classId) {
+            $newId = $this->create([
+                'subject_id' => (int) $source['subject_id'],
+                'class_id' => (int) $classId,
+                'title' => $data['title'],
+                'description' => $data['description'],
+                'deadline' => $data['deadline'],
+                'attachment_path' => $source['attachment_path'] ?? null,
+                'status' => $data['status'] ?: ($source['status'] ?? 'draft'),
+                'created_by' => $createdBy,
+            ]);
+
+            if ($questions !== []) {
+                $questionModel->replaceForAssignment($newId, array_map(static function (array $question): array {
+                    unset($question['id'], $question['assignment_id']);
+                    return $question;
+                }, $questions));
+            }
+
+            $created[] = $this->findById($newId);
+        }
+
+        return array_values(array_filter($created));
     }
 
     private function ensureQuizSchema(): void

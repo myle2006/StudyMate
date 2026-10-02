@@ -19,6 +19,10 @@ class StudentSubjectValidation
             $errors['student_id'] = 'Vui lòng chọn sinh viên hợp lệ.';
         }
 
+        if (! self::isPositiveInteger($data['class_id'] ?? null)) {
+            $errors['class_id'] = 'Vui lòng chọn lớp hợp lệ.';
+        }
+
         return $errors;
     }
 

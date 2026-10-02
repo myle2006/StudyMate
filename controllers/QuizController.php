@@ -5,12 +5,14 @@ class QuizController extends Controller
     private Assignment $assignment;
     private AssignmentSubmission $submission;
     private AssignmentQuizQuestion $quizQuestion;
+    private QuizSecurityEvent $securityEvent;
 
     public function __construct()
     {
         $this->assignment = new Assignment();
         $this->submission = new AssignmentSubmission();
         $this->quizQuestion = new AssignmentQuizQuestion();
+        $this->securityEvent = new QuizSecurityEvent();
     }
 
     public function show(string|int $assignmentId): void
@@ -34,7 +36,7 @@ class QuizController extends Controller
                 'assignment' => $assignment,
                 'questions' => $questions,
                 'submission' => $this->normalizeSubmission($submission),
-                'passing_score' => 70,
+                'passing_score' => 7,
             ],
         ]);
     }
@@ -93,7 +95,7 @@ class QuizController extends Controller
         $result = $this->quizQuestion->grade((int) $assignmentId, $answers);
         $feedback = $result['passed']
             ? 'Quiz đạt yêu cầu. Bài học đã được xác nhận hoàn thành.'
-            : 'Quiz chưa đạt yêu cầu. Bạn cần đạt tối thiểu 70% phần trắc nghiệm.';
+            : 'Quiz chưa đạt yêu cầu. Bạn cần đạt tối thiểu 7/10 phần trắc nghiệm.';
         $payload = [
             'type' => 'lesson_quiz',
             'answers' => $answers,
@@ -125,6 +127,52 @@ class QuizController extends Controller
         ]);
     }
 
+    public function securityEvent(string|int $assignmentId): void
+    {
+        $studentId = $this->currentUserId();
+        $assignment = $this->assignment->findForStudent((int) $assignmentId, $studentId);
+
+        if ($assignment === null) {
+            $this->forbidden();
+            return;
+        }
+
+        $input = $this->input();
+        $eventType = $this->cleanText((string) ($input['event_type'] ?? ''), 80);
+        $message = $this->cleanText((string) ($input['message'] ?? ''), 500);
+        $metadata = $input['metadata'] ?? [];
+
+        if ($eventType === '' || ! preg_match('/^[a-z0-9_.-]+$/', $eventType)) {
+            $this->json([
+                'success' => false,
+                'message' => 'Loại sự kiện bảo mật không hợp lệ.',
+                'errors' => ['event_type' => 'event_type chỉ gồm chữ thường, số, dấu gạch dưới, chấm hoặc gạch ngang.'],
+            ], 422);
+            return;
+        }
+
+        if ($message === '') {
+            $this->json([
+                'success' => false,
+                'message' => 'Thông báo sự kiện bảo mật không được để trống.',
+                'errors' => ['message' => 'message là bắt buộc.'],
+            ], 422);
+            return;
+        }
+
+        if (! is_array($metadata)) {
+            $metadata = [];
+        }
+
+        $eventId = $this->securityEvent->log((int) $assignmentId, $studentId, $eventType, $message, $metadata);
+
+        $this->json([
+            'success' => true,
+            'message' => 'Đã ghi nhận sự kiện bảo mật quiz.',
+            'data' => ['id' => $eventId],
+        ], 201);
+    }
+
     private function validateAnswers(array $questions, array $answers): array
     {
         $errors = [];
@@ -138,6 +186,17 @@ class QuizController extends Controller
         }
 
         return $errors;
+    }
+
+    private function cleanText(string $value, int $maxLength): string
+    {
+        $value = trim(preg_replace('/\s+/', ' ', $value) ?? '');
+
+        if (function_exists('mb_substr')) {
+            return mb_substr($value, 0, $maxLength);
+        }
+
+        return substr($value, 0, $maxLength);
     }
 
     private function ensureQuestionsFromAttachment(array $assignment): void
@@ -174,6 +233,10 @@ class QuizController extends Controller
 
         $path = '/' . ltrim($path, '/');
         $candidates = [];
+        if (preg_match('#/api/files/assignments/([^/]+)$#', $path, $matches)) {
+            $candidates[] = BASE_PATH . '/storage/uploads/assignments/' . basename($matches[1]);
+            $candidates[] = BASE_PATH . '/public/uploads/assignments/' . basename($matches[1]);
+        }
         if (str_starts_with($path, '/public/')) {
             $candidates[] = BASE_PATH . $path;
         }

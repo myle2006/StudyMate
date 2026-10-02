@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Trash2, UploadCloud, UserPlus } from "lucide-react";
 import StudentFilter from "../../../components/students/StudentFilter";
 import StudentTable from "../../../components/students/StudentTable";
-import { Button, Card, ConfirmDialog, EmptyState, Field, Input, LoadingState, Modal, PageHeader, useToast } from "../../../components/ui";
+import { Alert, Button, Card, ConfirmDialog, EmptyState, Field, Input, LoadingState, Modal, PageHeader, useToast } from "../../../components/ui";
 import {
+  bulkDeleteStudents,
   deleteStudent,
   disableStudent,
   enableStudent,
@@ -23,6 +24,8 @@ export default function StudentList() {
   const [confirmState, setConfirmState] = useState(null);
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState("");
+  const [resetPasswordResult, setResetPasswordResult] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
 
   async function loadStudents(nextFilters = filters) {
     setLoading(true);
@@ -47,6 +50,7 @@ export default function StudentList() {
     event.preventDefault();
     const nextFilters = { ...filters, page: 1 };
     setFilters(nextFilters);
+    setSelectedIds([]);
     loadStudents(nextFilters);
   }
 
@@ -64,6 +68,7 @@ export default function StudentList() {
       setMessage(nextMessage);
       toast.success(nextMessage);
       await loadStudents(filters);
+      setSelectedIds([]);
     } catch (err) {
       const nextError = err.message || "Không thể thực hiện thao tác.";
       setError(nextError);
@@ -111,14 +116,85 @@ export default function StudentList() {
   function handleResetPassword(student) {
     setResetTarget(student);
     setNewPassword("");
+    setResetPasswordResult("");
+  }
+
+  async function handleResetPasswordSubmit() {
+    if (!resetTarget?.id) return;
+
+    setLoading(true);
+    setMessage("");
+    setError("");
+    setResetPasswordResult("");
+
+    try {
+      const response = await resetStudentPassword(resetTarget.id, newPassword ? { new_password: newPassword } : {});
+      const temporaryPassword = response.data?.temporary_password || "";
+      if (temporaryPassword) {
+        setResetPasswordResult(temporaryPassword);
+        toast.success("Reset mật khẩu thành công. Mật khẩu tạm đang hiển thị trong hộp thoại.");
+      } else {
+        toast.success(response.message || "Reset mật khẩu sinh viên thành công.");
+        setResetTarget(null);
+      }
+      await loadStudents(filters);
+      setSelectedIds([]);
+      setNewPassword("");
+    } catch (err) {
+      const nextError = err.message || "Không thể reset mật khẩu.";
+      setError(nextError);
+      toast.error(nextError);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function copyTemporaryPassword() {
+    if (!resetPasswordResult) return;
+    try {
+      await navigator.clipboard.writeText(resetPasswordResult);
+      toast.success("Đã copy mật khẩu tạm.");
+    } catch {
+      toast.error("Không thể copy tự động. Hãy chọn và copy thủ công.");
+    }
   }
 
   function handleDelete(student) {
     askConfirm({
-      title: "Xóa sinh viên",
-      description: `Xóa sinh viên "${student.full_name}"? Nếu đã có dữ liệu học tập, tài khoản sẽ được chuyển sang inactive.`,
+      title: "Vô hiệu hóa sinh viên",
+      description: `Vô hiệu hóa sinh viên "${student.full_name}"? Dữ liệu học tập, điểm, bài nộp và log quiz sẽ được giữ lại.`,
       action: () => deleteStudent(student.id),
-      successMessage: "Xóa sinh viên thành công.",
+      successMessage: "Tài khoản sinh viên đã được vô hiệu hóa.",
+      danger: true,
+    });
+  }
+
+  function handleToggleStudent(studentId, checked) {
+    setSelectedIds((current) => {
+      const id = Number(studentId);
+      if (checked) return current.includes(id) ? current : [...current, id];
+
+      return current.filter((selectedId) => selectedId !== id);
+    });
+  }
+
+  function handleToggleAll(checked) {
+    const visibleIds = students.map((student) => Number(student.id));
+    setSelectedIds((current) => {
+      if (checked) return Array.from(new Set([...current, ...visibleIds]));
+
+      return current.filter((id) => !visibleIds.includes(id));
+    });
+  }
+
+  function handleBulkDelete() {
+    if (selectedIds.length === 0) return;
+
+    askConfirm({
+      title: "Vô hiệu hóa đồng loạt sinh viên",
+      description: `Vô hiệu hóa ${selectedIds.length} sinh viên đã chọn? Dữ liệu học tập, điểm, bài nộp và log quiz sẽ được giữ lại.`,
+      action: () => bulkDeleteStudents(selectedIds),
+      successMessage: "Đã vô hiệu hóa các sinh viên đã chọn.",
       danger: true,
     });
   }
@@ -146,8 +222,12 @@ export default function StudentList() {
             <Button type="button" variant="secondary" onClick={handleRefresh} disabled={loading}>
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Làm mới
             </Button>
-            <Button to="/admin/students/import" variant="secondary">Import CSV/Excel</Button>
-            <Button to="/admin/students/create">Thêm sinh viên</Button>
+            <Button to="/admin/students/import" variant="secondary">
+              <UploadCloud size={16} /> Import
+            </Button>
+            <Button to="/admin/students/create">
+              <UserPlus size={16} /> Thêm sinh viên
+            </Button>
           </>
         }
       />
@@ -156,8 +236,8 @@ export default function StudentList() {
         <StudentFilter filters={filters} loading={loading} onChange={setFilters} onSubmit={handleFilterSubmit} />
       </div>
 
-      {message && <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{message}</div>}
-      {error && <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</div>}
+      <Alert tone="success" className="mt-4">{message}</Alert>
+      <Alert tone="error" className="mt-4">{error}</Alert>
 
       <div className="mt-6">
         {loading && students.length === 0 ? (
@@ -171,9 +251,26 @@ export default function StudentList() {
           />
         ) : (
           <Card className="p-0">
+            <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-bold text-slate-600">
+                Đã chọn <span className="font-black text-slate-950">{selectedIds.length}</span> sinh viên
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button type="button" variant="secondary" onClick={() => setSelectedIds([])} disabled={selectedIds.length === 0 || loading}>
+                  Bỏ chọn
+                </Button>
+                <Button type="button" variant="danger" onClick={handleBulkDelete} disabled={selectedIds.length === 0 || loading}>
+                  <Trash2 size={16} />
+                  Vô hiệu hóa đã chọn
+                </Button>
+              </div>
+            </div>
             <StudentTable
               students={students}
               pagination={pagination}
+              selectedIds={selectedIds}
+              onToggleStudent={handleToggleStudent}
+              onToggleAll={handleToggleAll}
               onDisable={handleDisable}
               onEnable={handleEnable}
               onLock={handleLock}
@@ -207,26 +304,45 @@ export default function StudentList() {
         open={Boolean(resetTarget)}
         title="Reset mật khẩu"
         description={resetTarget ? `Nhập mật khẩu mới cho "${resetTarget.full_name}". Để trống để hệ thống sinh mật khẩu tạm.` : ""}
-        onClose={() => setResetTarget(null)}
+        onClose={() => {
+          setResetTarget(null);
+          setResetPasswordResult("");
+        }}
         footer={
           <>
-            <Button type="button" variant="secondary" onClick={() => setResetTarget(null)} disabled={loading}>Hủy</Button>
             <Button
               type="button"
-              onClick={() => runAction(
-                () => resetStudentPassword(resetTarget.id, newPassword ? { new_password: newPassword } : {}),
-                "Reset mật khẩu sinh viên thành công."
-              )}
+              variant="secondary"
+              onClick={() => {
+                setResetTarget(null);
+                setResetPasswordResult("");
+              }}
               disabled={loading}
             >
-              {loading ? "Đang xử lý..." : "Reset mật khẩu"}
+              {resetPasswordResult ? "Đóng" : "Hủy"}
+            </Button>
+            <Button
+              type="button"
+              onClick={resetPasswordResult ? copyTemporaryPassword : handleResetPasswordSubmit}
+              disabled={loading || !resetTarget}
+            >
+              {loading ? "Đang xử lý..." : resetPasswordResult ? "Copy mật khẩu" : "Reset mật khẩu"}
             </Button>
           </>
         }
       >
-        <Field label="Mật khẩu mới">
-          <Input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Để trống để sinh mật khẩu tạm" />
-        </Field>
+        {resetPasswordResult ? (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-800">
+            <p>Mật khẩu tạm chỉ hiển thị tại đây. Hãy copy và gửi cho sinh viên trước khi đóng hộp thoại.</p>
+            <p className="mt-3 rounded-lg bg-white px-3 py-2 font-mono text-base text-emerald-900 ring-1 ring-emerald-100">
+              {resetPasswordResult}
+            </p>
+          </div>
+        ) : (
+          <Field label="Mật khẩu mới">
+            <Input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Để trống để sinh mật khẩu tạm" />
+          </Field>
+        )}
       </Modal>
     </main>
   );

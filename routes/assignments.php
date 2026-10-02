@@ -3,6 +3,7 @@
 $router->get('/api/admin/assignments', [AssignmentController::class, 'index'], $admin);
 $router->get('/api/admin/assignments/{id}', [AssignmentController::class, 'show'], $admin);
 $router->post('/api/admin/assignments', [AssignmentController::class, 'store'], $admin);
+$router->post('/api/admin/assignments/{id}/duplicate', [AssignmentController::class, 'duplicate'], $admin);
 $router->put('/api/admin/assignments/{id}', [AssignmentController::class, 'update'], $admin);
 $router->post('/api/admin/assignments/{id}', [AssignmentController::class, 'update'], $admin);
 $router->delete('/api/admin/assignments/{id}', [AssignmentController::class, 'destroy'], $admin);

@@ -75,6 +75,13 @@ export function submitStudentQuiz(assignmentId, answers) {
   });
 }
 
+export function logQuizSecurityEvent(assignmentId, event) {
+  return request(`/student/assignments/${assignmentId}/quiz/security-events`, {
+    method: "POST",
+    body: JSON.stringify(event),
+  });
+}
+
 export function updateSubmission(id, formData) {
   if (formData instanceof FormData) {
     formData.set("_method", "PUT");

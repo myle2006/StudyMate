@@ -8,7 +8,9 @@ $router->post('/api/register', [AuthController::class, 'register']);
 $router->post('/api/login', [AuthController::class, 'login']);
 $router->get('/api/me', [AuthController::class, 'me'], $auth);
 $router->post('/api/logout', [AuthController::class, 'logout'], $auth);
+$router->get('/api/files/{category}/{filename}', [FileController::class, 'download'], $auth);
 $router->get('/api/admin/dashboard', [AdminDashboardController::class, 'index'], $admin);
+$router->get('/api/admin/health', [AdminHealthController::class, 'index'], $admin);
 $router->get('/api/student/dashboard', [StudentDashboardController::class, 'index'], $student);
 
 $router->get('/api/admin/students/import/template', [StudentController::class, 'downloadTemplate'], $admin);
@@ -17,6 +19,7 @@ $router->get('/api/admin/students', [StudentController::class, 'index'], $admin)
 $router->get('/api/admin/students/{id}', [StudentController::class, 'show'], $admin);
 $router->post('/api/admin/students', [StudentController::class, 'store'], $admin);
 $router->put('/api/admin/students/{id}', [StudentController::class, 'update'], $admin);
+$router->delete('/api/admin/students/bulk', [StudentController::class, 'bulkDestroy'], $admin);
 $router->delete('/api/admin/students/{id}', [StudentController::class, 'destroy'], $admin);
 $router->put('/api/admin/students/{id}/disable', [StudentController::class, 'disable'], $admin);
 $router->put('/api/admin/students/{id}/enable', [StudentController::class, 'enable'], $admin);

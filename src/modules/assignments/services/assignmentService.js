@@ -82,6 +82,13 @@ export function deleteAssignment(id) {
   });
 }
 
+export function duplicateAssignment(id, data) {
+  return request(`/admin/assignments/${id}/duplicate`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export function getStudentAssignments(params = {}) {
   return request(`/student/assignments${buildQuery(params)}`);
 }

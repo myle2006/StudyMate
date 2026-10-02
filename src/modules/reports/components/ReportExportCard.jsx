@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { Alert, Button, Field, Input, Select } from "../../../components/ui";
 import { downloadReportCsv } from "../services/reportService";
 
@@ -38,10 +38,10 @@ export default function ReportExportCard({
   }
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="group rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-slate-200/70">
       <div className="flex items-start gap-3">
         {Icon && (
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100 transition group-hover:scale-105">
             <Icon className="h-5 w-5" />
           </span>
         )}
@@ -106,7 +106,7 @@ export default function ReportExportCard({
       <Alert tone="error" className="mt-4">{error}</Alert>
 
       <Button type="button" onClick={handleExport} disabled={exporting} className="mt-5 w-full">
-        <Download className="h-4 w-4" />
+        {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
         {exporting ? "Đang xuất..." : "Xuất CSV"}
       </Button>
     </article>

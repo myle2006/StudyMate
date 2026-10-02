@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, BookOpenCheck, CheckCircle2, Eye, PencilLine } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { getMySubjects } from "../../studentSubjects/services/studentSubjectService";
 import { getLearningGoals } from "../../learningGoals/services/learningGoalService";
@@ -26,6 +26,7 @@ function StepCard({ icon: Icon, title, description }) {
 
 export default function RoadmapGeneratePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
   const [subjects, setSubjects] = useState([]);
   const [learningGoals, setLearningGoals] = useState([]);
@@ -34,6 +35,7 @@ export default function RoadmapGeneratePage() {
   const [submitting, setSubmitting] = useState(false);
   const [apiErrors, setApiErrors] = useState({});
   const [error, setError] = useState("");
+  const initialGoalId = searchParams.get("goal_id") || "";
 
   useEffect(() => {
     async function loadData() {
@@ -110,6 +112,7 @@ export default function RoadmapGeneratePage() {
             subjects={subjects}
             learningGoals={learningGoals}
             roadmapTemplates={roadmapTemplates}
+            initialGoalId={initialGoalId}
             submitting={submitting}
             apiErrors={apiErrors}
             onSubmit={handleSubmit}

@@ -44,6 +44,11 @@ class ReportController extends Controller
         $this->download($this->reports->progress($_GET));
     }
 
+    public function learningGoalsExport(): void
+    {
+        $this->download($this->reports->learningGoals($_GET));
+    }
+
     private function download(array $report): void
     {
         $filename = (string) ($report['filename'] ?? 'report.csv');
@@ -63,9 +68,16 @@ class ReportController extends Controller
         fputcsv($output, $headers);
 
         foreach ($rows as $row) {
-            fputcsv($output, array_map(static fn (mixed $value): string => (string) ($value ?? ''), $row));
+            fputcsv($output, array_map([$this, 'csvCell'], $row));
         }
 
         fclose($output);
+    }
+
+    private function csvCell(mixed $value): string
+    {
+        $cell = (string) ($value ?? '');
+
+        return preg_match('/^\s*[=\-+@]/', $cell) === 1 ? "'" . $cell : $cell;
     }
 }

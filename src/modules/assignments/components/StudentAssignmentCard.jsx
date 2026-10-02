@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock3, Eye, Send } from "lucide-react";
+import { ClipboardCheck, Clock3, Eye, Send } from "lucide-react";
 import { Button, Card } from "../../../components/ui";
 import AssignmentStatusBadge, { getDeadlineState } from "./AssignmentStatusBadge";
 
@@ -18,8 +18,20 @@ function formatDateTime(value) {
   });
 }
 
+function isCsvAttachment(value) {
+  if (!value) return false;
+  const path = String(value).split("?")[0].toLowerCase();
+  return path.endsWith(".csv");
+}
+
 export default function StudentAssignmentCard({ assignment }) {
   const deadlineState = getDeadlineState(assignment.deadline, assignment.status, assignment.submission_status);
+  const isQuiz = Number(assignment.quiz_question_count || 0) > 0 || isCsvAttachment(assignment.attachment_path);
+  const actionTo = isQuiz ? `/student/assignments/${assignment.id}/quiz` : `/student/assignments/${assignment.id}/submit`;
+  const actionLabel = isQuiz
+    ? assignment.submission_id ? "Xem / làm lại quiz" : "Làm quiz"
+    : assignment.submission_id ? "Cập nhật bài nộp" : "Nộp bài";
+  const ActionIcon = isQuiz ? ClipboardCheck : Send;
   const toneClass = deadlineState.overdue
     ? "border-rose-300 bg-rose-50/70"
     : deadlineState.urgent
@@ -61,8 +73,8 @@ export default function StudentAssignmentCard({ assignment }) {
         <Button to={`/student/assignments/${assignment.id}`} variant="secondary" className="w-full">
           <Eye size={16} /> Xem chi tiết
         </Button>
-        <Button to={`/student/assignments/${assignment.id}/submit`} className="w-full" disabled={assignment.status === "closed"}>
-          <Send size={16} /> {assignment.submission_id ? "Cập nhật bài nộp" : "Nộp bài"}
+        <Button to={actionTo} className="w-full" disabled={assignment.status === "closed"}>
+          <ActionIcon size={16} /> {actionLabel}
         </Button>
       </div>
     </Card>

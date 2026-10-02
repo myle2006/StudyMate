@@ -95,20 +95,20 @@ export default function RoadmapListPage() {
             actionTo="/student/roadmaps/generate"
           />
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {roadmaps.map((roadmap) => (
-              <Card key={roadmap.id} className="flex h-full flex-col p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+              <Card key={roadmap.id} className="group flex h-full flex-col p-5 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-slate-200/70">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-xs font-black uppercase text-blue-600">
                       {roadmap.subject_code} - {roadmap.subject_name}
                     </p>
-                    <h2 className="mt-2 line-clamp-2 text-lg font-black text-slate-950">{roadmap.title}</h2>
+                    <h2 className="mt-2 line-clamp-2 text-lg font-black text-slate-950 group-hover:text-blue-700">{roadmap.title}</h2>
                   </div>
                   <RoadmapStatusBadge status={roadmap.status} />
                 </div>
                 <p className="mt-4 line-clamp-3 min-h-16 text-sm leading-6 text-slate-600">{roadmap.overview || roadmap.goal}</p>
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-3 rounded-lg bg-slate-50 p-3">
                   <RoadmapProgressBar value={roadmap.progress_percent} />
                   <p className="text-xs font-bold text-slate-500">
                     {roadmap.item_count || 0} nội dung · {roadmap.completed_item_count || 0} đã học

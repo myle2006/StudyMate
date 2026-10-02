@@ -33,12 +33,13 @@ export default function AssignedStudentTable({ students, onRemove }) {
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+          <thead className="bg-slate-50 text-left text-xs font-black uppercase text-slate-500">
             <tr>
               <th className="w-16 px-4 py-3">STT</th>
               <th className="px-4 py-3">Họ tên</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Mã sinh viên</th>
+              <th className="px-4 py-3">Lớp</th>
               <th className="px-4 py-3">Trạng thái</th>
               <th className="px-4 py-3">Ngày được gán</th>
               <th className="px-4 py-3 text-right">Hành động</th>
@@ -51,6 +52,7 @@ export default function AssignedStudentTable({ students, onRemove }) {
                 <td className="px-4 py-4 font-black text-slate-900">{student.full_name}</td>
                 <td className="px-4 py-4 font-semibold text-slate-600">{student.email}</td>
                 <td className="px-4 py-4 font-bold text-slate-700">{student.student_code || "-"}</td>
+                <td className="px-4 py-4 font-bold text-slate-700">{student.class_code || "DEFAULT"}</td>
                 <td className="px-4 py-4">
                   <Badge tone="green">{student.status === "active" ? "Đang học" : student.status}</Badge>
                 </td>
@@ -58,7 +60,7 @@ export default function AssignedStudentTable({ students, onRemove }) {
                 <td className="px-4 py-4">
                   <div className="flex justify-end">
                     <Button type="button" variant="danger" size="sm" onClick={() => onRemove(student)}>
-                      <Trash2 size={15} /> Xóa khỏi môn học
+                      <Trash2 size={15} /> Gỡ
                     </Button>
                   </div>
                 </td>

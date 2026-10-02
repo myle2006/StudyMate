@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Alert, Badge, Button, Card, EmptyState, LoadingState, PageHeader } from "../../../components/ui";
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from "../services/notificationService";
@@ -168,11 +168,13 @@ export default function NotificationListPage() {
                       <div className="mt-4 flex flex-wrap gap-2">
                         {notification.link && (
                           <Button as={Link} to={notification.link} size="sm" variant="secondary" onClick={() => handleRead(notification)}>
+                            <ExternalLink className="h-4 w-4" />
                             Mở chi tiết
                           </Button>
                         )}
                         {!notification.read && (
                           <Button type="button" size="sm" variant="ghost" onClick={() => handleRead(notification)}>
+                            <CheckCheck className="h-4 w-4" />
                             Đánh dấu đã đọc
                           </Button>
                         )}

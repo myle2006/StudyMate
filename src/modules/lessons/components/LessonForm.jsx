@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "csv", "zip", "rar", "png", "jpg", "jpeg"];
@@ -171,9 +172,9 @@ export default function LessonForm({ mode = "create", subjects = [], initialValu
         </Field>
 
         {initialValues.material_path && !materialFile && (
-          <a href={initialValues.material_path} target="_blank" rel="noreferrer" className="mt-4 inline-flex text-sm font-bold text-blue-600 hover:text-blue-700">
+          <button type="button" onClick={() => downloadProtectedFile(initialValues.material_path)} className="mt-4 inline-flex text-sm font-bold text-blue-600 hover:text-blue-700">
             Xem tài liệu hiện tại
-          </a>
+          </button>
         )}
 
         <Field

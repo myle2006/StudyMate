@@ -125,10 +125,15 @@ class StudentController extends Controller
         }
 
         $this->student->update($studentId, $data);
+        if ($data['password'] !== '') {
+            $this->student->resetPassword($studentId, $data['password']);
+        }
 
         $this->json([
             'success' => true,
-            'message' => 'Cập nhật thông tin sinh viên thành công.',
+            'message' => $data['password'] !== ''
+                ? 'Cập nhật thông tin và mật khẩu sinh viên thành công.'
+                : 'Cập nhật thông tin sinh viên thành công.',
             'data' => $this->compactStudent($this->student->findById($studentId)),
         ]);
     }
@@ -141,21 +146,88 @@ class StudentController extends Controller
             return;
         }
 
-        if ($this->student->hasRelatedData($studentId)) {
-            $this->student->disable($studentId);
-            $this->json([
-                'success' => true,
-                'message' => 'Sinh viên đã có dữ liệu học tập nên tài khoản được chuyển sang trạng thái vô hiệu hóa.',
-            ]);
-            return;
-        }
-
-        $this->student->delete($studentId);
+        $this->student->disable($studentId);
 
         $this->json([
             'success' => true,
-            'message' => 'Xóa sinh viên thành công.',
+            'message' => 'Tài khoản sinh viên đã được vô hiệu hóa để bảo toàn dữ liệu học tập.',
         ]);
+    }
+
+    public function bulkDestroy(): void
+    {
+        $input = $this->input();
+        $ids = $this->normalizeStudentIds($input['ids'] ?? []);
+
+        if ($ids === []) {
+            $this->validationFailed(['ids' => 'Vui lòng chọn ít nhất một sinh viên để vô hiệu hóa.']);
+            return;
+        }
+
+        $summary = [
+            'requested' => count($ids),
+            'deleted' => 0,
+            'disabled' => 0,
+            'not_found' => 0,
+            'failed' => 0,
+        ];
+        $results = [];
+
+        foreach ($ids as $studentId) {
+            $student = $this->student->findById($studentId);
+
+            if ($student === null) {
+                $summary['not_found']++;
+                $results[] = [
+                    'id' => $studentId,
+                    'status' => 'not_found',
+                    'message' => 'Không tìm thấy sinh viên.',
+                ];
+                continue;
+            }
+
+            try {
+                $success = $this->student->disable($studentId);
+                $status = 'disabled';
+                $message = 'Tài khoản sinh viên được chuyển sang inactive để bảo toàn dữ liệu học tập.';
+
+                if (! $success) {
+                    $summary['failed']++;
+                    $results[] = [
+                        'id' => $studentId,
+                        'status' => 'failed',
+                        'message' => 'Không thể xử lý sinh viên này.',
+                    ];
+                    continue;
+                }
+
+                $summary[$status]++;
+                $results[] = [
+                    'id' => $studentId,
+                    'status' => $status,
+                    'message' => $message,
+                ];
+            } catch (Throwable $exception) {
+                $summary['failed']++;
+                $results[] = [
+                    'id' => $studentId,
+                    'status' => 'failed',
+                    'message' => 'Không thể xử lý sinh viên này.',
+                ];
+            }
+        }
+
+        $processed = $summary['deleted'] + $summary['disabled'];
+        $this->json([
+            'success' => $processed > 0,
+            'message' => $processed > 0
+                ? "Đã xử lý {$processed} sinh viên: {$summary['disabled']} vô hiệu hóa."
+                : 'Không có sinh viên nào được xử lý.',
+            'data' => [
+                'summary' => $summary,
+                'results' => $results,
+            ],
+        ], $processed > 0 ? 200 : 404);
     }
 
     public function disable(string|int $id): void
@@ -206,7 +278,7 @@ class StudentController extends Controller
         }
 
         $input = $this->input();
-        $newPassword = (string) ($input['new_password'] ?? '');
+        $newPassword = trim((string) ($input['new_password'] ?? ''));
 
         if ($newPassword !== '' && strlen($newPassword) < 6) {
             $this->validationFailed(['new_password' => 'Mật khẩu mới phải có ít nhất 6 ký tự.']);
@@ -298,11 +370,27 @@ class StudentController extends Controller
         return [
             'full_name' => trim((string) ($input['full_name'] ?? '')),
             'email' => strtolower(trim((string) ($input['email'] ?? ''))),
-            'password' => $isCreate ? (string) ($input['password'] ?? '') : '',
+            'password' => trim((string) ($input['password'] ?? '')),
             'phone' => trim((string) ($input['phone'] ?? '')),
             'student_code' => trim((string) ($input['student_code'] ?? '')),
             'status' => trim((string) ($input['status'] ?? 'active')),
         ];
+    }
+
+    private function normalizeStudentIds(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($value as $id) {
+            if (is_numeric($id) && (int) $id > 0) {
+                $ids[] = (int) $id;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     private function validateStudent(array $data, bool $isCreate): array
@@ -338,7 +426,7 @@ class StudentController extends Controller
                 : 'Mã sinh viên chỉ được chứa chữ cái và số.';
         }
 
-        if ($isCreate && $data['password'] !== '' && strlen($data['password']) < 6) {
+        if ($data['password'] !== '' && strlen($data['password']) < 6) {
             $errors['password'] = 'Mật khẩu phải có ít nhất 6 ký tự.';
         }
 

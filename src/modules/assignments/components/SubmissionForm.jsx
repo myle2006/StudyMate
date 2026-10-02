@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button, Card, Field, Textarea } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import AssignmentStatusBadge, { getDeadlineState } from "./AssignmentStatusBadge";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -136,14 +137,13 @@ export default function SubmissionForm({ assignment, submission, apiErrors = {},
         </Field>
 
         {(submission?.file_path || assignment?.submission_file_path) && !file && (
-          <a
-            href={submission?.file_path || assignment?.submission_file_path}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => downloadProtectedFile(submission?.file_path || assignment?.submission_file_path)}
             className="inline-flex text-sm font-bold text-blue-600 hover:text-blue-700"
           >
             Xem file đã nộp
-          </a>
+          </button>
         )}
 
         <div className="flex flex-col gap-3">

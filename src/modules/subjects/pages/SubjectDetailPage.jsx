@@ -95,7 +95,7 @@ export default function SubjectDetailPage({ studentView = false }) {
         title={subject.subject_name}
         description="Thông tin tổng quan của môn học trong StudyMate AI."
         actions={
-          <div className="flex flex-wrap gap-3">
+          <>
             <Button to={backUrl} variant="secondary">
               <ArrowLeft size={16} /> Quay lại
             </Button>
@@ -109,7 +109,7 @@ export default function SubjectDetailPage({ studentView = false }) {
                 </Button>
               </>
             )}
-          </div>
+          </>
         }
       />
 

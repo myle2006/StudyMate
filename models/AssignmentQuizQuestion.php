@@ -217,11 +217,11 @@ class AssignmentQuizQuestion extends Model
             ];
         }
 
-        $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100, 2) : 0.0;
+        $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 10, 2) : 0.0;
 
         return [
             'score' => $score,
-            'passed' => $totalPoints > 0 && $score >= 70,
+            'passed' => $totalPoints > 0 && $score >= 7,
             'earned_points' => $earnedPoints,
             'total_points' => $totalPoints,
             'auto_question_count' => count($autoQuestions),

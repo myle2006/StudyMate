@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
 
 const typeLabels = {
   class: "Học trên lớp",
@@ -82,14 +81,15 @@ function getScheduleLevel(schedule) {
   return levelConfig.later;
 }
 
-export default function StudyScheduleCard({ schedule, compact = false }) {
+export default function StudyScheduleCard({ schedule, compact = false, onSelect }) {
   const level = getScheduleLevel(schedule);
 
   if (compact) {
     return (
-      <Link
-        to={`/student/schedules/${schedule.id}`}
-        className={`group relative block overflow-hidden rounded-lg border p-3 pr-2 shadow-sm transition focus:outline-none focus:ring-4 focus:ring-blue-100 ${level.card}`}
+      <button
+        type="button"
+        onClick={() => onSelect?.(schedule)}
+        className={`group relative block w-full overflow-hidden rounded-lg border p-3 pr-2 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-100 ${level.card}`}
         title={`${schedule.subject_code} - ${schedule.title}`}
       >
         <span className={`absolute inset-y-0 left-0 w-1 ${level.bar}`} aria-hidden="true" />
@@ -105,17 +105,20 @@ export default function StudyScheduleCard({ schedule, compact = false }) {
           <h3 className="mt-0.5 line-clamp-2 min-h-9 text-sm font-black leading-[18px] text-slate-950 group-hover:text-blue-700">
             {schedule.title}
           </h3>
+          {schedule.learning_goal_title && (
+            <p className="mt-1 truncate text-[11px] font-bold text-blue-700">{schedule.learning_goal_title}</p>
+          )}
           <div className="mt-2 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
             <span className="truncate">{typeLabels[schedule.schedule_type] || schedule.schedule_type}</span>
             <span className="shrink-0">{schedule.end_time}</span>
           </div>
         </div>
-      </Link>
+      </button>
     );
   }
 
   return (
-    <article className={`rounded-lg border bg-white p-4 shadow-sm ${level.card}`}>
+    <article className={`rounded-lg border bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${level.card}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-xs font-extrabold uppercase text-blue-600">
@@ -131,11 +134,14 @@ export default function StudyScheduleCard({ schedule, compact = false }) {
       <p className="mt-3 text-sm font-semibold text-slate-600">
         {schedule.start_time} - {schedule.end_time}
       </p>
+      {schedule.learning_goal_title && (
+        <p className="mt-1 truncate text-sm font-bold text-blue-700">Mục tiêu: {schedule.learning_goal_title}</p>
+      )}
       <p className="mt-1 text-sm text-slate-500">{typeLabels[schedule.schedule_type] || schedule.schedule_type}</p>
       <p className="mt-1 truncate text-sm text-slate-500">{schedule.location || "Chưa có địa điểm/link"}</p>
-      <Link to={`/student/schedules/${schedule.id}`} className="mt-4 inline-flex text-sm font-extrabold text-blue-600 hover:text-blue-700">
+      <button type="button" onClick={() => onSelect?.(schedule)} className="mt-4 inline-flex text-sm font-extrabold text-blue-600 hover:text-blue-700">
         Xem chi tiết
-      </Link>
+      </button>
     </article>
   );
 }

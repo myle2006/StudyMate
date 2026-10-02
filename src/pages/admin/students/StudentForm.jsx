@@ -56,7 +56,7 @@ function validate(form, isEdit) {
       : "Mã sinh viên chỉ được chứa chữ cái và số.";
   }
 
-  if (!isEdit && form.password && form.password.length < 6) {
+  if (form.password && form.password.trim().length < 6) {
     errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
   }
 
@@ -75,6 +75,7 @@ export default function StudentForm() {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
+  const [temporaryPassword, setTemporaryPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -107,12 +108,14 @@ export default function StudentForm() {
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: "" }));
+    setTemporaryPassword("");
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     const nextErrors = validate(form, isEdit);
     setErrors(nextErrors);
+    setTemporaryPassword("");
 
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -121,13 +124,23 @@ export default function StudentForm() {
 
     try {
       if (isEdit) {
-        const { password, ...payload } = form;
+        const payload = form.password.trim()
+          ? { ...form, password: form.password.trim() }
+          : (() => {
+              const { password, ...rest } = form;
+              return rest;
+            })();
         await updateStudent(id, payload);
-        toast.success("Đã cập nhật thông tin sinh viên.");
+        toast.success(form.password.trim() ? "Đã cập nhật thông tin và mật khẩu sinh viên." : "Đã cập nhật thông tin sinh viên.");
       } else {
-        const response = await createStudent(form);
-        const temporaryPassword = response.data?.temporary_password;
-        toast.success(temporaryPassword ? `Đã thêm sinh viên mới. Mật khẩu tạm: ${temporaryPassword}` : "Đã thêm sinh viên mới.");
+        const response = await createStudent({ ...form, password: form.password.trim() });
+        const nextTemporaryPassword = response.data?.temporary_password || "";
+        if (nextTemporaryPassword) {
+          setTemporaryPassword(nextTemporaryPassword);
+          toast.success("Đã thêm sinh viên mới. Mật khẩu tạm đang hiển thị trên màn hình.");
+          return;
+        }
+        toast.success("Đã thêm sinh viên mới.");
       }
       navigate("/admin/students");
     } catch (err) {
@@ -158,52 +171,64 @@ export default function StudentForm() {
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <Alert tone="error">{message}</Alert>
+          {temporaryPassword ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm font-bold text-emerald-800">
+              <p>Đã thêm sinh viên mới. Hãy gửi mật khẩu tạm này cho sinh viên trước khi rời trang:</p>
+              <p className="mt-3 rounded-lg bg-white px-3 py-2 font-mono text-base text-emerald-900 ring-1 ring-emerald-100">
+                {temporaryPassword}
+              </p>
+              <Button to="/admin/students" variant="secondary" className="mt-4 border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-100">
+                Về danh sách sinh viên
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-5 lg:grid-cols-2">
+                <Field label="Họ tên" error={errors.full_name}>
+                  <Input value={form.full_name} onChange={(event) => updateField("full_name", event.target.value)} />
+                </Field>
 
-          <div className="grid gap-5 lg:grid-cols-2">
-            <Field label="Họ tên" error={errors.full_name}>
-              <Input value={form.full_name} onChange={(event) => updateField("full_name", event.target.value)} />
-            </Field>
+                <Field label="Email" error={errors.email}>
+                  <Input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} />
+                </Field>
 
-            <Field label="Email" error={errors.email}>
-              <Input type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} />
-            </Field>
+                <Field label="Mã sinh viên" error={errors.student_code}>
+                  <Input value={form.student_code} onChange={(event) => updateField("student_code", event.target.value)} />
+                </Field>
 
-            <Field label="Mã sinh viên" error={errors.student_code}>
-              <Input value={form.student_code} onChange={(event) => updateField("student_code", event.target.value)} />
-            </Field>
+                <Field label="Số điện thoại" error={errors.phone}>
+                  <Input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} />
+                </Field>
 
-            <Field label="Số điện thoại" error={errors.phone}>
-              <Input value={form.phone} onChange={(event) => updateField("phone", event.target.value)} />
-            </Field>
+                <Field label={isEdit ? "Mật khẩu mới" : "Mật khẩu"} error={errors.password} hint={isEdit ? "Để trống nếu không đổi mật khẩu." : "Để trống để hệ thống sinh mật khẩu tạm."}>
+                  <Input
+                    type="password"
+                    value={form.password}
+                    onChange={(event) => updateField("password", event.target.value)}
+                    placeholder={isEdit ? "Nhập mật khẩu mới nếu muốn đổi" : "Để trống để hệ thống sinh mật khẩu tạm"}
+                    autoComplete="new-password"
+                  />
+                </Field>
 
-            {!isEdit && (
-              <Field label="Mật khẩu" error={errors.password}>
-                <Input
-                  type="password"
-                  value={form.password}
-                  onChange={(event) => updateField("password", event.target.value)}
-                  placeholder="Để trống để hệ thống sinh mật khẩu tạm"
-                />
-              </Field>
-            )}
+                <Field label="Trạng thái" error={errors.status}>
+                  <Select value={form.status} onChange={(event) => updateField("status", event.target.value)}>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Vô hiệu hóa</option>
+                    <option value="locked">Bị khóa</option>
+                  </Select>
+                </Field>
+              </div>
 
-            <Field label="Trạng thái" error={errors.status}>
-              <Select value={form.status} onChange={(event) => updateField("status", event.target.value)}>
-                <option value="active">Đang hoạt động</option>
-                <option value="inactive">Vô hiệu hóa</option>
-                <option value="locked">Bị khóa</option>
-              </Select>
-            </Field>
-          </div>
-
-          <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
-            <Button type="button" to="/admin/students" variant="secondary">
-              Hủy
-            </Button>
-            <Button type="submit" disabled={loading}>
-              <Save size={16} /> {loading ? "Đang lưu..." : isEdit ? "Cập nhật" : "Thêm sinh viên"}
-            </Button>
-          </div>
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
+                <Button type="button" to="/admin/students" variant="secondary">
+                  Hủy
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  <Save size={16} /> {loading ? "Đang lưu..." : isEdit ? "Cập nhật" : "Thêm sinh viên"}
+                </Button>
+              </div>
+            </>
+          )}
         </form>
       </Card>
     </div>

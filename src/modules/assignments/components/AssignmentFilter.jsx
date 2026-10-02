@@ -2,9 +2,9 @@ import React from "react";
 import { Search } from "lucide-react";
 import { Card, Input, Select } from "../../../components/ui";
 
-export default function AssignmentFilter({ filters, subjects, onChange }) {
+export default function AssignmentFilter({ filters, subjects, subjectClasses = [], onChange }) {
   return (
-    <Card className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_260px_200px]">
+    <Card className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_240px_220px_180px]">
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
@@ -22,6 +22,16 @@ export default function AssignmentFilter({ filters, subjects, onChange }) {
             {subject.subject_code} - {subject.subject_name}
           </option>
         ))}
+      </Select>
+      <Select name="class_id" value={filters.class_id} onChange={(event) => onChange("class_id", event.target.value)} className="mt-0">
+        <option value="">Tất cả lớp</option>
+        {subjectClasses
+          .filter((item) => !filters.subject_id || String(item.subject_id) === String(filters.subject_id))
+          .map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.class_code}{item.class_name ? ` - ${item.class_name}` : ""} ({Number(item.open_assignments_count || 0)} mở)
+            </option>
+          ))}
       </Select>
       <Select name="status" value={filters.status} onChange={(event) => onChange("status", event.target.value)} className="mt-0">
         <option value="">Tất cả trạng thái</option>

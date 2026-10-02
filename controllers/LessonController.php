@@ -300,7 +300,7 @@ class LessonController extends Controller
     private function storeMaterial(array $file): string
     {
         $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
-        $uploadDir = BASE_PATH . '/public/uploads/lessons';
+        $uploadDir = BASE_PATH . '/storage/uploads/lessons';
 
         if (! is_dir($uploadDir) && ! mkdir($uploadDir, 0755, true)) {
             throw new RuntimeException('Không thể tạo thư mục lưu tài liệu bài học.');
@@ -313,7 +313,7 @@ class LessonController extends Controller
             throw new RuntimeException('Không thể lưu tài liệu bài học.');
         }
 
-        return public_url_path() . '/uploads/lessons/' . $fileName;
+        return public_url_path() . '/api/files/lessons/' . $fileName;
     }
 
     private function currentUserId(): int

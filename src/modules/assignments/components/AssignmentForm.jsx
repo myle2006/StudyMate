@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "zip", "rar", "png", "jpg", "jpeg"];
+const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "zip", "rar", "png", "jpg", "jpeg", "csv"];
 const DEFAULT_FORM = {
   subject_id: "",
+  class_id: "",
   title: "",
   description: "",
   deadline: "",
@@ -21,6 +23,10 @@ function validateForm(form, attachmentFile) {
 
   if (!form.subject_id) {
     errors.subject_id = "Môn học là bắt buộc.";
+  }
+
+  if (!form.class_id) {
+    errors.class_id = "Lớp là bắt buộc.";
   }
 
   if (!form.title.trim()) {
@@ -40,7 +46,7 @@ function validateForm(form, attachmentFile) {
   if (attachmentFile) {
     const extension = attachmentFile.name.split(".").pop()?.toLowerCase() || "";
     if (!ALLOWED_EXTENSIONS.includes(extension)) {
-      errors.attachment = "File chỉ hỗ trợ pdf, doc, docx, zip, rar, png, jpg hoặc jpeg.";
+      errors.attachment = "File chỉ hỗ trợ pdf, doc, docx, zip, rar, png, jpg, jpeg hoặc csv.";
     } else if (attachmentFile.size > MAX_FILE_SIZE) {
       errors.attachment = "File đính kèm không được vượt quá 10MB.";
     }
@@ -52,6 +58,7 @@ function validateForm(form, attachmentFile) {
 export default function AssignmentForm({
   mode = "create",
   subjects = [],
+  subjectClasses = [],
   initialValues = {},
   submitting = false,
   apiErrors = {},
@@ -70,7 +77,11 @@ export default function AssignmentForm({
 
   function handleChange(event) {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+      ...(name === "subject_id" ? { class_id: "" } : {}),
+    }));
   }
 
   function handleFileChange(event) {
@@ -86,6 +97,7 @@ export default function AssignmentForm({
 
     const payload = new FormData();
     payload.append("subject_id", form.subject_id);
+    payload.append("class_id", form.class_id);
     payload.append("title", form.title.trim());
     payload.append("description", form.description.trim());
     payload.append("deadline", form.deadline);
@@ -110,6 +122,19 @@ export default function AssignmentForm({
                   {subject.subject_code} - {subject.subject_name}
                 </option>
               ))}
+            </Select>
+          </Field>
+
+          <Field label="Lớp" error={errors.class_id}>
+            <Select name="class_id" value={form.class_id} onChange={handleChange} disabled={!form.subject_id}>
+              <option value="">{form.subject_id ? "Chọn lớp" : "Chọn môn học trước"}</option>
+              {subjectClasses
+                .filter((item) => String(item.subject_id) === String(form.subject_id))
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.class_code}{item.class_name ? ` - ${item.class_name}` : ""} ({Number(item.active_students_count || 0)} SV)
+                  </option>
+                ))}
             </Select>
           </Field>
 
@@ -139,25 +164,24 @@ export default function AssignmentForm({
         <Field
           label="File đính kèm"
           error={errors.attachment}
-          hint="Tối đa 10MB. Hỗ trợ pdf, doc, docx, zip, rar, png, jpg, jpeg."
+          hint="Tối đa 10MB. Hỗ trợ pdf, doc, docx, zip, rar, png, jpg, jpeg, csv. Dùng CSV để tạo quiz."
         >
           <input
             type="file"
-            accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
+            accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg,.csv"
             onChange={handleFileChange}
             className="mt-2 w-full rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700"
           />
         </Field>
 
         {initialValues.attachment_path && !attachmentFile && (
-          <a
-            href={initialValues.attachment_path}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => downloadProtectedFile(initialValues.attachment_path)}
             className="mt-4 inline-flex text-sm font-bold text-blue-600 hover:text-blue-700"
           >
             Xem file hiện tại
-          </a>
+          </button>
         )}
 
         <div className="mt-6 flex flex-col gap-3">

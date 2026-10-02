@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Download } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Download } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Button, Card, LoadingState, PageHeader, useToast } from "../../../components/ui";
+import { downloadProtectedFile } from "../../../utils/downloadFile";
 import GradeForm from "../components/GradeForm";
 import SubmissionStatusBadge from "../components/SubmissionStatusBadge";
 import { getAdminSubmissionById, gradeSubmission } from "../services/submissionService";
@@ -28,6 +29,14 @@ function InfoItem({ label, value, children }) {
       <div className="mt-2 text-sm font-bold text-slate-950">{children || value || "-"}</div>
     </div>
   );
+}
+
+function scoreLabel(score) {
+  return score !== null && score !== undefined ? `${Number(score).toFixed(1)}/10` : "-";
+}
+
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
 export default function AdminSubmissionDetailPage() {
@@ -73,6 +82,29 @@ export default function AdminSubmissionDetailPage() {
     }
   }
 
+  function exportSecurityEvents() {
+    const rows = [
+      ["Thời gian", "Loại sự kiện", "Thông báo", "IP", "User agent"],
+      ...(submission.security_events || []).map((event) => [
+        formatDateTime(event.created_at),
+        event.event_type,
+        event.message,
+        event.ip_address || "",
+        event.user_agent || "",
+      ]),
+    ];
+    const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `quiz_security_events_submission_${submission.id}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   if (loading) {
     return <LoadingState label="Đang tải chi tiết bài nộp..." />;
   }
@@ -107,14 +139,13 @@ export default function AdminSubmissionDetailPage() {
                 <ArrowLeft size={16} /> Danh sách bài nộp
               </Button>
               {submission.file_path && (
-                <a
-                  href={submission.file_path}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => downloadProtectedFile(submission.file_path)}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-extrabold text-white hover:bg-blue-700"
                 >
                   <Download size={16} /> Tải file
-                </a>
+                </button>
               )}
             </>
           }
@@ -133,7 +164,7 @@ export default function AdminSubmissionDetailPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <InfoItem label="Deadline" value={formatDateTime(submission.deadline)} />
             <InfoItem label="Trạng thái bài tập" value={submission.assignment_status} />
-            <InfoItem label="Điểm" value={submission.score ?? "-"} />
+            <InfoItem label="Điểm" value={scoreLabel(submission.score)} />
             <InfoItem label="Người chấm" value={submission.graded_by_name || "-"} />
           </div>
 
@@ -151,6 +182,38 @@ export default function AdminSubmissionDetailPage() {
             </div>
           )}
         </Card>
+
+        {Array.isArray(submission.security_events) && submission.security_events.length > 0 && (
+          <Card className="space-y-4 p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-extrabold uppercase text-amber-600">Sự kiện bảo mật quiz</p>
+                <h2 className="mt-1 text-lg font-black text-slate-950">{submission.security_events.length} cảnh báo được ghi nhận</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button type="button" size="sm" variant="secondary" onClick={exportSecurityEvents}>
+                  <Download size={14} />
+                  Export CSV
+                </Button>
+                <AlertTriangle className="h-6 w-6 text-amber-500" />
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-slate-200">
+              <div className="divide-y divide-slate-100">
+                {submission.security_events.map((event) => (
+                  <div key={event.id} className="grid gap-2 bg-white p-4 text-sm md:grid-cols-[180px_minmax(0,1fr)]">
+                    <div className="font-bold text-slate-500">{formatDateTime(event.created_at)}</div>
+                    <div>
+                      <p className="font-black text-slate-950">{event.event_type}</p>
+                      <p className="mt-1 font-semibold leading-6 text-slate-600">{event.message}</p>
+                      {event.ip_address && <p className="mt-1 text-xs font-bold text-slate-400">IP: {event.ip_address}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
 
         <GradeForm submission={submission} submitting={grading} apiErrors={apiErrors} onSubmit={handleGrade} />
       </div>

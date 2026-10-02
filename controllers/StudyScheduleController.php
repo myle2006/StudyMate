@@ -48,7 +48,7 @@ class StudyScheduleController extends Controller
         $userId = $this->currentUserId();
         $data = $this->normalizeData($this->input());
         $data['user_id'] = $userId;
-        $errors = $this->validateData($data);
+        $errors = $this->validateData($data, true);
 
         if ($errors !== []) {
             $this->validationFailed($errors);
@@ -83,7 +83,7 @@ class StudyScheduleController extends Controller
 
         $data = $this->normalizeData($this->input(), $existingSchedule);
         $data['user_id'] = $userId;
-        $errors = $this->validateData($data);
+        $errors = $this->validateData($data, false);
 
         if ($errors !== []) {
             $this->validationFailed($errors);
@@ -141,9 +141,9 @@ class StudyScheduleController extends Controller
         ];
     }
 
-    private function validateData(array $data): array
+    private function validateData(array $data, bool $enforceUpcomingNotPast = true): array
     {
-        $errors = StudyScheduleValidation::validate($data);
+        $errors = StudyScheduleValidation::validate($data, $enforceUpcomingNotPast);
 
         if (! isset($errors['subject_id']) && ! $this->schedule->subjectExists((int) $data['subject_id'])) {
             $errors['subject_id'] = 'Môn học không tồn tại hoặc đã bị xóa.';

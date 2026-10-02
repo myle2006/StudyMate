@@ -1,6 +1,6 @@
 import React from "react";
 import { Search, UserPlus } from "lucide-react";
-import { Alert, Button, EmptyState, Input, LoadingState, Modal } from "../../../components/ui";
+import { Alert, Button, EmptyState, Field, Input, LoadingState, Modal, Select } from "../../../components/ui";
 
 export default function AssignStudentModal({
   open,
@@ -9,18 +9,41 @@ export default function AssignStudentModal({
   loading,
   error,
   assigningId,
+  classes = [],
+  selectedClassId = "",
+  onClassChange,
   onKeywordChange,
   onAssign,
   onClose,
 }) {
+  const selectedClass = classes.find((item) => String(item.id) === String(selectedClassId));
+
   return (
     <Modal
       open={open}
       title="Thêm sinh viên"
-      description="Chọn sinh viên chưa được gán active vào môn học này."
+      description="Chọn lớp đích trước khi gán sinh viên vào môn học."
       onClose={onClose}
     >
       <div className="space-y-4">
+        <Field label="Lớp đích">
+          <Select value={selectedClassId} onChange={(event) => onClassChange?.(event.target.value)} className="mt-0">
+            <option value="">Chọn lớp</option>
+            {classes.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.class_code}{item.class_name ? ` - ${item.class_name}` : ""} ({Number(item.active_students_count || 0)} SV)
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        {selectedClass && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-800">
+            {selectedClass.class_code}: {Number(selectedClass.active_students_count || 0)} sinh viên active,
+            {" "}{Number(selectedClass.open_assignments_count || 0)} bài tập đang mở
+          </div>
+        )}
+
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
@@ -55,11 +78,11 @@ export default function AssignStudentModal({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={assigningId === student.id}
+                  disabled={!selectedClassId || assigningId === student.id}
                   onClick={() => onAssign(student)}
                 >
                   <UserPlus size={15} />
-                  {assigningId === student.id ? "Đang gán..." : "Gán vào môn học"}
+                  {assigningId === student.id ? "Đang gán..." : "Gán vào lớp"}
                 </Button>
               </div>
             ))}

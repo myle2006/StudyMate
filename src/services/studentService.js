@@ -1,5 +1,8 @@
 const API_BASE_URL =
-  window.STUDYMATE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || "/api";
+  window.STUDYMATE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "/api";
 
 function getToken() {
   return localStorage.getItem("token") || "";
@@ -72,6 +75,13 @@ export function updateStudent(id, data) {
 export function deleteStudent(id) {
   return request(`/admin/students/${id}`, {
     method: "DELETE",
+  });
+}
+
+export function bulkDeleteStudents(ids) {
+  return request("/admin/students/bulk", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
   });
 }
 

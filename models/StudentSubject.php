@@ -29,9 +29,11 @@ class StudentSubject extends Model
         $statement = $this->db()->prepare(
             'SELECT s.id, s.subject_code, s.subject_name, s.description, s.credits,
                     s.status, s.color, s.image, s.created_by, s.created_at, s.updated_at,
+                    ss.class_id, sc.class_code, sc.class_name,
                     ss.assigned_at, ss.status AS assignment_status
              FROM student_subjects ss
              INNER JOIN subjects s ON s.id = ss.subject_id
+             LEFT JOIN subject_classes sc ON sc.id = ss.class_id
              WHERE ' . implode(' AND ', $where) . '
              ORDER BY ss.assigned_at DESC, s.subject_name ASC'
         );
@@ -45,9 +47,11 @@ class StudentSubject extends Model
         $statement = $this->db()->prepare(
             'SELECT s.id, s.subject_code, s.subject_name, s.description, s.credits,
                     s.status, s.color, s.image, s.created_by, s.created_at, s.updated_at,
+                    ss.class_id, sc.class_code, sc.class_name,
                     ss.assigned_at, ss.status AS assignment_status
              FROM student_subjects ss
              INNER JOIN subjects s ON s.id = ss.subject_id
+             LEFT JOIN subject_classes sc ON sc.id = ss.class_id
              WHERE ss.student_id = :student_id
                AND ss.subject_id = :subject_id
                AND ss.status = :assignment_status
@@ -82,11 +86,18 @@ class StudentSubject extends Model
             $params['keyword'] = '%' . $keyword . '%';
         }
 
+        if (! empty($filters['class_id']) && ctype_digit((string) $filters['class_id'])) {
+            $where[] = 'ss.class_id = :class_id';
+            $params['class_id'] = (int) $filters['class_id'];
+        }
+
         $statement = $this->db()->prepare(
             'SELECT ss.id, ss.student_id, ss.subject_id, ss.status, ss.assigned_by, ss.assigned_at,
+                    ss.class_id, sc.class_code, sc.class_name,
                     ss.removed_at, ss.created_at, ss.updated_at,
                     u.full_name, u.email, u.student_code, u.status AS student_status
              FROM student_subjects ss
+             LEFT JOIN subject_classes sc ON sc.id = ss.class_id
              INNER JOIN users u ON u.id = ss.student_id
              INNER JOIN roles r ON r.id = u.role_id
              WHERE ' . implode(' AND ', $where) . '
@@ -132,22 +143,53 @@ class StudentSubject extends Model
         return $statement->fetchAll();
     }
 
-    public function assignStudent(int $subjectId, int $studentId, int $assignedBy): array
+    public function assignStudent(int $subjectId, int $studentId, int $assignedBy, int $classId): array
     {
         $db = $this->db();
         $db->beginTransaction();
 
         try {
+            $activeStatement = $db->prepare(
+                'SELECT ss.id, ss.class_id, sc.class_code, sc.class_name
+                 FROM student_subjects ss
+                 LEFT JOIN subject_classes sc ON sc.id = ss.class_id
+                 WHERE ss.student_id = :student_id
+                   AND ss.subject_id = :subject_id
+                   AND ss.status = :status
+                 LIMIT 1
+                 FOR UPDATE'
+            );
+            $activeStatement->execute([
+                'student_id' => $studentId,
+                'subject_id' => $subjectId,
+                'status' => 'active',
+            ]);
+            $active = $activeStatement->fetch();
+
+            if ($active) {
+                $db->commit();
+
+                return [
+                    'assigned' => false,
+                    'reactivated' => false,
+                    'duplicate' => true,
+                    'active_class_id' => (int) ($active['class_id'] ?? 0),
+                    'active_class_code' => $active['class_code'] ?? null,
+                    'active_class_name' => $active['class_name'] ?? null,
+                ];
+            }
+
             $statement = $db->prepare(
                 'SELECT id, status
                  FROM student_subjects
-                 WHERE student_id = :student_id AND subject_id = :subject_id
+                 WHERE student_id = :student_id AND subject_id = :subject_id AND class_id = :class_id
                  LIMIT 1
                  FOR UPDATE'
             );
             $statement->execute([
                 'student_id' => $studentId,
                 'subject_id' => $subjectId,
+                'class_id' => $classId,
             ]);
             $existing = $statement->fetch();
 
@@ -178,12 +220,13 @@ class StudentSubject extends Model
             }
 
             $insert = $db->prepare(
-                'INSERT INTO student_subjects (student_id, subject_id, status, assigned_by, assigned_at)
-                 VALUES (:student_id, :subject_id, :status, :assigned_by, NOW())'
+                'INSERT INTO student_subjects (student_id, subject_id, class_id, status, assigned_by, assigned_at)
+                 VALUES (:student_id, :subject_id, :class_id, :status, :assigned_by, NOW())'
             );
             $insert->execute([
                 'student_id' => $studentId,
                 'subject_id' => $subjectId,
+                'class_id' => $classId,
                 'status' => 'active',
                 'assigned_by' => $assignedBy,
             ]);
@@ -199,8 +242,20 @@ class StudentSubject extends Model
         }
     }
 
-    public function removeStudent(int $subjectId, int $studentId): bool
+    public function removeStudent(int $subjectId, int $studentId, ?int $classId = null): bool
     {
+        $classSql = '';
+        $params = [
+            'subject_id' => $subjectId,
+            'student_id' => $studentId,
+            'removed_status' => 'removed',
+            'active_status' => 'active',
+        ];
+        if ($classId !== null) {
+            $classSql = ' AND class_id = :class_id';
+            $params['class_id'] = $classId;
+        }
+
         $statement = $this->db()->prepare(
             'UPDATE student_subjects
              SET status = :removed_status,
@@ -208,33 +263,35 @@ class StudentSubject extends Model
                  updated_at = NOW()
              WHERE subject_id = :subject_id
                AND student_id = :student_id
-               AND status = :active_status'
+               AND status = :active_status' . $classSql
         );
-        $statement->execute([
-            'subject_id' => $subjectId,
-            'student_id' => $studentId,
-            'removed_status' => 'removed',
-            'active_status' => 'active',
-        ]);
+        $statement->execute($params);
 
         return $statement->rowCount() > 0;
     }
 
-    public function findActiveAssignment(int $subjectId, int $studentId): ?array
+    public function findActiveAssignment(int $subjectId, int $studentId, ?int $classId = null): ?array
     {
-        $statement = $this->db()->prepare(
-            'SELECT id, student_id, subject_id, status, assigned_by, assigned_at, removed_at, created_at, updated_at
-             FROM student_subjects
-             WHERE subject_id = :subject_id
-               AND student_id = :student_id
-               AND status = :status
-             LIMIT 1'
-        );
-        $statement->execute([
+        $classSql = '';
+        $params = [
             'subject_id' => $subjectId,
             'student_id' => $studentId,
             'status' => 'active',
-        ]);
+        ];
+        if ($classId !== null) {
+            $classSql = ' AND class_id = :class_id';
+            $params['class_id'] = $classId;
+        }
+
+        $statement = $this->db()->prepare(
+            'SELECT id, student_id, subject_id, class_id, status, assigned_by, assigned_at, removed_at, created_at, updated_at
+             FROM student_subjects
+             WHERE subject_id = :subject_id
+               AND student_id = :student_id
+               AND status = :status' . $classSql . '
+             LIMIT 1'
+        );
+        $statement->execute($params);
         $assignment = $statement->fetch();
 
         return $assignment ?: null;
