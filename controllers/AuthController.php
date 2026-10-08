@@ -215,9 +215,12 @@ class AuthController extends Controller
 
     private function normalizeRegisterData(array $input): array
     {
+        $email = strtolower(trim((string) ($input['email'] ?? $input['login'] ?? '')));
+
         return [
             'full_name' => trim((string) ($input['full_name'] ?? '')),
-            'login' => strtolower(trim((string) ($input['login'] ?? $input['email'] ?? ''))),
+            'email' => $email,
+            'login' => $email,
             'password' => (string) ($input['password'] ?? ''),
             'confirm_password' => (string) ($input['confirm_password'] ?? ''),
             'phone' => trim((string) ($input['phone'] ?? '')),
@@ -228,7 +231,7 @@ class AuthController extends Controller
     private function normalizeLoginData(array $input): array
     {
         return [
-            'email' => strtolower(trim((string) ($input['email'] ?? ''))),
+            'login' => strtolower(trim((string) ($input['login'] ?? $input['email'] ?? ''))),
             'password' => (string) ($input['password'] ?? ''),
         ];
     }
@@ -277,10 +280,8 @@ class AuthController extends Controller
     {
         $errors = [];
 
-        if ($data['email'] === '') {
-            $errors['email'] = 'Email là bắt buộc.';
-        } elseif (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Email không đúng định dạng.';
+        if ($data['login'] === '') {
+            $errors['email'] = 'Email hoặc mã sinh viên là bắt buộc.';
         }
 
         if ($data['password'] === '') {
