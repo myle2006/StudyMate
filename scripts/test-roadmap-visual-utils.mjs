@@ -5,6 +5,7 @@ import {
   canCompleteRoadmapNode,
   filterRoadmapNodes,
 } from "../src/modules/learningRoadmaps/utils/roadmapVisualUtils.js";
+import { findNextStudyNode } from "../src/modules/learningRoadmaps/utils/roadmapStudyFlow.js";
 
 const sampleItems = [
   {
@@ -135,6 +136,15 @@ record(
     assert.equal(model.completed, 1);
     assert.equal(model.total, 4);
     assert.equal(model.progress, 25);
+  },
+);
+
+record(
+  "Không gợi ý lại bài đã hoàn thành",
+  "An all-completed roadmap has no next study node",
+  String(findNextStudyNode(sampleItems.map((item) => ({ ...item, status: "completed" }))).node),
+  () => {
+    assert.equal(findNextStudyNode(sampleItems.map((item) => ({ ...item, status: "completed" }))).node, null);
   },
 );
 

@@ -1,4 +1,4 @@
-import { buildRoadmapVisualModel, canCompleteRoadmapNode } from "./roadmapVisualUtils";
+import { buildRoadmapVisualModel, canCompleteRoadmapNode } from "./roadmapVisualUtils.js";
 
 export function getStudyActionLabel(item) {
   if (!item) return "Tiếp tục học";
@@ -49,5 +49,5 @@ export function findNextStudyNode(items = [], options = {}) {
   const nextIncomplete = nodes.find((node) => node.rawStatus !== "completed");
   if (nextIncomplete) return { visual, node: nextIncomplete };
 
-  return { visual, node: nodes[0] || null };
+  return { visual, node: null };
 }

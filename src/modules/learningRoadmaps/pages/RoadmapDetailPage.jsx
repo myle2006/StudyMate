@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Clock3, Layers3, Map, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Clock3, Map, Pencil, PlayCircle, Target, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Card, ConfirmDialog, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
@@ -468,22 +468,40 @@ export default function RoadmapDetailPage() {
           </Card>
         )}
 
-        <Card className="space-y-5 p-6">
-          <RoadmapProgressBar value={lessonProgressPercent} completed={completedItems} total={totalItems} />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <InfoItem icon={Clock3} label="Thời gian học" value={`${Number(roadmap.study_time_per_day).toFixed(1)} giờ/ngày`} />
-            <InfoItem icon={CalendarDays} label="Bắt đầu" value={formatDate(roadmap.start_date)} />
-            <InfoItem icon={CalendarDays} label="Kết thúc" value={formatDate(roadmap.end_date)} />
-            <InfoItem label="Trình độ" value={levelMap[roadmap.current_level] || roadmap.current_level} />
-            <InfoItem label="Ngày học" value={formatWeekdays(roadmap.available_weekdays)} />
-            <InfoItem label="Giờ bắt đầu" value={roadmap.preferred_start_time || "-"} />
-            <InfoItem label="Mỗi buổi" value={formatMinutes(roadmap.session_duration_minutes)} />
-            <InfoItem label="Nhắc lịch" value={`${roadmap.reminder_minutes_before ?? 0} phút trước`} />
+        <Card className="overflow-hidden">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="p-5 sm:p-6">
+              <RoadmapProgressBar value={lessonProgressPercent} completed={completedItems} total={totalItems} />
+              <div className="mt-6 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-blue-600 shadow-sm ring-1 ring-blue-100">
+                  <Target size={18} />
+                </div>
+                <div>
+                  <p className="text-xs font-extrabold uppercase text-blue-700">Mục tiêu học tập</p>
+                  <p className="mt-1 whitespace-pre-line text-sm font-semibold leading-6 text-slate-700">{roadmap.goal}</p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 border-t border-slate-200 bg-slate-50/70 p-5 lg:border-l lg:border-t-0">
+              <InfoItem icon={Clock3} label="Mỗi ngày" value={`${Number(roadmap.study_time_per_day).toFixed(1)} giờ`} />
+              <InfoItem label="Trình độ" value={levelMap[roadmap.current_level] || roadmap.current_level} />
+              <InfoItem icon={CalendarDays} label="Bắt đầu" value={formatDate(roadmap.start_date)} />
+              <InfoItem icon={CalendarDays} label="Kết thúc" value={formatDate(roadmap.end_date)} />
+            </div>
           </div>
-          <div className="rounded-xl bg-slate-50 p-5">
-            <p className="text-xs font-extrabold uppercase text-slate-500">Mục tiêu</p>
-            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{roadmap.goal}</p>
-          </div>
+          <details className="group border-t border-slate-200">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3 text-sm font-extrabold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 sm:px-6">
+              Xem lịch học và nhắc nhở
+              <span className="text-xs font-bold text-blue-600 group-open:hidden">Mở rộng</span>
+              <span className="hidden text-xs font-bold text-blue-600 group-open:inline">Thu gọn</span>
+            </summary>
+            <div className="grid gap-3 border-t border-slate-200 bg-slate-50/50 p-5 sm:grid-cols-2 lg:grid-cols-4 sm:p-6">
+              <InfoItem label="Ngày học" value={formatWeekdays(roadmap.available_weekdays)} />
+              <InfoItem label="Giờ bắt đầu" value={roadmap.preferred_start_time || "-"} />
+              <InfoItem label="Mỗi buổi" value={formatMinutes(roadmap.session_duration_minutes)} />
+              <InfoItem label="Nhắc lịch" value={`${roadmap.reminder_minutes_before ?? 0} phút trước`} />
+            </div>
+          </details>
         </Card>
 
         <StudyFocusCard
@@ -497,15 +515,24 @@ export default function RoadmapDetailPage() {
         />
 
         {progressSummary && (
-          <Card className="space-y-5 p-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <Card className="space-y-5 p-5 sm:p-6">
+            <div>
+              <p className="text-xs font-black uppercase text-blue-600">Tổng quan tiến độ</p>
+              <h2 className="mt-1 text-lg font-black text-slate-950">Kết quả học tập</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <InfoItem label="Đã hoàn thành" value={`${progressSummary.completed_items || 0}/${progressSummary.total_items || 0} nhiệm vụ`} />
-              <InfoItem label="Chưa hoàn thành" value={`${progressSummary.not_completed_items || 0} nhiệm vụ`} />
               <InfoItem label="Đã học" value={formatMinutes(progressSummary.actual_study_minutes)} />
               <InfoItem label="Còn lại" value={formatMinutes(progressSummary.remaining_minutes)} />
               <InfoItem label="Đạt mục tiêu" value={`${Number(progressSummary.goal_achievement_percent || 0).toFixed(0)}%`} />
             </div>
-            <div className="grid gap-4 lg:grid-cols-2">
+            <details className="group overflow-hidden rounded-xl border border-slate-200">
+              <summary className="flex cursor-pointer list-none items-center justify-between bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-700 hover:bg-slate-100">
+                Tiến độ chi tiết theo ngày và tuần
+                <span className="text-xs text-blue-600 group-open:hidden">Xem chi tiết</span>
+                <span className="hidden text-xs text-blue-600 group-open:inline">Thu gọn</span>
+              </summary>
+              <div className="grid gap-4 border-t border-slate-200 p-4 lg:grid-cols-2">
               <div className="rounded-xl bg-slate-50 p-4">
                 <h3 className="text-sm font-black text-slate-950">Tiến độ theo ngày</h3>
                 <div className="mt-3 space-y-2">
@@ -528,7 +555,8 @@ export default function RoadmapDetailPage() {
                   ))}
                 </div>
               </div>
-            </div>
+              </div>
+            </details>
           </Card>
         )}
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AlertCircle, CalendarDays, CheckCircle2, Circle, Clock3, Loader2, RotateCcw } from "lucide-react";
+import { AlertCircle, CalendarDays, CheckCircle2, ChevronDown, Circle, Clock3, Loader2, PlayCircle, RotateCcw } from "lucide-react";
 import { Badge, Button, Card, Field, Input, Select, Textarea } from "../../../components/ui";
 
 const statusMap = {
@@ -45,6 +45,7 @@ export default function RoadmapItemCard({
   const config = statusMap[item.status] || statusMap.not_started;
   const Icon = config.icon;
   const priority = priorityMap[item.priority] || priorityMap.medium;
+  const [resultOpen, setResultOpen] = useState(false);
   const [resultForm, setResultForm] = useState({
     status: ["completed", "not_completed", "in_progress"].includes(item.status) ? item.status : "in_progress",
     completion_percent: item.completion_percent ?? 0,
@@ -132,31 +133,65 @@ export default function RoadmapItemCard({
           </div>
           <Badge tone={priority.tone}>{priority.label}</Badge>
           {onStatusChange && (
-            <div>
+            <div className="space-y-2 border-t border-slate-200 pt-4">
               <p className="text-xs font-extrabold uppercase text-slate-500">
-                {updating ? "Đang lưu..." : "Cập nhật trạng thái"}
+                {updating ? "Đang lưu thay đổi..." : "Thao tác nhanh"}
               </p>
-              <Select
-                value={item.status}
-                disabled={updating}
-                onChange={(event) => onStatusChange(item, event.target.value)}
-                className="mt-2"
-              >
-                <option value="not_started">Chưa bắt đầu</option>
-                <option value="in_progress">Đang học</option>
-                <option value="completed">Hoàn thành</option>
-                <option value="not_completed">Chưa hoàn thành</option>
-                <option value="rescheduled">Dời lịch</option>
-              </Select>
+              {item.status !== "completed" && (
+                <div className="grid gap-2">
+                  {item.status !== "in_progress" && (
+                    <Button type="button" variant="secondary" size="sm" onClick={() => onStatusChange(item, "in_progress")} disabled={updating}>
+                      <PlayCircle size={15} />
+                      Bắt đầu học
+                    </Button>
+                  )}
+                  <Button type="button" size="sm" onClick={() => onStatusChange(item, "completed")} disabled={updating}>
+                    {updating ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                    {updating ? "Đang hoàn thành..." : "Đánh dấu hoàn thành"}
+                  </Button>
+                </div>
+              )}
+              <details className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-1 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">
+                  Trạng thái khác
+                  <ChevronDown size={15} className="transition-transform group-open:rotate-180" />
+                </summary>
+                <Select
+                  value={item.status}
+                  disabled={updating}
+                  onChange={(event) => onStatusChange(item, event.target.value)}
+                  className="mt-1"
+                  aria-label="Chọn trạng thái bước học"
+                >
+                  <option value="not_started">Chưa bắt đầu</option>
+                  <option value="in_progress">Đang học</option>
+                  <option value="completed">Hoàn thành</option>
+                  <option value="not_completed">Chưa hoàn thành</option>
+                  <option value="rescheduled">Dời lịch</option>
+                </Select>
+              </details>
             </div>
           )}
         </div>
       </div>
 
       {onResultSubmit && (
-        <div className="mt-5 rounded-xl border border-slate-200 p-4">
-          <h4 className="text-sm font-black text-slate-950">Kết quả sau buổi học</h4>
-          <div className="mt-4 grid gap-4 md:grid-cols-4">
+        <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+          <button
+            type="button"
+            aria-expanded={resultOpen}
+            onClick={() => setResultOpen((current) => !current)}
+            className="flex w-full items-center justify-between gap-3 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100"
+          >
+            <span>
+              <span className="block text-sm font-black text-slate-950">Kết quả sau buổi học</span>
+              <span className="mt-0.5 block text-xs font-semibold text-slate-500">Ghi lại mức độ hoàn thành, thời gian học và ghi chú.</span>
+            </span>
+            <ChevronDown size={18} className={`shrink-0 text-slate-500 transition-transform ${resultOpen ? "rotate-180" : ""}`} />
+          </button>
+          {resultOpen && (
+          <div className="border-t border-slate-200 p-4">
+          <div className="grid gap-4 md:grid-cols-4">
             <Field label="Trạng thái">
               <Select value={resultForm.status} onChange={(event) => updateResult("status", event.target.value)}>
                 <option value="in_progress">Đang thực hiện</option>
@@ -195,6 +230,8 @@ export default function RoadmapItemCard({
           <Button type="button" className="mt-4" onClick={() => onResultSubmit(item, resultForm)} disabled={savingResult}>
             {savingResult ? "Đang lưu..." : "Lưu kết quả"}
           </Button>
+          </div>
+          )}
         </div>
       )}
 

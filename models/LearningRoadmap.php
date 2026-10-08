@@ -122,6 +122,10 @@ class LearningRoadmap extends Model
 
         try {
             $params = $this->roadmapParams($data);
+            // The INSERT payload also contains values that are intentionally not
+            // part of the UPDATE statement. PDO rejects surplus named bindings,
+            // which previously made status/edit requests fail with HY093.
+            unset($params['user_id'], $params['progress_percent']);
             $params['id'] = $id;
             $params['user_id_for_where'] = $userId;
 
