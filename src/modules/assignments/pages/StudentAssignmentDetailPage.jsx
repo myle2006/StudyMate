@@ -30,12 +30,6 @@ function InfoItem({ label, value, children }) {
   );
 }
 
-function isCsvAttachment(value) {
-  if (!value) return false;
-  const path = String(value).split("?")[0].toLowerCase();
-  return path.endsWith(".csv");
-}
-
 export default function StudentAssignmentDetailPage() {
   const { id } = useParams();
   const [assignment, setAssignment] = useState(null);
@@ -81,7 +75,7 @@ export default function StudentAssignmentDetailPage() {
     );
   }
 
-  const isQuiz = Number(assignment.quiz_question_count || 0) > 0 || isCsvAttachment(assignment.attachment_path);
+  const isQuiz = Boolean(assignment.is_quiz) || Number(assignment.quiz_question_count || 0) > 0;
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
@@ -144,7 +138,7 @@ export default function StudentAssignmentDetailPage() {
             </p>
           </div>
 
-          {assignment.attachment_path && (
+          {assignment.attachment_path && !isQuiz && (
             <button
               type="button"
               onClick={() => downloadProtectedFile(assignment.attachment_path)}

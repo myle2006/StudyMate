@@ -28,12 +28,15 @@ class QuizController extends Controller
         $this->ensureQuestionsFromAttachment($assignment);
         $questions = $this->quizQuestion->getForAssignment((int) $assignmentId);
         $submission = $this->submission->findByAssignmentForStudent((int) $assignmentId, $studentId);
+        $publicAssignment = $assignment;
+        $publicAssignment['is_quiz'] = true;
+        unset($publicAssignment['attachment_path']);
 
         $this->json([
             'success' => true,
             'message' => $questions === [] ? 'Quiz này chưa có câu hỏi.' : 'Lấy quiz thành công.',
             'data' => [
-                'assignment' => $assignment,
+                'assignment' => $publicAssignment,
                 'questions' => $questions,
                 'submission' => $this->normalizeSubmission($submission),
             ],

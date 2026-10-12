@@ -192,6 +192,7 @@ class AssignmentController extends Controller
             'status' => trim((string) ($_GET['status'] ?? '')),
             'deadline' => trim((string) ($_GET['deadline'] ?? '')),
         ]);
+        $assignments = array_map([$this, 'protectQuizAttachment'], $assignments);
 
         $this->json([
             'success' => true,
@@ -213,11 +214,30 @@ class AssignmentController extends Controller
             return;
         }
 
+        $assignment = $this->protectQuizAttachment($assignment);
+
         $this->json([
             'success' => true,
             'message' => 'Lấy chi tiết bài tập của tôi thành công.',
             'data' => $assignment,
         ]);
+    }
+
+    private function protectQuizAttachment(array $assignment): array
+    {
+        $attachmentPath = (string) ($assignment['attachment_path'] ?? '');
+        $path = (string) (parse_url($attachmentPath, PHP_URL_PATH) ?: $attachmentPath);
+        $fileName = strtolower(basename($path));
+        $isQuiz = (int) ($assignment['quiz_question_count'] ?? 0) > 0
+            || strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'csv'
+            || str_starts_with($fileName, 'quiz_');
+
+        $assignment['is_quiz'] = $isQuiz;
+        if ($isQuiz) {
+            unset($assignment['attachment_path']);
+        }
+
+        return $assignment;
     }
 
     private function normalizeData(array $input, ?array $current = null): array

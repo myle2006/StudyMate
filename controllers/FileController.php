@@ -66,6 +66,15 @@ class FileController extends Controller
 
     private function studentCanAccessAssignmentFile(int $studentId, string $filename): bool
     {
+        // Quiz attachments contain the source question bank, so students must
+        // never receive them even when they know the protected file URL.
+        $normalizedFilename = strtolower($filename);
+        if (str_starts_with($normalizedFilename, 'quiz_') || pathinfo($normalizedFilename, PATHINFO_EXTENSION) === 'csv') {
+            return false;
+        }
+
+        (new AssignmentQuizQuestion())->ensureSchema();
+
         $statement = Database::connection()->prepare(
             'SELECT COUNT(*)
              FROM assignments a
@@ -74,6 +83,12 @@ class FileController extends Controller
              WHERE ss.student_id = :student_id
                AND ss.status = :student_subject_status
                AND a.attachment_path LIKE :suffix
+               AND LOWER(a.attachment_path) NOT LIKE :quiz_extension
+               AND NOT EXISTS (
+                   SELECT 1
+                   FROM assignment_quiz_questions q
+                   WHERE q.assignment_id = a.id
+               )
                AND a.status <> :draft_status
                AND a.deleted_at IS NULL
                AND s.deleted_at IS NULL'
@@ -82,6 +97,7 @@ class FileController extends Controller
             'student_id' => $studentId,
             'student_subject_status' => 'active',
             'suffix' => '%/' . $filename,
+            'quiz_extension' => '%.csv',
             'draft_status' => 'draft',
         ]);
 

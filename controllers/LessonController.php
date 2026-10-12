@@ -306,6 +306,10 @@ class LessonController extends Controller
             throw new RuntimeException('Không thể tạo thư mục lưu tài liệu bài học.');
         }
 
+        if (! is_writable($uploadDir)) {
+            throw new RuntimeException('Thư mục lưu tài liệu bài học không có quyền ghi.');
+        }
+
         $fileName = 'lesson_' . date('YmdHis') . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
         $targetPath = $uploadDir . '/' . $fileName;
 

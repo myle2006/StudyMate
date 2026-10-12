@@ -18,15 +18,9 @@ function formatDateTime(value) {
   });
 }
 
-function isCsvAttachment(value) {
-  if (!value) return false;
-  const path = String(value).split("?")[0].toLowerCase();
-  return path.endsWith(".csv");
-}
-
 export default function StudentAssignmentCard({ assignment }) {
   const deadlineState = getDeadlineState(assignment.deadline, assignment.status, assignment.submission_status);
-  const isQuiz = Number(assignment.quiz_question_count || 0) > 0 || isCsvAttachment(assignment.attachment_path);
+  const isQuiz = Boolean(assignment.is_quiz) || Number(assignment.quiz_question_count || 0) > 0;
   const actionTo = isQuiz ? `/student/assignments/${assignment.id}/quiz` : `/student/assignments/${assignment.id}/submit`;
   const actionLabel = isQuiz
     ? assignment.submission_id ? "Xem kết quả" : "Làm quiz"
