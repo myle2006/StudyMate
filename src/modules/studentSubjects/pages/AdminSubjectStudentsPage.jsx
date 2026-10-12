@@ -166,8 +166,8 @@ export default function AdminSubjectStudentsPage() {
       return;
     }
     const extension = importFile.name.split(".").pop()?.toLowerCase();
-    if (!["csv", "xlsx", "xls"].includes(extension)) {
-      setImportError("File import chỉ hỗ trợ CSV, XLS hoặc XLSX.");
+    if (!["csv", "xlsx"].includes(extension)) {
+      setImportError("File import chỉ hỗ trợ CSV hoặc XLSX.");
       return;
     }
     if (importFile.size > 5 * 1024 * 1024) {
@@ -325,9 +325,9 @@ export default function AdminSubjectStudentsPage() {
           </div>
           <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center hover:border-blue-300 hover:bg-blue-50">
             <UploadCloud className="text-blue-600" size={30} />
-            <span className="mt-2 text-sm font-bold text-slate-800">{importFile ? importFile.name : "Chọn file CSV, XLS hoặc XLSX"}</span>
+            <span className="mt-2 text-sm font-bold text-slate-800">{importFile ? importFile.name : "Chọn file CSV hoặc XLSX"}</span>
             <span className="mt-1 text-xs text-slate-500">Ví dụ header: full_name,student_code,email,phone</span>
-            <input type="file" accept=".csv,.xls,.xlsx" className="sr-only" onChange={(event) => { setImportFile(event.target.files?.[0] || null); setImportError(""); }} />
+            <input type="file" accept=".csv,.xlsx" className="sr-only" onChange={(event) => { setImportFile(event.target.files?.[0] || null); setImportError(""); }} />
           </label>
           {importResult && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">

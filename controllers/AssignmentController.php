@@ -54,14 +54,28 @@ class AssignmentController extends Controller
             return;
         }
 
-        if ($file !== null) {
-            $data['attachment_path'] = $this->storeAttachment($file);
+        $quizQuestions = $this->parseQuizAttachment($file);
+        if ($quizQuestions === false) {
+            return;
         }
 
-        $currentUser = $this->currentUser();
-        $data['created_by'] = (int) ($currentUser['id'] ?? 0);
+        try {
+            if ($file !== null) {
+                $data['attachment_path'] = $this->storeAttachment($file);
+            }
 
-        $assignmentId = $this->assignment->create($data);
+            $currentUser = $this->currentUser();
+            $data['created_by'] = (int) ($currentUser['id'] ?? 0);
+
+            $assignmentId = $this->assignment->create($data);
+
+            if ($quizQuestions !== null) {
+                (new AssignmentQuizQuestion())->replaceForAssignment($assignmentId, $quizQuestions);
+            }
+        } catch (RuntimeException $exception) {
+            $this->validationFailed(['attachment' => $exception->getMessage()]);
+            return;
+        }
 
         $this->json([
             'success' => true,
@@ -89,11 +103,25 @@ class AssignmentController extends Controller
             return;
         }
 
-        if ($file !== null) {
-            $data['attachment_path'] = $this->storeAttachment($file);
+        $quizQuestions = $this->parseQuizAttachment($file);
+        if ($quizQuestions === false) {
+            return;
         }
 
-        $this->assignment->update($assignmentId, $data);
+        try {
+            if ($file !== null) {
+                $data['attachment_path'] = $this->storeAttachment($file);
+            }
+
+            $this->assignment->update($assignmentId, $data);
+
+            if ($quizQuestions !== null) {
+                (new AssignmentQuizQuestion())->replaceForAssignment($assignmentId, $quizQuestions);
+            }
+        } catch (RuntimeException $exception) {
+            $this->validationFailed(['attachment' => $exception->getMessage()]);
+            return;
+        }
 
         $this->json([
             'success' => true,
@@ -287,8 +315,12 @@ class AssignmentController extends Controller
         $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
         $uploadDir = BASE_PATH . '/storage/uploads/assignments';
 
-        if (! is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+        if (! is_dir($uploadDir) && ! mkdir($uploadDir, 0775, true)) {
+            throw new RuntimeException('Không thể tạo thư mục lưu file đính kèm.');
+        }
+
+        if (! is_writable($uploadDir)) {
+            throw new RuntimeException('Thư mục lưu file đính kèm không có quyền ghi.');
         }
 
         $fileName = 'assignment_' . date('YmdHis') . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
@@ -299,6 +331,25 @@ class AssignmentController extends Controller
         }
 
         return public_url_path() . '/api/files/assignments/' . $fileName;
+    }
+
+    private function parseQuizAttachment(?array $file): array|false|null
+    {
+        if ($file === null) {
+            return null;
+        }
+
+        $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+        if ($extension !== 'csv') {
+            return null;
+        }
+
+        try {
+            return (new AssignmentQuizQuestion())->parseCsv((string) ($file['tmp_name'] ?? ''));
+        } catch (RuntimeException $exception) {
+            $this->validationFailed(['attachment' => $exception->getMessage()]);
+            return false;
+        }
     }
 
     private function currentUserId(): int

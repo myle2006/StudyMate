@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Edit3, Users } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleOff, Edit3, Users } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { Badge, Button, Card, LoadingState, PageHeader } from "../../../components/ui";
+import { Badge, Button, Card, IconIndicator, LoadingState, PageHeader } from "../../../components/ui";
 import { getSubjectById } from "../services/subjectService";
 
 const statusConfig = {
-  studying: { label: "Đang học", tone: "blue" },
-  paused: { label: "Tạm dừng", tone: "amber" },
-  completed: { label: "Hoàn thành", tone: "green" },
+  studying: { label: "Đang học", tone: "blue", icon: CheckCircle2 },
+  paused: { label: "Tạm dừng", tone: "amber", icon: CircleOff },
+  completed: { label: "Hoàn thành", tone: "green", icon: CheckCircle2 },
 };
 
 function SubjectCover({ subject }) {
@@ -86,7 +86,7 @@ export default function SubjectDetailPage({ studentView = false }) {
     );
   }
 
-  const status = statusConfig[subject.status] || { label: subject.status, tone: "slate" };
+  const status = statusConfig[subject.status] || { label: subject.status, tone: "slate", icon: CircleOff };
 
   return (
     <div className="space-y-6">
@@ -121,7 +121,11 @@ export default function SubjectDetailPage({ studentView = false }) {
             <div>
               <p className="text-sm font-bold text-slate-500">Trạng thái hiện tại</p>
               <div className="mt-2">
-                <Badge tone={status.tone}>{status.label}</Badge>
+                {studentView ? (
+                  <Badge tone={status.tone}>{status.label}</Badge>
+                ) : (
+                  <IconIndicator icon={status.icon} label={status.label} tone={status.tone} />
+                )}
               </div>
             </div>
             <div className="rounded-xl bg-blue-50 px-4 py-3 text-right">

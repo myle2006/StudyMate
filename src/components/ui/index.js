@@ -1,6 +1,7 @@
 export { default as Badge } from "./Badge";
 export { default as Button } from "./Button";
 export { default as Card } from "./Card";
+export { default as IconIndicator } from "./IconIndicator";
 export { Alert, EmptyState, LoadingState } from "./Feedback";
 export { Field, Input, Select, Textarea } from "./FormControls";
 export { ConfirmDialog, Modal } from "./Modal";

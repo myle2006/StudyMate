@@ -51,6 +51,7 @@ CREATE TABLE `users` (
   `full_name` VARCHAR(150) NOT NULL,
   `email` VARCHAR(150) NOT NULL UNIQUE,
   `password` VARCHAR(255) NOT NULL,
+  `must_change_password` TINYINT(1) NOT NULL DEFAULT 0,
   `avatar` VARCHAR(255) NULL,
   `phone` VARCHAR(20) NULL,
   `student_code` VARCHAR(50) NULL,

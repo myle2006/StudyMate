@@ -218,30 +218,23 @@ class StudentSubjectController extends Controller
         }
 
         $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
-        if (! in_array($extension, ['csv', 'xlsx', 'xls'], true)) {
-            $this->validationFailed(['file' => 'File import chỉ hỗ trợ CSV, XLS hoặc XLSX.']);
+        if (! in_array($extension, ['csv', 'xlsx'], true)) {
+            $this->validationFailed(['file' => 'File import chỉ hỗ trợ CSV hoặc XLSX.']);
             return;
         }
 
-        $uploadDir = BASE_PATH . '/public/uploads/imports';
-        if (! is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        $storedPath = $uploadDir . '/class_students_' . date('YmdHis') . '_' . bin2hex(random_bytes(6)) . '.' . $extension;
-        if (! move_uploaded_file($file['tmp_name'], $storedPath)) {
-            $this->validationFailed(['file' => 'Không thể lưu file import.']);
+        $temporaryPath = (string) ($file['tmp_name'] ?? '');
+        if ($temporaryPath === '' || ! is_readable($temporaryPath)) {
+            $this->validationFailed(['file' => 'Không thể đọc file import tạm trên máy chủ.']);
             return;
         }
 
         try {
             $service = new ImportStudentService();
-            $result = $service->importToClass($storedPath, $extension, $subjectId, $classId, $this->currentUserId());
+            $result = $service->importToClass($temporaryPath, $extension, $subjectId, $classId, $this->currentUserId());
         } catch (RuntimeException $exception) {
-            @unlink($storedPath);
             $this->validationFailed(['file' => $exception->getMessage()]);
             return;
-        } finally {
-            @unlink($storedPath);
         }
 
         $this->json([

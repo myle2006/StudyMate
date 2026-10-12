@@ -5,8 +5,6 @@ class LearningRoadmapController extends Controller
     private LearningRoadmap $roadmap;
     private LearningRoadmapItem $item;
     private LearningGoal $learningGoal;
-    private const QUIZ_PASSING_SCORE = 7.0;
-
     public function __construct()
     {
         $this->roadmap = new LearningRoadmap();
@@ -407,11 +405,10 @@ class LearningRoadmapController extends Controller
         }
 
         if ($nextStatus === 'completed' && ! empty($item['assignment_id'])) {
-            $score = $item['assignment_score'] ?? null;
-            if ($score === null || (float) $score < self::QUIZ_PASSING_SCORE) {
+            if (empty($item['assignment_submission_id'])) {
                 return [
-                    'status' => 'Bước có quiz/bài xác nhận chỉ được hoàn thành sau khi đạt điểm yêu cầu.',
-                    'assignment' => 'Bạn cần đạt tối thiểu ' . self::QUIZ_PASSING_SCORE . '/10 trước khi hoàn thành bước này.',
+                    'status' => 'Bước có quiz/bài xác nhận chỉ được hoàn thành sau khi nộp quiz.',
+                    'assignment' => 'Bạn cần nộp quiz trước khi hoàn thành bước này.',
                 ];
             }
         }
@@ -426,8 +423,7 @@ class LearningRoadmapController extends Controller
         }
 
         if (! empty($item['assignment_id'])) {
-            $score = $item['assignment_score'] ?? null;
-            return $score !== null && (float) $score >= self::QUIZ_PASSING_SCORE;
+            return ! empty($item['assignment_submission_id']);
         }
 
         return true;

@@ -4,7 +4,7 @@ import ImportResult from "../../../components/students/ImportResult";
 import { Alert, Button, Card, PageHeader, useToast } from "../../../components/ui";
 import { downloadImportTemplate, importStudents } from "../../../services/studentService";
 
-const allowedExtensions = ["csv", "xls", "xlsx"];
+const allowedExtensions = ["csv", "xlsx"];
 
 export default function StudentImport() {
   const toast = useToast();
@@ -42,7 +42,7 @@ export default function StudentImport() {
 
     const extension = file.name.split(".").pop()?.toLowerCase();
     if (!allowedExtensions.includes(extension)) {
-      setError("File import chỉ hỗ trợ CSV, XLS hoặc XLSX.");
+      setError("File import chỉ hỗ trợ CSV hoặc XLSX.");
       return;
     }
 
@@ -87,17 +87,17 @@ export default function StudentImport() {
             <div>
               <h2 className="text-lg font-black text-slate-950">Chọn file import</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                CSV chạy ổn định nhất trên cPanel. XLSX cần PHP có ZipArchive; XLS cần PhpSpreadsheet.
+                CSV chạy ổn định nhất. XLSX cần PHP có ZipArchive.
               </p>
             </div>
 
             <label className="flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center transition hover:border-blue-300 hover:bg-blue-50">
               <UploadCloud className="text-blue-600" size={34} />
               <span className="mt-3 text-sm font-black text-slate-950">
-                {file ? file.name : "Bấm để chọn file CSV, XLS hoặc XLSX"}
+                {file ? file.name : "Bấm để chọn file CSV hoặc XLSX"}
               </span>
               <span className="mt-1 text-xs font-semibold text-slate-500">Dung lượng tối đa 5MB</span>
-              <input type="file" accept=".csv,.xls,.xlsx" onChange={handleFileChange} className="sr-only" />
+              <input type="file" accept=".csv,.xlsx" onChange={handleFileChange} className="sr-only" />
             </label>
 
             <Alert tone="error">{error}</Alert>

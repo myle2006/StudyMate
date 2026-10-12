@@ -1,12 +1,12 @@
 import React from "react";
-import { Copy, Download, Edit3, Eye, Inbox, Trash2 } from "lucide-react";
-import { Badge, Button, Card, EmptyState } from "../../../components/ui";
+import { CheckCircle2, CircleOff, Copy, Download, Edit3, Eye, FileEdit, Inbox, Trash2 } from "lucide-react";
+import { Button, Card, EmptyState, IconIndicator } from "../../../components/ui";
 import { downloadProtectedFile } from "../../../utils/downloadFile";
 
 const statusConfig = {
-  open: { label: "Đang mở", tone: "green" },
-  closed: { label: "Đã đóng", tone: "slate" },
-  draft: { label: "Nháp", tone: "amber" },
+  open: { label: "Đang mở", tone: "green", icon: CheckCircle2 },
+  closed: { label: "Đã đóng", tone: "slate", icon: CircleOff },
+  draft: { label: "Nháp", tone: "amber", icon: FileEdit },
 };
 
 function formatDateTime(value) {
@@ -70,37 +70,39 @@ export default function AssignmentTable({ assignments, onDelete, onDuplicate }) 
                   <td className="px-4 py-4 font-bold text-slate-700">{assignment.class_code || "DEFAULT"}</td>
                   <td className="px-4 py-4 font-semibold text-slate-600">{formatDateTime(assignment.deadline)}</td>
                   <td className="px-4 py-4">
-                    <Badge tone={status.tone}>{status.label}</Badge>
+                    <IconIndicator icon={status.icon} label={status.label} tone={status.tone} />
                   </td>
                   <td className="px-4 py-4">
                     {assignment.attachment_path ? (
                       <button
                         type="button"
                         onClick={() => downloadProtectedFile(assignment.attachment_path)}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700"
+                        aria-label="Tải tệp đính kèm"
+                        title="Tệp đính kèm có sẵn · Tải xuống"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
                       >
-                        <Download size={14} /> Tải file
+                        <Download size={15} />
                       </button>
                     ) : (
                       <span className="text-slate-400">-</span>
                     )}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex min-w-[420px] flex-wrap justify-end gap-2">
-                      <Button to={`/admin/assignments/${assignment.id}`} variant="secondary" size="sm">
-                        <Eye size={15} /> Xem
+                    <div className="flex min-w-[240px] flex-wrap justify-end gap-2">
+                      <Button to={`/admin/assignments/${assignment.id}`} variant="secondary" size="sm" aria-label="Xem bài tập" title="Xem bài tập" className="!h-9 !w-9 !p-0">
+                        <Eye size={15} />
                       </Button>
-                      <Button to={`/admin/assignments/${assignment.id}/submissions`} variant="secondary" size="sm">
-                        <Inbox size={15} /> Bài nộp
+                      <Button to={`/admin/assignments/${assignment.id}/submissions`} variant="secondary" size="sm" aria-label="Xem bài nộp" title="Xem bài nộp" className="!h-9 !w-9 !p-0">
+                        <Inbox size={15} />
                       </Button>
-                      <Button to={`/admin/assignments/${assignment.id}/edit`} variant="secondary" size="sm">
-                        <Edit3 size={15} /> Sửa
+                      <Button to={`/admin/assignments/${assignment.id}/edit`} variant="secondary" size="sm" aria-label="Sửa bài tập" title="Sửa bài tập" className="!h-9 !w-9 !p-0">
+                        <Edit3 size={15} />
                       </Button>
-                      <Button type="button" variant="secondary" size="sm" onClick={() => onDuplicate?.(assignment)}>
-                        <Copy size={15} /> Duplicate
+                      <Button type="button" variant="secondary" size="sm" aria-label="Nhân bản bài tập" title="Nhân bản bài tập" className="!h-9 !w-9 !p-0" onClick={() => onDuplicate?.(assignment)}>
+                        <Copy size={15} />
                       </Button>
-                      <Button type="button" variant="danger" size="sm" onClick={() => onDelete(assignment)}>
-                        <Trash2 size={15} /> Xóa
+                      <Button type="button" variant="danger" size="sm" aria-label="Xóa bài tập" title="Xóa bài tập" className="!h-9 !w-9 !p-0" onClick={() => onDelete(assignment)}>
+                        <Trash2 size={15} />
                       </Button>
                     </div>
                   </td>

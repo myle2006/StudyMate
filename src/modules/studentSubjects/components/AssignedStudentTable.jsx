@@ -1,6 +1,6 @@
 import React from "react";
-import { Trash2 } from "lucide-react";
-import { Badge, Button, Card, EmptyState } from "../../../components/ui";
+import { CheckCircle2, Trash2 } from "lucide-react";
+import { Button, Card, EmptyState, IconIndicator } from "../../../components/ui";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -54,13 +54,13 @@ export default function AssignedStudentTable({ students, onRemove }) {
                 <td className="px-4 py-4 font-bold text-slate-700">{student.student_code || "-"}</td>
                 <td className="px-4 py-4 font-bold text-slate-700">{student.class_code || "DEFAULT"}</td>
                 <td className="px-4 py-4">
-                  <Badge tone="green">{student.status === "active" ? "Đang học" : student.status}</Badge>
+                  <IconIndicator icon={CheckCircle2} label={student.status === "active" ? "Đang học" : student.status || "Không rõ"} tone="green" />
                 </td>
                 <td className="px-4 py-4 text-slate-500">{formatDate(student.assigned_at)}</td>
                 <td className="px-4 py-4">
                   <div className="flex justify-end">
-                    <Button type="button" variant="danger" size="sm" onClick={() => onRemove(student)}>
-                      <Trash2 size={15} /> Gỡ
+                    <Button type="button" variant="danger" size="sm" aria-label="Gỡ sinh viên khỏi môn học" title="Gỡ sinh viên khỏi môn học" className="!h-9 !w-9 !p-0" onClick={() => onRemove(student)}>
+                      <Trash2 size={15} />
                     </Button>
                   </div>
                 </td>

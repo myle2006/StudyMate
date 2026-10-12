@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Download, Edit3, Inbox } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleOff, Edit3, FileEdit, Inbox, Paperclip } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { Badge, Button, Card, LoadingState, PageHeader } from "../../../components/ui";
+import { Button, Card, IconIndicator, LoadingState, PageHeader } from "../../../components/ui";
 import { downloadProtectedFile } from "../../../utils/downloadFile";
 import { getAssignmentById } from "../services/assignmentService";
 
 const statusConfig = {
-  open: { label: "Đang mở", tone: "green" },
-  closed: { label: "Đã đóng", tone: "slate" },
-  draft: { label: "Nháp", tone: "amber" },
+  open: { label: "Đang mở", tone: "green", icon: CheckCircle2 },
+  closed: { label: "Đã đóng", tone: "slate", icon: CircleOff },
+  draft: { label: "Nháp", tone: "amber", icon: FileEdit },
 };
 
 function formatDateTime(value) {
@@ -80,7 +80,7 @@ export default function AdminAssignmentDetailPage() {
     );
   }
 
-  const status = statusConfig[assignment.status] || { label: assignment.status, tone: "slate" };
+  const status = statusConfig[assignment.status] || { label: assignment.status, tone: "slate", icon: CircleOff };
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
@@ -109,7 +109,7 @@ export default function AdminAssignmentDetailPage() {
             <div>
               <p className="text-sm font-bold text-slate-500">Trạng thái</p>
               <div className="mt-2">
-                <Badge tone={status.tone}>{status.label}</Badge>
+                <IconIndicator icon={status.icon} label={status.label} tone={status.tone} />
               </div>
             </div>
             <div className="rounded-xl bg-blue-50 px-4 py-3 text-right">
@@ -136,9 +136,11 @@ export default function AdminAssignmentDetailPage() {
             <button
               type="button"
               onClick={() => downloadProtectedFile(assignment.attachment_path)}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700"
+              aria-label="Tải file đính kèm"
+              title="Tệp đính kèm có sẵn · Tải xuống"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
             >
-              <Download size={16} /> Tải file đính kèm
+              <Paperclip size={16} />
             </button>
           )}
         </Card>

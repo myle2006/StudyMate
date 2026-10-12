@@ -36,7 +36,6 @@ class QuizController extends Controller
                 'assignment' => $assignment,
                 'questions' => $questions,
                 'submission' => $this->normalizeSubmission($submission),
-                'passing_score' => 7,
             ],
         ]);
     }
@@ -57,6 +56,15 @@ class QuizController extends Controller
                 'message' => 'Quiz đã đóng, không thể nộp bài.',
                 'errors' => ['assignment' => 'Quiz đã đóng.'],
             ], 422);
+            return;
+        }
+
+        if ($this->submission->findByAssignmentForStudent((int) $assignmentId, $studentId) !== null) {
+            $this->json([
+                'success' => false,
+                'message' => 'Quiz này đã được nộp, không thể nộp lại.',
+                'errors' => ['submission' => 'Mỗi người dùng chỉ được nộp quiz một lần.'],
+            ], 409);
             return;
         }
 
@@ -82,20 +90,8 @@ class QuizController extends Controller
             return;
         }
 
-        $errors = $this->validateAnswers($questions, $answers);
-        if ($errors !== []) {
-            $this->json([
-                'success' => false,
-                'message' => 'Bạn cần trả lời đầy đủ câu hỏi bắt buộc.',
-                'errors' => $errors,
-            ], 422);
-            return;
-        }
-
         $result = $this->quizQuestion->grade((int) $assignmentId, $answers);
-        $feedback = $result['passed']
-            ? 'Quiz đạt yêu cầu. Bài học đã được xác nhận hoàn thành.'
-            : 'Quiz chưa đạt yêu cầu. Bạn cần đạt tối thiểu 7/10 phần trắc nghiệm.';
+        $feedback = 'Quiz đã được nộp. Bài học đã được xác nhận hoàn thành.';
         $payload = [
             'type' => 'lesson_quiz',
             'answers' => $answers,
@@ -104,17 +100,28 @@ class QuizController extends Controller
             'details' => $result['details'],
         ];
 
-        $submissionId = $this->submission->upsertQuizResult(
-            (int) $assignmentId,
-            $studentId,
-            $payload,
-            (float) $result['score'],
-            $feedback
-        );
+        try {
+            $submissionId = $this->submission->createQuizResult(
+                (int) $assignmentId,
+                $studentId,
+                $payload,
+                (float) $result['score'],
+                $feedback
+            );
+        } catch (PDOException $exception) {
+            if ($exception->getCode() === '23000') {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Quiz này đã được nộp, không thể nộp lại.',
+                    'errors' => ['submission' => 'Mỗi người dùng chỉ được nộp quiz một lần.'],
+                ], 409);
+                return;
+            }
 
-        $progress = $result['passed']
-            ? $this->completeRoadmapItems((int) $assignmentId, $studentId)
-            : ['roadmap_items' => 0, 'lessons' => 0, 'roadmaps' => []];
+            throw $exception;
+        }
+
+        $progress = $this->completeRoadmapItems((int) $assignmentId, $studentId);
 
         $this->json([
             'success' => true,
@@ -171,21 +178,6 @@ class QuizController extends Controller
             'message' => 'Đã ghi nhận sự kiện bảo mật quiz.',
             'data' => ['id' => $eventId],
         ], 201);
-    }
-
-    private function validateAnswers(array $questions, array $answers): array
-    {
-        $errors = [];
-
-        foreach ($questions as $question) {
-            $questionId = (int) $question['id'];
-            $answer = trim((string) ($answers[$questionId] ?? $answers[(string) $questionId] ?? ''));
-            if ($answer === '') {
-                $errors["answers.{$questionId}"] = 'Câu hỏi này chưa có câu trả lời.';
-            }
-        }
-
-        return $errors;
     }
 
     private function cleanText(string $value, int $maxLength): string

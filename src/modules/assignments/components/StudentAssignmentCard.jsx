@@ -29,7 +29,7 @@ export default function StudentAssignmentCard({ assignment }) {
   const isQuiz = Number(assignment.quiz_question_count || 0) > 0 || isCsvAttachment(assignment.attachment_path);
   const actionTo = isQuiz ? `/student/assignments/${assignment.id}/quiz` : `/student/assignments/${assignment.id}/submit`;
   const actionLabel = isQuiz
-    ? assignment.submission_id ? "Xem / làm lại quiz" : "Làm quiz"
+    ? assignment.submission_id ? "Xem kết quả" : "Làm quiz"
     : assignment.submission_id ? "Cập nhật bài nộp" : "Nộp bài";
   const ActionIcon = isQuiz ? ClipboardCheck : Send;
   const toneClass = deadlineState.overdue

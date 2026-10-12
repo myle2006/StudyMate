@@ -262,13 +262,13 @@ function LessonDetail({ node, nodes, updating, onClose, onStart, onComplete }) {
           <p className="mt-1 whitespace-pre-line">{node.item.assignment_title || node.item.suggested_task || "Chưa gắn quiz xác nhận."}</p>
           {node.item.assignment_id && (
             <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">
-              Trạng thái quiz: {isQuizCompleted(node.item) ? "Đã đạt yêu cầu" : "Chưa đạt/chưa làm"}
+              Trạng thái quiz: {isQuizCompleted(node.item) ? "Đã nộp" : "Chưa nộp"}
             </div>
           )}
           {node.item.assignment_id && (
             <Button to={`/student/assignments/${node.item.assignment_id}/quiz`} variant="secondary" size="sm" className="mt-2">
               <ClipboardCheck size={15} />
-              Làm quiz xác nhận
+              {isQuizCompleted(node.item) ? "Xem kết quả quiz" : "Làm quiz xác nhận"}
             </Button>
           )}
         </section>

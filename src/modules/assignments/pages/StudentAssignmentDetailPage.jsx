@@ -102,7 +102,7 @@ export default function StudentAssignmentDetailPage() {
               )}
               {isQuiz ? (
                 <Button to={`/student/assignments/${assignment.id}/quiz`} disabled={assignment.status === "closed"}>
-                  <ClipboardCheck size={16} /> {assignment.submission_id ? "Xem / làm lại quiz" : "Làm quiz"}
+                  <ClipboardCheck size={16} /> {assignment.submission_id ? "Xem kết quả" : "Làm quiz"}
                 </Button>
               ) : (
                 <Button to={`/student/assignments/${assignment.id}/submit`} disabled={assignment.status === "closed"}>

@@ -1,13 +1,6 @@
 import React from "react";
-import { Eye, LockKeyhole, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { Eye, LockKeyhole, Pencil, Power, RotateCcw, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Badge } from "../ui";
-
-const statusConfig = {
-  active: { label: "Đang hoạt động", tone: "green" },
-  inactive: { label: "Vô hiệu hóa", tone: "amber" },
-  locked: { label: "Bị khóa", tone: "rose" },
-};
 
 function Tooltip({ label }) {
   return (
@@ -46,28 +39,6 @@ function IconActionButton({ label, onClick, children, className = "" }) {
   );
 }
 
-function StatusSwitch({ student, onEnable, onDisable }) {
-  const isActive = student.status === "active";
-  const label = isActive ? "Tắt tài khoản" : "Bật tài khoản";
-
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={isActive}
-      aria-label={label}
-      title={label}
-      onClick={() => (isActive ? onDisable(student) : onEnable(student))}
-      className={`group relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border p-0.5 transition focus:outline-none focus:ring-4 focus:ring-blue-100 ${
-        isActive ? "border-emerald-300 bg-emerald-500" : "border-slate-300 bg-slate-200"
-      }`}
-    >
-      <span className={`h-5 w-5 rounded-full bg-white shadow-sm transition ${isActive ? "translate-x-5" : "translate-x-0"}`} />
-      <Tooltip label={label} />
-    </button>
-  );
-}
-
 export default function StudentTable({
   students,
   pagination,
@@ -96,20 +67,18 @@ export default function StudentTable({
                 className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
             </th>
-            {["STT", "Họ tên", "Email", "Mã sinh viên", "Số điện thoại", "Trạng thái", "Lần đăng nhập", "Ngày tạo", "Thao tác"].map(
+            {["STT", "Họ tên", "Email", "Mã sinh viên", "Số điện thoại", "Lần đăng nhập", "Ngày tạo"].map(
               (column) => (
                 <th key={column} className="px-4 py-3 text-left font-black text-slate-600">
                   {column}
                 </th>
               )
             )}
+            <th className="px-4 py-3 text-right font-black text-slate-600">Thao tác</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {students.map((student, index) => {
-            const status = statusConfig[student.status] || { label: student.status, tone: "slate" };
-
-            return (
+          {students.map((student, index) => (
               <tr key={student.id} className="align-middle transition hover:bg-slate-50/80">
                 <td className="px-4 py-4">
                   <input
@@ -130,12 +99,6 @@ export default function StudentTable({
                 <td className="px-4 py-4 text-slate-700">{student.email}</td>
                 <td className="px-4 py-4 text-slate-700">{student.student_code}</td>
                 <td className="px-4 py-4 text-slate-700">{student.phone || "-"}</td>
-                <td className="px-4 py-4">
-                  <div className="flex min-w-[160px] items-center gap-3">
-                    <StatusSwitch student={student} onEnable={onEnable} onDisable={onDisable} />
-                    <Badge tone={status.tone}>{status.label}</Badge>
-                  </div>
-                </td>
                 <td className="px-4 py-4 text-slate-600">{student.last_login_at || "-"}</td>
                 <td className="px-4 py-4 text-slate-600">{student.created_at || "-"}</td>
                 <td className="px-4 py-4">
@@ -149,6 +112,13 @@ export default function StudentTable({
                     <IconActionButton label="Reset mật khẩu" onClick={() => onResetPassword(student)} className="border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
                       <RotateCcw size={16} strokeWidth={2.4} />
                     </IconActionButton>
+                    <IconActionButton
+                      label={student.status === "active" ? "Vô hiệu hóa tài khoản" : "Kích hoạt tài khoản"}
+                      onClick={() => (student.status === "active" ? onDisable?.(student) : onEnable?.(student))}
+                      className={student.status === "active" ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}
+                    >
+                      <Power size={16} strokeWidth={2.4} />
+                    </IconActionButton>
                     <IconActionButton label="Khóa tài khoản" onClick={() => onLock(student)} className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100">
                       <LockKeyhole size={16} strokeWidth={2.4} />
                     </IconActionButton>
@@ -158,8 +128,7 @@ export default function StudentTable({
                   </div>
                 </td>
               </tr>
-            );
-          })}
+          ))}
         </tbody>
       </table>
     </div>

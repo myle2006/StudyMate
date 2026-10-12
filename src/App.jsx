@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { Activity, BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
 import Login from "./pages/auth/Login";
 import ChangePassword from "./pages/auth/ChangePassword";
 import Register from "./pages/auth/Register";
@@ -72,7 +72,6 @@ const adminMenu = [
   { label: "Bài tập", to: "/admin/assignments", icon: ClipboardList },
   { label: "Thông báo", to: "/notifications", icon: Bell, badgeKey: "notifications" },
   { label: "Báo cáo", to: "/admin/reports", icon: FileDown },
-  { label: "Kiểm tra hệ thống", to: "/admin/health", icon: Activity },
   { label: "Bài học", to: "/admin/lessons", icon: ClipboardList },
 ];
 

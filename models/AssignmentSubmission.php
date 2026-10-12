@@ -290,35 +290,9 @@ class AssignmentSubmission extends Model
         ]);
     }
 
-    public function upsertQuizResult(int $assignmentId, int $studentId, array $payload, float $score, string $feedback): int
+    public function createQuizResult(int $assignmentId, int $studentId, array $payload, float $score, string $feedback): int
     {
         $content = json_encode($payload, JSON_UNESCAPED_UNICODE);
-        $existing = $this->findByAssignmentForStudent($assignmentId, $studentId);
-
-        if ($existing) {
-            $statement = $this->db()->prepare(
-                'UPDATE assignment_submissions
-                 SET content = :content,
-                     file_path = NULL,
-                     submitted_at = NOW(),
-                     status = :status,
-                     score = :score,
-                     feedback = :feedback,
-                     graded_by = NULL,
-                     graded_at = NOW()
-                 WHERE id = :id AND student_id = :student_id'
-            );
-            $statement->execute([
-                'id' => (int) $existing['id'],
-                'student_id' => $studentId,
-                'content' => $content,
-                'status' => 'graded',
-                'score' => $score,
-                'feedback' => $feedback !== '' ? $feedback : null,
-            ]);
-
-            return (int) $existing['id'];
-        }
 
         $statement = $this->db()->prepare(
             'INSERT INTO assignment_submissions

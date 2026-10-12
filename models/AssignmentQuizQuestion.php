@@ -153,7 +153,9 @@ class AssignmentQuizQuestion extends Model
             }
 
             $correctAnswer = strtoupper(trim((string) ($data['correct_answer'] ?? $data['answer'] ?? '')));
-            if ($type === 'single_choice' && ! in_array($correctAnswer, ['A', 'B', 'C', 'D'], true)) {
+            $rawPoints = (float) ($data['points'] ?? 1);
+            $isUnscoredChoice = $type === 'single_choice' && $correctAnswer === '' && $rawPoints <= 0;
+            if ($type === 'single_choice' && ! $isUnscoredChoice && ! in_array($correctAnswer, ['A', 'B', 'C', 'D'], true)) {
                 fclose($handle);
                 throw new RuntimeException("Dòng {$line}: đáp án đúng phải là A, B, C hoặc D.");
             }
@@ -165,8 +167,8 @@ class AssignmentQuizQuestion extends Model
                 'option_b' => trim((string) ($data['option_b'] ?? '')),
                 'option_c' => trim((string) ($data['option_c'] ?? '')),
                 'option_d' => trim((string) ($data['option_d'] ?? '')),
-                'correct_answer' => $type === 'single_choice' ? $correctAnswer : null,
-                'points' => max(0.5, (float) ($data['points'] ?? 1)),
+                'correct_answer' => $type === 'single_choice' && $correctAnswer !== '' ? $correctAnswer : null,
+                'points' => $isUnscoredChoice ? 0.0 : max(0.5, $rawPoints),
                 'explanation' => trim((string) ($data['explanation'] ?? '')),
                 'order_number' => count($questions) + 1,
             ];
@@ -187,6 +189,7 @@ class AssignmentQuizQuestion extends Model
         $autoQuestions = array_values(array_filter(
             $questions,
             static fn (array $question): bool => $question['question_type'] === 'single_choice'
+                && trim((string) ($question['correct_answer'] ?? '')) !== ''
         ));
 
         $totalPoints = 0.0;
@@ -196,7 +199,8 @@ class AssignmentQuizQuestion extends Model
         foreach ($questions as $question) {
             $questionId = (int) $question['id'];
             $answer = strtoupper(trim((string) ($answers[$questionId] ?? $answers[(string) $questionId] ?? '')));
-            $isAuto = $question['question_type'] === 'single_choice';
+            $hasCorrectAnswer = trim((string) ($question['correct_answer'] ?? '')) !== '';
+            $isAuto = $question['question_type'] === 'single_choice' && $hasCorrectAnswer;
             $isCorrect = $isAuto && $answer !== '' && $answer === strtoupper((string) $question['correct_answer']);
 
             if ($isAuto) {
@@ -221,7 +225,8 @@ class AssignmentQuizQuestion extends Model
 
         return [
             'score' => $score,
-            'passed' => $totalPoints > 0 && $score >= 7,
+            // A quiz submission completes the lesson regardless of the score.
+            'passed' => true,
             'earned_points' => $earnedPoints,
             'total_points' => $totalPoints,
             'auto_question_count' => count($autoQuestions),

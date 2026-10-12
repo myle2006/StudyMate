@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { Button, Card, LoadingState, PageHeader } from "../../../components/ui";
 import { downloadProtectedFile } from "../../../utils/downloadFile";
 import AssignmentStatusBadge from "../components/AssignmentStatusBadge";
+import SubmissionContent, { isQuizSubmission } from "../components/SubmissionContent";
 import { getSubmissionById } from "../services/submissionService";
 
 function formatDateTime(value) {
@@ -90,9 +91,11 @@ export default function StudentSubmissionDetailPage() {
               <Button to="/student/assignments" variant="secondary">
                 <ArrowLeft size={16} /> Danh sách bài tập
               </Button>
-              <Button to={`/student/assignments/${submission.assignment_id}/submit`}>
-                <Edit3 size={16} /> Cập nhật bài nộp
-              </Button>
+              {!isQuizSubmission(submission.content) && (
+                <Button to={`/student/assignments/${submission.assignment_id}/submit`}>
+                  <Edit3 size={16} /> Cập nhật bài nộp
+                </Button>
+              )}
             </>
           }
         />
@@ -111,9 +114,7 @@ export default function StudentSubmissionDetailPage() {
 
           <div className="rounded-xl bg-slate-50 p-4">
             <p className="text-xs font-extrabold uppercase text-slate-500">Nội dung bài làm</p>
-            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
-              {submission.content || "Bạn chưa nhập nội dung bài làm."}
-            </p>
+            <SubmissionContent content={submission.content} emptyMessage="Bạn chưa nhập nội dung bài làm." />
           </div>
 
           {submission.file_path && (

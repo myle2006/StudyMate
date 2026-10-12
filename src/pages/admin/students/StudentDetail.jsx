@@ -1,14 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Edit3 } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { Badge, Button, Card, LoadingState, PageHeader } from "../../../components/ui";
+import { Button, Card, LoadingState, PageHeader } from "../../../components/ui";
 import { getStudentById } from "../../../services/studentService";
-
-const statusConfig = {
-  active: { label: "Đang hoạt động", tone: "green" },
-  inactive: { label: "Vô hiệu hóa", tone: "amber" },
-  locked: { label: "Bị khóa", tone: "rose" },
-};
 
 function InfoItem({ label, value }) {
   return (
@@ -62,8 +56,6 @@ export default function StudentDetail() {
     );
   }
 
-  const status = statusConfig[student.status] || { label: student.status, tone: "slate" };
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -92,10 +84,7 @@ export default function StudentDetail() {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-2xl font-black text-slate-950">{student.full_name}</h2>
-              <Badge tone={status.tone}>{status.label}</Badge>
-            </div>
+            <h2 className="text-2xl font-black text-slate-950">{student.full_name}</h2>
             <p className="mt-2 text-sm font-semibold text-slate-500">ID: {student.id}</p>
           </div>
         </div>

@@ -203,7 +203,7 @@ class ImportStudentService
 
         throw new RuntimeException(
             $extension === 'xls'
-                ? 'File XLS cần cài thư viện phpoffice/phpspreadsheet để xử lý.'
+                ? 'File XLS chưa được hỗ trợ. Vui lòng lưu file thành CSV hoặc XLSX rồi import lại.'
                 : 'Định dạng file import chưa được hỗ trợ trên máy chủ này.'
         );
     }
@@ -215,10 +215,18 @@ class ImportStudentService
             throw new RuntimeException('Không thể đọc file import.');
         }
 
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+            throw new RuntimeException('File import không có dữ liệu.');
+        }
+
+        $delimiter = $this->detectCsvDelimiter($firstLine);
+        rewind($handle);
         $header = null;
         $rows = [];
 
-        while (($line = fgetcsv($handle)) !== false) {
+        while (($line = fgetcsv($handle, 0, $delimiter)) !== false) {
             if ($header === null) {
                 $header = $this->normalizeHeader($line);
                 continue;
@@ -232,6 +240,10 @@ class ImportStudentService
         }
 
         fclose($handle);
+
+        if ($header === null || $rows === []) {
+            throw new RuntimeException('File import phải có dòng tiêu đề và ít nhất một dòng dữ liệu.');
+        }
 
         return $rows;
     }
@@ -256,15 +268,28 @@ class ImportStudentService
             throw new RuntimeException('File XLSX không hợp lệ.');
         }
 
+        $namespaces = $xml->getDocNamespaces(true);
+        $mainNamespace = $namespaces[''] ?? 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+        $worksheet = $xml->children($mainNamespace);
         $header = null;
         $rows = [];
 
-        foreach ($xml->sheetData->row as $row) {
+        foreach ($worksheet->sheetData->row as $row) {
             $values = [];
             foreach ($row->c as $cell) {
+                $cellReference = (string) ($cell['r'] ?? '');
+                $columnIndex = $this->xlsxColumnIndex($cellReference);
                 $value = (string) ($cell->v ?? '');
                 $type = (string) ($cell['t'] ?? '');
-                $values[] = $type === 's' ? ($sharedStrings[(int) $value] ?? '') : $value;
+
+                if ($type === 's') {
+                    $value = $sharedStrings[(int) $value] ?? '';
+                } elseif ($type === 'inlineStr') {
+                    $inline = $cell->is;
+                    $value = isset($inline->t) ? (string) $inline->t : '';
+                }
+
+                $values[$columnIndex] = $value;
             }
 
             if ($header === null) {
@@ -277,6 +302,10 @@ class ImportStudentService
             }
 
             $rows[] = $this->combineRow($header, $values);
+        }
+
+        if ($header === null || $rows === []) {
+            throw new RuntimeException('File import phải có dòng tiêu đề và ít nhất một dòng dữ liệu.');
         }
 
         return $rows;
@@ -294,8 +323,11 @@ class ImportStudentService
             return [];
         }
 
+        $namespaces = $xml->getDocNamespaces(true);
+        $mainNamespace = $namespaces[''] ?? 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+        $sharedStringDocument = $xml->children($mainNamespace);
         $strings = [];
-        foreach ($xml->si as $item) {
+        foreach ($sharedStringDocument->si as $item) {
             if (isset($item->t)) {
                 $strings[] = (string) $item->t;
                 continue;
@@ -313,14 +345,64 @@ class ImportStudentService
 
     private function normalizeHeader(array $header): array
     {
-        return array_map(
-            static function ($column): string {
-                $column = preg_replace('/^\xEF\xBB\xBF/', '', (string) $column);
+        $aliases = [
+            'name' => 'full_name',
+            'ho ten' => 'full_name',
+            'họ tên' => 'full_name',
+            'mssv' => 'student_code',
+            'student code' => 'student_code',
+            'student-code' => 'student_code',
+            'ma sinh vien' => 'student_code',
+            'mã sinh viên' => 'student_code',
+            'e-mail' => 'email',
+            'so dien thoai' => 'phone',
+            'số điện thoại' => 'phone',
+            'mat khau' => 'password',
+            'mật khẩu' => 'password',
+            'trang thai' => 'status',
+            'trạng thái' => 'status',
+        ];
 
-                return strtolower(trim($column ?? ''));
+        return array_map(
+            static function ($column) use ($aliases): string {
+                $column = preg_replace('/^\xEF\xBB\xBF/', '', (string) $column);
+                $column = strtolower(trim($column ?? ''));
+
+                return $aliases[$column] ?? $column;
             },
             $header
         );
+    }
+
+    private function detectCsvDelimiter(string $line): string
+    {
+        $delimiters = [',', ';', "\t"];
+        $selected = ',';
+        $maxCount = -1;
+
+        foreach ($delimiters as $delimiter) {
+            $count = substr_count($line, $delimiter);
+            if ($count > $maxCount) {
+                $selected = $delimiter;
+                $maxCount = $count;
+            }
+        }
+
+        return $selected;
+    }
+
+    private function xlsxColumnIndex(string $reference): int
+    {
+        if (! preg_match('/^([A-Z]+)/i', $reference, $matches)) {
+            return 0;
+        }
+
+        $index = 0;
+        foreach (str_split(strtoupper($matches[1])) as $letter) {
+            $index = ($index * 26) + (ord($letter) - 64);
+        }
+
+        return max(0, $index - 1);
     }
 
     private function combineRow(array $header, array $line): array

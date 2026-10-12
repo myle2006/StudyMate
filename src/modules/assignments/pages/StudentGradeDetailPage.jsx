@@ -5,6 +5,7 @@ import { Alert, Button, Card, LoadingState, PageHeader } from "../../../componen
 import { downloadProtectedFile } from "../../../utils/downloadFile";
 import AssignmentStatusBadge from "../components/AssignmentStatusBadge";
 import GradeStatusBadge from "../components/GradeStatusBadge";
+import SubmissionContent from "../components/SubmissionContent";
 import { getStudentGradeBySubmissionId } from "../services/submissionService";
 
 function formatDateTime(value) {
@@ -142,9 +143,7 @@ export default function StudentGradeDetailPage() {
                 <FileText size={16} />
                 <span>Nội dung bài làm</span>
               </div>
-              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
-                {submission.content || "Bạn chưa nhập nội dung bài làm."}
-              </p>
+              <SubmissionContent content={submission.content} emptyMessage="Bạn chưa nhập nội dung bài làm." />
             </div>
 
             <div className="rounded-xl bg-slate-50 p-5">

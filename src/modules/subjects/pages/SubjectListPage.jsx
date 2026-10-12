@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Edit3, Eye, Plus, Trash2, Users } from "lucide-react";
+import { CheckCircle2, CircleOff, Edit3, Eye, Plus, Trash2, Users } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import { Alert, Badge, Button, Card, ConfirmDialog, EmptyState, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
+import { Alert, Button, Card, ConfirmDialog, EmptyState, IconIndicator, Input, LoadingState, PageHeader, Select, useToast } from "../../../components/ui";
 import { deleteSubject, getSubjects } from "../services/subjectService";
 
 const statusLabels = {
@@ -14,6 +14,12 @@ const statusTones = {
   studying: "blue",
   paused: "amber",
   completed: "green",
+};
+
+const statusIcons = {
+  studying: CheckCircle2,
+  paused: CircleOff,
+  completed: CheckCircle2,
 };
 
 function SubjectVisual({ subject }) {
@@ -155,24 +161,26 @@ export default function SubjectListPage() {
                       <td className="px-4 py-4 font-bold text-slate-800">{subject.subject_name}</td>
                       <td className="px-4 py-4 font-bold text-slate-700">{subject.credits ?? 3}</td>
                       <td className="px-4 py-4">
-                        <Badge tone={statusTones[subject.status] || "slate"}>
-                          {statusLabels[subject.status] || subject.status}
-                        </Badge>
+                        <IconIndicator
+                          icon={statusIcons[subject.status] || CircleOff}
+                          label={statusLabels[subject.status] || subject.status}
+                          tone={statusTones[subject.status] || "slate"}
+                        />
                       </td>
                       <td className="px-4 py-4 text-slate-500">{subject.created_at || "-"}</td>
                       <td className="px-4 py-4">
                         <div className="flex min-w-[360px] flex-wrap justify-end gap-2">
-                          <Button to={`/admin/subjects/${subject.id}`} variant="secondary" size="sm">
-                            <Eye size={15} /> Xem
+                          <Button to={`/admin/subjects/${subject.id}`} variant="secondary" size="sm" aria-label="Xem môn học" title="Xem môn học" className="!h-9 !w-9 !p-0">
+                            <Eye size={15} />
                           </Button>
-                          <Button to={`/admin/subjects/${subject.id}/students`} variant="secondary" size="sm">
-                            <Users size={15} /> Quản lý sinh viên
+                          <Button to={`/admin/subjects/${subject.id}/students`} variant="secondary" size="sm" aria-label="Quản lý sinh viên trong môn học" title="Quản lý sinh viên trong môn học" className="!h-9 !w-9 !p-0">
+                            <Users size={15} />
                           </Button>
-                          <Button to={`/admin/subjects/${subject.id}/edit`} variant="secondary" size="sm">
-                            <Edit3 size={15} /> Sửa
+                          <Button to={`/admin/subjects/${subject.id}/edit`} variant="secondary" size="sm" aria-label="Sửa môn học" title="Sửa môn học" className="!h-9 !w-9 !p-0">
+                            <Edit3 size={15} />
                           </Button>
-                          <Button type="button" variant="danger" size="sm" onClick={() => setSelectedSubject(subject)}>
-                            <Trash2 size={15} /> Xóa
+                          <Button type="button" variant="danger" size="sm" aria-label="Xóa môn học" title="Xóa môn học" className="!h-9 !w-9 !p-0" onClick={() => setSelectedSubject(subject)}>
+                            <Trash2 size={15} />
                           </Button>
                         </div>
                       </td>

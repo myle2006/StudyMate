@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { Button, Card, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { downloadProtectedFile } from "../../../utils/downloadFile";
 import GradeForm from "../components/GradeForm";
+import SubmissionContent from "../components/SubmissionContent";
 import SubmissionStatusBadge from "../components/SubmissionStatusBadge";
 import { getAdminSubmissionById, gradeSubmission } from "../services/submissionService";
 
@@ -170,9 +171,7 @@ export default function AdminSubmissionDetailPage() {
 
           <div className="rounded-xl bg-slate-50 p-4">
             <p className="text-xs font-extrabold uppercase text-slate-500">Nội dung bài nộp</p>
-            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
-              {submission.content || "Sinh viên không nhập nội dung."}
-            </p>
+            <SubmissionContent content={submission.content} emptyMessage="Sinh viên không nhập nội dung." />
           </div>
 
           {submission.feedback && (

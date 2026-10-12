@@ -101,6 +101,7 @@ CREATE TABLE `users` (
   `full_name` varchar(150) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
+  `must_change_password` tinyint(1) NOT NULL DEFAULT 0,
   `avatar` varchar(255) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `student_code` varchar(50) DEFAULT NULL,

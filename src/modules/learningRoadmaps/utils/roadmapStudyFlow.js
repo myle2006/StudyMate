@@ -18,7 +18,7 @@ export function getStudentFacingStatus(nodeOrItem) {
   if (locked) return "Cần hoàn thành bài trước";
   if (status === "in_progress" && hasQuiz && !quizDone) return "Chờ làm quiz";
   if (status === "in_progress") return "Đang học";
-  if (status === "not_completed") return "Chưa đạt yêu cầu";
+  if (status === "not_completed") return "Chưa hoàn thành";
   if (status === "rescheduled") return "Đã dời lịch";
   return "Có thể học";
 }

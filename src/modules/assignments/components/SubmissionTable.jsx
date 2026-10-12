@@ -1,6 +1,6 @@
 import React from "react";
 import { Download, Eye } from "lucide-react";
-import { Button, Card, EmptyState } from "../../../components/ui";
+import { Button, Card, EmptyState, IconIndicator } from "../../../components/ui";
 import { downloadProtectedFile } from "../../../utils/downloadFile";
 import SubmissionStatusBadge from "./SubmissionStatusBadge";
 
@@ -67,19 +67,19 @@ export default function SubmissionTable({ submissions }) {
                       <button
                         type="button"
                         onClick={() => downloadProtectedFile(item.file_path)}
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-extrabold text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                        aria-label="Tải file bài nộp"
+                        title="Tệp bài nộp có sẵn · Tải xuống"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
                       >
-                        <Download size={14} /> File
+                        <Download size={14} />
                       </button>
                     )}
                     {item.submission_id ? (
-                      <Button to={`/admin/submissions/${item.submission_id}`} variant="secondary" size="sm">
-                        <Eye size={15} /> Xem chi tiết
+                      <Button to={`/admin/submissions/${item.submission_id}`} variant="secondary" size="sm" aria-label="Xem chi tiết bài nộp" title="Xem chi tiết bài nộp" className="!h-9 !w-9 !p-0">
+                        <Eye size={15} />
                       </Button>
                     ) : (
-                      <span className="inline-flex h-9 items-center rounded-lg bg-slate-100 px-3 text-xs font-bold text-slate-500">
-                        Chưa có bài nộp
-                      </span>
+                      <IconIndicator icon={Eye} label="Chưa có bài nộp" tone="slate" />
                     )}
                   </div>
                 </td>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Clock3, Map, Pencil, PlayCircle, Target, Trash2 } from "lucide-react";
+import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Clock3, Map as MapIcon, Pencil, PlayCircle, Target, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Button, Card, ConfirmDialog, LoadingState, PageHeader, useToast } from "../../../components/ui";
 import { useAuth } from "../../../context/AuthContext";
@@ -98,7 +98,7 @@ function StudyFocusCard({ node, nodes, progressPercent, updating, onStart, onCom
             {hasQuiz ? (
               <Button to={`/student/assignments/${item.assignment_id}/quiz`} variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50">
                 <ClipboardCheck size={16} />
-                Làm quiz xác nhận
+                {item.assignment_submission_status === "graded" ? "Xem kết quả quiz" : "Làm quiz xác nhận"}
               </Button>
             ) : (
               <Button type="button" variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50" onClick={() => onStart(node)} disabled={updating || node.rawStatus === "completed"}>
@@ -107,7 +107,7 @@ function StudyFocusCard({ node, nodes, progressPercent, updating, onStart, onCom
               </Button>
             )}
             <Button type="button" variant="secondary" className="border-white/60 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={onShowMap}>
-              <Map size={16} />
+              <MapIcon size={16} />
               Xem trên bản đồ
             </Button>
           </div>
@@ -115,7 +115,7 @@ function StudyFocusCard({ node, nodes, progressPercent, updating, onStart, onCom
         <div className="grid gap-3 p-5">
           <InfoItem label="Trạng thái" value={statusText} />
           <InfoItem label="Tiến độ lộ trình" value={`${progressPercent}%`} />
-          <InfoItem label="Quiz xác nhận" value={hasQuiz ? (item.assignment_submission_status === "graded" ? "Đã làm" : "Cần làm") : "Không yêu cầu"} />
+          <InfoItem label="Quiz xác nhận" value={hasQuiz ? (item.assignment_submission_status === "graded" ? "Đã nộp" : "Cần làm") : "Không yêu cầu"} />
           {!hasQuiz && (
             <Button type="button" onClick={() => onComplete(node)} disabled={updating || !completeAllowed || node.rawStatus === "completed"}>
               <CheckCircle2 size={16} />
