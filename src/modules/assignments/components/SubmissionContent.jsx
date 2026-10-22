@@ -21,12 +21,20 @@ function answerLabel(value) {
   return String(value);
 }
 
-export default function SubmissionContent({ content, emptyMessage = "Chưa có nội dung bài nộp." }) {
+export default function SubmissionContent({ content, emptyMessage = "Chưa có nội dung bài nộp.", showQuizDetails = false }) {
   const payload = parseContent(content);
 
   if (payload?.type !== "lesson_quiz") {
     const text = typeof content === "string" ? content : "";
     return <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-slate-700">{text || emptyMessage}</p>;
+  }
+
+  if (!showQuizDetails) {
+    return (
+      <p className="mt-3 text-sm font-semibold leading-7 text-slate-600">
+        Bài quiz đã được nộp. Đáp án và chi tiết chấm từng câu không được hiển thị.
+      </p>
+    );
   }
 
   const answers = payload.answers && typeof payload.answers === "object" ? payload.answers : {};

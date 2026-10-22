@@ -171,7 +171,7 @@ export default function AdminSubmissionDetailPage() {
 
           <div className="rounded-xl bg-slate-50 p-4">
             <p className="text-xs font-extrabold uppercase text-slate-500">Nội dung bài nộp</p>
-            <SubmissionContent content={submission.content} emptyMessage="Sinh viên không nhập nội dung." />
+            <SubmissionContent content={submission.content} emptyMessage="Sinh viên không nhập nội dung." showQuizDetails />
           </div>
 
           {submission.feedback && (

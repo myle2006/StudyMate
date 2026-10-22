@@ -27,6 +27,9 @@ class QuizController extends Controller
 
         $this->ensureQuestionsFromAttachment($assignment);
         $questions = $this->quizQuestion->getForAssignment((int) $assignmentId);
+        // The question bank order must not become the order every student sees.
+        // IDs are retained, so submitted answers can still be graded correctly.
+        shuffle($questions);
         $submission = $this->submission->findByAssignmentForStudent((int) $assignmentId, $studentId);
         $publicAssignment = $assignment;
         $publicAssignment['is_quiz'] = true;
@@ -130,8 +133,10 @@ class QuizController extends Controller
             'success' => true,
             'message' => $feedback,
             'data' => [
-                'submission' => $this->submission->findForStudent($submissionId, $studentId),
-                'result' => $result,
+                'submission' => $this->normalizeSubmission($this->submission->findForStudent($submissionId, $studentId)),
+                // A student may see the final score only after the submission has
+                // been accepted. Never return per-question grading data here.
+                'result' => $this->publicResult($result),
                 'progress' => $progress,
             ],
         ]);
@@ -255,11 +260,26 @@ class QuizController extends Controller
         }
 
         $content = json_decode((string) ($submission['content'] ?? ''), true);
-        if (is_array($content)) {
-            $submission['quiz_payload'] = $content;
+        if (is_array($content) && ($content['type'] ?? null) === 'lesson_quiz') {
+            $publicResult = $this->publicResult($content);
+            $submission['quiz_payload'] = $publicResult;
+            // Do not expose saved answers, correctness, explanations, or answer keys
+            // through the raw submission content either.
+            $submission['content'] = json_encode([
+                'type' => 'lesson_quiz',
+                ...$publicResult,
+            ], JSON_UNESCAPED_UNICODE);
         }
 
         return $submission;
+    }
+
+    private function publicResult(array $result): array
+    {
+        return [
+            'score' => isset($result['score']) ? (float) $result['score'] : null,
+            'passed' => true,
+        ];
     }
 
     private function completeRoadmapItems(int $assignmentId, int $studentId): array

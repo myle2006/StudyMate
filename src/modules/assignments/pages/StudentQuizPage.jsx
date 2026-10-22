@@ -48,7 +48,7 @@ export default function StudentQuizPage() {
         setPayload(response.data);
         const savedQuiz = response.data.submission?.quiz_payload;
         setResult(savedQuiz && Object.prototype.hasOwnProperty.call(savedQuiz, "score")
-          ? { score: Number(savedQuiz.score), passed: true, details: savedQuiz.details || [] }
+          ? { score: Number(savedQuiz.score), passed: true }
           : null);
         setQuizStarted(false);
         setCurrentQuestionIndex(0);

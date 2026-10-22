@@ -102,7 +102,7 @@ class AssignmentSubmissionController extends Controller
         $this->json([
             'success' => true,
             'message' => 'Lấy danh sách bài nộp thành công.',
-            'data' => $this->submission->getAllForStudent($this->currentUserId()),
+            'data' => array_map([$this, 'sanitizeStudentSubmission'], $this->submission->getAllForStudent($this->currentUserId())),
         ]);
     }
 
@@ -111,7 +111,7 @@ class AssignmentSubmissionController extends Controller
         $this->json([
             'success' => true,
             'message' => 'Lấy danh sách điểm và feedback thành công.',
-            'data' => $this->submission->getGradesForStudent($this->currentUserId()),
+            'data' => array_map([$this, 'sanitizeStudentSubmission'], $this->submission->getGradesForStudent($this->currentUserId())),
         ]);
     }
 
@@ -131,7 +131,7 @@ class AssignmentSubmissionController extends Controller
         $this->json([
             'success' => true,
             'message' => 'Lấy chi tiết điểm và feedback thành công.',
-            'data' => $submission,
+            'data' => $this->sanitizeStudentSubmission($submission),
         ]);
     }
 
@@ -149,7 +149,7 @@ class AssignmentSubmissionController extends Controller
         $this->json([
             'success' => true,
             'message' => $submission ? 'Lấy bài nộp thành công.' : 'Bạn chưa nộp bài tập này.',
-            'data' => $submission,
+            'data' => $this->sanitizeStudentSubmission($submission),
         ]);
     }
 
@@ -169,7 +169,7 @@ class AssignmentSubmissionController extends Controller
         $this->json([
             'success' => true,
             'message' => 'Lấy chi tiết bài nộp thành công.',
-            'data' => $submission,
+            'data' => $this->sanitizeStudentSubmission($submission),
         ]);
     }
 
@@ -217,7 +217,7 @@ class AssignmentSubmissionController extends Controller
         $this->json([
             'success' => true,
             'message' => $message,
-            'data' => $this->submission->findForStudent($submissionId, $studentId),
+            'data' => $this->sanitizeStudentSubmission($this->submission->findForStudent($submissionId, $studentId)),
         ], $existingSubmission ? 200 : 201);
     }
 
@@ -264,7 +264,7 @@ class AssignmentSubmissionController extends Controller
         $this->json([
             'success' => true,
             'message' => 'Cập nhật bài nộp thành công.',
-            'data' => $this->submission->findForStudent((int) $id, $studentId),
+            'data' => $this->sanitizeStudentSubmission($this->submission->findForStudent((int) $id, $studentId)),
         ]);
     }
 
@@ -305,6 +305,30 @@ class AssignmentSubmissionController extends Controller
         return [
             'content' => trim((string) ($input['content'] ?? $current['content'] ?? '')),
         ];
+    }
+
+    /**
+     * Quiz answer keys and per-question grading are kept for administrators,
+     * but must never be sent back through a student endpoint.
+     */
+    private function sanitizeStudentSubmission(?array $submission): ?array
+    {
+        if ($submission === null) {
+            return null;
+        }
+
+        $payload = json_decode((string) ($submission['content'] ?? ''), true);
+        if (! is_array($payload) || ($payload['type'] ?? null) !== 'lesson_quiz') {
+            return $submission;
+        }
+
+        $submission['content'] = json_encode([
+            'type' => 'lesson_quiz',
+            'score' => isset($payload['score']) ? (float) $payload['score'] : null,
+            'passed' => true,
+        ], JSON_UNESCAPED_UNICODE);
+
+        return $submission;
     }
 
     private function requestData(): array
