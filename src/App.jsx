@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link, Navigate, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
-import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
+import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { BarChart3, Bell, BookOpen, CalendarDays, ClipboardList, Eye, FileDown, Flower2, Home, LogOut, Menu, Route as RouteIcon, Target, Users, X } from "lucide-react";
 import Login from "./pages/auth/Login";
 import ChangePassword from "./pages/auth/ChangePassword";
 import Register from "./pages/auth/Register";
@@ -54,6 +54,7 @@ import StudyScheduleCalendarPage from "./modules/studySchedules/pages/StudySched
 import StudyScheduleCreatePage from "./modules/studySchedules/pages/StudyScheduleCreatePage";
 import StudyScheduleEditPage from "./modules/studySchedules/pages/StudyScheduleEditPage";
 import StudyScheduleDetailPage from "./modules/studySchedules/pages/StudyScheduleDetailPage";
+import FlowershopPage from "./modules/flowershop/FlowershopPage";
 import AdminRoute from "./routes/AdminRoute";
 import PrivateRoute from "./routes/PrivateRoute";
 import StudentRoute from "./routes/StudentRoute";
@@ -67,6 +68,7 @@ const brandSlogan = "PLT Solutions – Học kỹ năng nghề CNTT từ doanh n
 
 const adminMenu = [
   { label: "Dashboard", to: "/admin/dashboard", icon: Home },
+  { label: "Tiệm Hoa Hẹn", to: "/flowershop", icon: Flower2 },
   { label: "Sinh viên", to: "/admin/students", icon: Users },
   { label: "Môn học", to: "/admin/subjects", icon: BookOpen },
   { label: "Bài tập", to: "/admin/assignments", icon: ClipboardList },
@@ -77,6 +79,7 @@ const adminMenu = [
 
 const studentMenu = [
   { label: "Dashboard", to: "/student/dashboard", icon: Home },
+  { label: "Tiệm Hoa Hẹn", to: "/flowershop", icon: Flower2 },
   { label: "Môn học của tôi", to: "/student/my-subjects", icon: BookOpen },
   { label: "Bài tập", to: "/student/assignments", icon: ClipboardList },
   { label: "Thông báo", to: "/notifications", icon: Bell, badgeKey: "notifications" },
@@ -89,6 +92,7 @@ const studentMenu = [
 
 const guestPreviewMenu = [
   { label: "Dashboard demo", to: "/student/dashboard", icon: Home },
+  { label: "Tiệm Hoa Hẹn", to: "/flowershop", icon: Flower2 },
   { label: "Lộ trình mẫu", to: "/student/roadmaps", icon: RouteIcon },
   { label: "Môn học mẫu", to: "/student/my-subjects", icon: BookOpen },
 ];
@@ -235,6 +239,7 @@ function MobileNav({ user, onLogout, unreadCount = 0, isGuestPreview = false }) 
 
 function AppLayout({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, isGuestPreview, user, logout, endGuestPreview } = useAuth();
   const basePath = window.STUDYMATE_BASE_PATH || "";
   const [unreadCount, setUnreadCount] = useState(0);
@@ -277,6 +282,10 @@ function AppLayout({ children }) {
   function handleEndPreview() {
     endGuestPreview();
     navigate("/", { replace: true });
+  }
+
+  if (location.pathname.startsWith("/flowershop")) {
+    return children;
   }
 
   if (isAuthenticated) {
@@ -447,6 +456,7 @@ export default function App() {
         <Route path="/student/schedules/:id/edit" element={<StudentRoute><GuestPreviewDashboardRedirect><StudyScheduleEditPage /></GuestPreviewDashboardRedirect></StudentRoute>} />
         <Route path="/roadmap" element={<StudentRoute><Navigate to="/student/roadmaps" replace /></StudentRoute>} />
         <Route path="/notifications" element={<PrivateRoute><NotificationListPage /></PrivateRoute>} />
+        <Route path="/flowershop/*" element={<FlowershopPage />} />
 
         <Route path="/subjects" element={<SubjectLegacyRedirect />} />
         <Route path="/subjects/create" element={<AdminRoute><Navigate to="/admin/subjects/create" replace /></AdminRoute>} />

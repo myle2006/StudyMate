@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   FileDown,
+  Flower2,
   LayoutDashboard,
   LogIn,
   PlayCircle,
@@ -159,6 +160,10 @@ function Hero() {
             StudyMate gom môn học, lịch học, bài tập, bài học, thông báo, điểm số và lộ trình vào một không gian học tập sáng sủa, dễ theo dõi mỗi ngày.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href={appUrl("/flowershop")} className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-6 py-4 text-base font-black text-white shadow-[0_18px_44px_rgba(4,120,87,0.24)] transition hover:bg-emerald-800">
+              <Flower2 className="h-5 w-5" />
+              Chơi Tiệm Hoa Hẹn
+            </a>
             <a href={appUrl("/preview")} className="inline-flex items-center justify-center gap-2 rounded-lg bg-sky-600 px-6 py-4 text-base font-black text-white shadow-[0_18px_44px_rgba(14,165,233,0.24)] transition hover:bg-sky-700">
               <PlayCircle className="h-5 w-5" />
               Dùng thử với tài khoản khách

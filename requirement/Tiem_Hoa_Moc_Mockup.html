@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiệm Hoa Mộc · Mockup tương tác</title>
+<style>
+:root { color-scheme: light dark; background: light-dark(#eeece5,#171614); }
+body { max-width: 1100px; margin: 24px auto; padding: 0 12px; }
+</style>
+</head>
+<body>
+<style>
+#petal-shop{color-scheme:light dark;--ground:light-dark(#f9f7f1,#201d1b);--paper:light-dark(#fffefa,#292522);--ink:light-dark(#2d322b,#f1eee5);--soft:light-dark(#625f56,#c5bcae);--edge:light-dark(#e9e2d7,#45403a);--sage:light-dark(#365947,#b8d7be);--wash:light-dark(#eaf0e7,#303d33);--rose:light-dark(#f5e7e3,#483534);--alert:light-dark(#923c31,#ffb7a8);background:var(--ground);color:var(--ink);border:1px solid var(--edge);border-radius:18px;overflow:hidden;font:14px/1.45 system-ui,sans-serif}
+#petal-shop *{box-sizing:border-box}#petal-shop button,#petal-shop select{font:inherit;color:inherit}#petal-shop button{background:var(--paper);border:1px solid var(--edge);border-radius:9px;padding:7px 11px}#petal-shop button:not(:disabled):hover{border-color:var(--sage)}#petal-shop button:disabled{opacity:.45}#petal-shop button:focus-visible,#petal-shop select:focus-visible{outline:2px solid var(--sage);outline-offset:2px}
+#petal-shop .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--paper);border-bottom:1px solid var(--edge);padding:12px 18px;padding-right:95px}
+#petal-shop .brand-mark{display:grid;place-items:center;background:var(--wash);color:var(--sage);border-radius:12px;width:35px;height:35px;font-size:21px}#petal-shop .brand{font:500 22px/1.1 Georgia,serif}#petal-shop .top small{display:block;margin-top:3px}#petal-shop small{color:var(--soft);font-size:11px}
+#petal-shop nav{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}#petal-shop nav button{border-color:transparent}#petal-shop button[aria-pressed=true]{background:var(--wash);color:var(--sage);border-color:var(--sage)}
+#petal-shop .shell{padding:19px}#petal-shop .mast{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:15px}#petal-shop h1,#petal-shop h2,#petal-shop h3,#petal-shop p{margin:0}#petal-shop h1{font:500 clamp(25px,4vw,34px)/1.14 Georgia,serif;margin:2px 0 3px}#petal-shop h2{font:500 21px/1.2 Georgia,serif}#petal-shop h3{font-size:13px}#petal-shop .eyebrow{font-size:10px;letter-spacing:.14em;color:var(--sage);font-weight:700;text-transform:uppercase}#petal-shop .sub{color:var(--soft);font-size:12px}
+#petal-shop .layout{display:grid;grid-template-columns:minmax(155px,.78fr) minmax(225px,1.28fr) minmax(240px,1.17fr);gap:12px;align-items:start}#petal-shop .panel{background:var(--paper);border:1px solid var(--edge);border-radius:14px;padding:13px;min-width:0}#petal-shop .heading{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:11px}#petal-shop .queue{display:grid;gap:7px}#petal-shop .order{text-align:left;width:100%;display:grid;gap:3px;padding:9px}#petal-shop .order strong{font-size:13px}#petal-shop .orderline{display:flex;justify-content:space-between;gap:3px;flex-wrap:wrap}#petal-shop .brief{margin-top:13px;border-top:1px solid var(--edge);padding-top:11px}#petal-shop .brief p{font-size:12px;margin:6px 0;color:var(--soft)}#petal-shop .brief blockquote{margin:8px 0 0;background:var(--rose);border-radius:8px;padding:8px;font-size:11px}
+#petal-shop .stage{position:relative;overflow:hidden;border-radius:11px;background:radial-gradient(ellipse at 53% 36%,light-dark(#faf1e9,#493b36),light-dark(#efe1d5,#302621));border:1px solid var(--edge)}#petal-shop .stage canvas{display:block;width:100%;aspect-ratio:1.18}#petal-shop .folio{position:absolute;top:10px;left:10px;font-size:10px;letter-spacing:.1em;color:var(--soft)}#petal-shop .count{position:absolute;bottom:9px;right:9px;font-size:11px;padding:3px 8px;border-radius:20px;background:var(--paper)}
+#petal-shop .choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}#petal-shop label{display:grid;gap:3px;font-size:11px;color:var(--soft)}#petal-shop select{width:100%;padding:6px;background:var(--ground);border:1px solid var(--edge);border-radius:7px;font-size:12px}
+#petal-shop .totals{margin-top:12px;border-top:1px solid var(--edge);padding-top:9px}#petal-shop .split{display:flex;align-items:center;justify-content:space-between;gap:7px}#petal-shop .total{font:500 25px Georgia,serif;font-variant-numeric:tabular-nums}#petal-shop .meter{height:6px;border-radius:9px;background:var(--edge);overflow:hidden;margin:6px 0}#petal-shop .meter span{height:100%;display:block;background:var(--sage);border-radius:inherit}#petal-shop .bad,#petal-shop .bad .sub{color:var(--alert)}#petal-shop .bad .meter span{background:var(--alert)}
+#petal-shop .primary{width:100%;margin-top:8px;background:var(--sage);color:var(--paper);border-color:var(--sage);font-weight:650}#petal-shop .status{min-height:19px;margin-top:6px;font-size:11px;color:var(--soft)}#petal-shop .status.error{color:var(--alert)}
+#petal-shop .inventory{display:grid;gap:0}#petal-shop .item{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--edge)}#petal-shop .item:last-child{border-bottom:0}#petal-shop .item strong{display:block;font-size:12px}#petal-shop .item small{display:block;font-size:11px}#petal-shop .swatch{display:grid;place-items:center;width:27px;height:30px;background:var(--ground);border-radius:7px;font-size:19px}#petal-shop .stepper{display:flex;gap:3px;align-items:center}#petal-shop .stepper button{padding:0;width:24px;height:26px;line-height:1}#petal-shop .stepper span{font-variant-numeric:tabular-nums;min-width:15px;text-align:center;font-size:12px}
+#petal-shop .help{border-radius:9px;background:var(--wash);color:var(--sage);padding:9px;margin-top:9px;font-size:11px}#petal-shop .help button{margin-top:5px;padding:4px 8px;font-size:11px}#petal-shop .order-table{width:100%;border-collapse:collapse;text-align:left}#petal-shop .order-table th,#petal-shop .order-table td{padding:9px 5px;border-bottom:1px solid var(--edge);overflow-wrap:anywhere}#petal-shop .order-table th{font-size:11px;color:var(--soft)}#petal-shop .order-table td{font-size:12px}
+@media(max-width:740px){#petal-shop .layout{grid-template-columns:1fr 1fr}#petal-shop .orders{grid-column:1/-1}#petal-shop .queue{grid-template-columns:repeat(3,minmax(0,1fr))}#petal-shop .brief{margin-top:8px;padding-top:7px}}
+@media(max-width:485px){#petal-shop .layout{grid-template-columns:1fr}#petal-shop .shell{padding:10px}#petal-shop .top{padding-left:10px}#petal-shop nav{margin-left:0}#petal-shop .queue{grid-template-columns:1fr}#petal-shop .order{grid-template-columns:1fr 1fr}#petal-shop .orderline{grid-column:1/-1}}
+@media(pointer:coarse){#petal-shop button,#petal-shop select{min-height:44px}#petal-shop .stepper button{width:36px}}
+#petal-shop .morning-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:12px;align-items:start}
+#petal-shop .market-grid{display:grid;grid-template-columns:minmax(145px,.85fr) minmax(245px,1.55fr) minmax(190px,1.05fr);gap:12px;align-items:start}
+#petal-shop .market-grid .item{grid-template-columns:minmax(0,1fr) auto}
+#petal-shop .morning-band{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:13px 15px;margin-bottom:12px;border-radius:12px;background:var(--wash);color:var(--sage)}
+#petal-shop .morning-band strong{font:500 22px Georgia,serif}
+#petal-shop .plan-row{border-bottom:1px solid var(--edge);padding:10px 0}
+#petal-shop .plan-row:last-child{border-bottom:0}
+#petal-shop .plan-row p{margin-top:4px}
+#petal-shop .need{color:var(--alert);font-size:12px}
+#petal-shop .good{color:var(--sage);font-size:12px}
+#petal-shop .stall+.stall{border-top:1px solid var(--edge);padding-top:12px;margin-top:12px}
+#petal-shop .stall .heading{margin-bottom:2px}
+#petal-shop .cart-total{border-top:1px solid var(--edge);margin-top:10px;padding-top:8px}
+#petal-shop .cart-total .split+.split{margin-top:5px}
+#petal-shop .walk-in{margin-top:9px;width:100%}
+@media(max-width:740px){#petal-shop .market-grid{grid-template-columns:1fr 1fr}#petal-shop .market-needs{grid-column:1/-1}}
+@media(max-width:485px){#petal-shop .market-grid,#petal-shop .morning-grid{grid-template-columns:1fr}}
+#petal-shop .top{padding-right:18px}
+#petal-shop .stock-link{margin-left:auto}
+#petal-shop .day-path{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;padding:10px 19px;gap:8px;background:var(--paper);border-bottom:1px solid var(--edge)}
+#petal-shop .day-path button{display:flex;align-items:center;gap:7px;text-align:left;background:var(--ground);border-color:var(--edge)}
+#petal-shop .day-path button span{display:grid;place-items:center;min-width:23px;height:23px;padding:0 3px;border-radius:7px;background:var(--paper);font-size:10px;color:var(--soft);font-variant-numeric:tabular-nums}
+#petal-shop .day-path button[aria-current=step]{background:var(--wash);color:var(--sage);border-color:var(--sage);font-weight:650}
+#petal-shop .report-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+#petal-shop .report-metrics .panel{display:grid;gap:5px}
+#petal-shop .report-metrics strong{font:500 clamp(18px,3vw,25px)/1.2 Georgia,serif}
+#petal-shop .next-actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:11px}
+#petal-shop .next-actions .primary{width:auto;margin-top:0}
+#petal-shop .purchase-note{margin-top:10px;background:var(--wash);color:var(--sage);border-radius:8px;padding:8px}
+@media(max-width:485px){#petal-shop .top{padding-right:10px}#petal-shop .day-path{padding:8px 10px;grid-template-columns:1fr 1fr}#petal-shop .report-metrics{gap:5px}#petal-shop .report-metrics .panel{padding:7px}}
+</style>
+<section id="petal-shop" aria-label="Tiệm hoa theo ngân sách">
+<header class="top">
+  <span class="brand-mark" aria-hidden="true">✿</span>
+  <div><div class="brand">Tiệm Hoa Mộc</div><small>Mô phỏng một ngày làm chủ tiệm</small></div>
+  <button class="stock-link" type="button" data-page="stock" aria-pressed="false">Xem kho hoa</button>
+</header>
+<nav class="day-path" aria-label="Các bước trong ngày">
+  <button type="button" data-page="morning" aria-current="step"><span>01</span>Mở tiệm</button>
+  <button type="button" data-page="market"><span>02</span>Đi chợ hoa</button>
+  <button type="button" data-page="desk"><span>03</span>Bàn phối hoa</button>
+  <button type="button" data-page="report"><span>04</span>Tổng kết</button>
+</nav>
+<div class="shell" id="petal-content"></div>
+</section>
+<script>
+(() => {
+  const root = document.getElementById('petal-shop');
+  const content = root.querySelector('#petal-content');
+  const flowers = [
+    {name:'Tulip hồng',price:50000,stock:2,color:'#d87891',shade:'#9f3b59',type:'tulip'},
+    {name:'Hồng phấn',price:35000,stock:10,color:'#e8a2a8',shade:'#b75a72',type:'rose'},
+    {name:'Baby trắng',price:25000,stock:8,color:'#fff5dd',shade:'#d2b592',type:'baby'},
+    {name:'Cẩm chướng hồng',price:28000,stock:7,color:'#cf789a',shade:'#9c466c',type:'rose'},
+    {name:'Cúc vàng',price:30000,stock:6,color:'#f2c96c',shade:'#ca8d42',type:'daisy'},
+    {name:'Lá bạc',price:15000,stock:10,color:'#87a59a',shade:'#50796b',type:'leaf'}
+  ];
+  const wraps = [{name:'Giấy kem',price:20000,color:'#e7cda8',shade:'#b88b66'},{name:'Giấy hồng',price:40000,color:'#e4b3b0',shade:'#ab737c'},{name:'Giấy kraft',price:15000,color:'#cca37b',shade:'#956841'}];
+  const cards = [{name:'Thiệp trơn',price:10000},{name:'Thiệp viền hoa',price:30000}];
+  const orders = [
+    {id:'TH-01',name:'Sinh nhật mẹ',time:'17:30',budget:350000,preferred:0,alternate:1,card:'Chúc mừng sinh nhật mẹ!',brief:'Tông hồng nhẹ. Ưu tiên tulip hồng, có thể đổi sang hồng phấn.',qty:[5,0,2,0,0,0],wrap:1,cardStyle:1},
+    {id:'TH-02',name:'Kỷ niệm ngày cưới',time:'18:00',budget:320000,preferred:0,alternate:3,approval:true,card:'Chúc mình luôn vui bên nhau!',brief:'Tông hồng. Ưu tiên tulip hồng. Khách cần duyệt nếu đổi sang cẩm chướng hồng.',qty:[4,0,2,0,0,0],wrap:0,cardStyle:0},
+    {id:'TH-03',name:'Cảm ơn cô giáo',time:'18:30',budget:240000,preferred:4,avoid:2,card:'Em cảm ơn cô!',brief:'Tông vàng ấm, chọn cúc vàng làm hoa chính. Khách yêu cầu tránh baby trắng.',qty:[0,0,0,0,5,2],wrap:0,cardStyle:0}
+  ].map(o => ({...o,state:0,approved:false,reserved:flowers.map(()=>0)}));
+  const states = ['Đang phối','Chờ khách duyệt','Đã chốt','Đã chuẩn bị','Đã giao'];
+  const money = n => n.toLocaleString('vi-VN') + ' đ';
+  const total = o => o.qty.reduce((sum,q,i) => sum + q*flowers[i].price, wraps[o.wrap].price + cards[o.cardStyle].price);
+  const booked = [orders[0], orders[2]];
+  const bookingPlans = booked.map(o=>[...o.qty]);
+  const offers = [
+    {flower:0, size:1, price:35000, remaining:6, fresh:'Dùng trong ngày'},
+    {flower:2, size:3, price:45000, remaining:3, fresh:'Tươi thêm 2 ngày'},
+    {flower:0, size:5, price:140000, remaining:4, fresh:'Tươi thêm 2 ngày'},
+    {flower:4, size:3, price:60000, remaining:3, fresh:'Tươi thêm 2 ngày'}
+  ].map(offer=>({...offer,count:0}));
+  const startCash = 500000;
+  let cash = startCash;
+  let opened = false;
+  let walkIn = false;
+  let current = 0;
+  let page = 'morning';
+  let notice = '';
+  const cartCost = () => offers.reduce((sum,o)=>sum+o.count*o.price,0);
+  const available = (o,i) => flowers[i].stock + o.reserved[i];
+  const orderQueue = () => walkIn ? orders : booked;
+  const deliveredOrders = () => orderQueue().filter(o=>o.state===4);
+  const missing = () => flowers.map((f,i)=>Math.max(0,bookingPlans.reduce((sum,qty)=>sum+qty[i],0)-f.stock));
+  const missingText = items => items.map((count,i)=>count?flowers[i].name+' · '+count+' cành':'').filter(Boolean);
+  const held = i => orderQueue().reduce((sum,o)=>sum+(o.state<2?o.reserved[i]:o.state===2?o.qty[i]:0),0);
+
+
+  function issue(o) {
+    if (total(o) > o.budget) return 'Vượt ngân sách ' + money(total(o)-o.budget) + '.';
+    const short = flowers.findIndex((f,i) => o.qty[i] > available(o,i));
+    if (short >= 0) return flowers[short].name + ' chỉ còn ' + available(o,short) + ' cành dùng được cho đơn này.';
+    if (o.avoid !== undefined && o.qty[o.avoid]) return 'Hãy bỏ ' + flowers[o.avoid].name.toLowerCase() + ' theo yêu cầu khách.';
+    if (!o.qty[o.preferred] && (o.alternate === undefined || !o.qty[o.alternate])) return 'Hãy chọn hoa chính theo yêu cầu khách.';
+    return '';
+  }
+
+  function draw(o) {
+    const cv = content.querySelector('canvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    ctx.scale(2,2);
+    const path = (fill, commands) => {ctx.beginPath();commands(ctx);ctx.closePath();ctx.fillStyle=fill;ctx.fill();};
+    const oval = (x,y,rx,ry,rot,color) => {ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();};
+    const stems = [];
+    const positions = [[151,62],[115,87],[185,84],[86,112],[216,109],[135,111],[174,123],[107,61],[195,61],[76,81],[227,81],[153,89],[112,133],[198,133],[157,44],[67,110],[242,104],[145,131]];
+    const quantities = [...o.qty];
+    while (stems.length < positions.length && quantities.some(n => n > 0)) {
+      quantities.forEach((n,i) => {
+        if (n && stems.length < positions.length) {
+          stems.push(flowers[i]);
+          quantities[i]--;
+        }
+      });
+    }
+    if (!stems.length) return;
+    const wrap = wraps[o.wrap];
+    oval(162,239,76,10,0,'#4b252218');
+    path(wrap.shade,p=>{p.moveTo(74,124);p.lineTo(71,87);p.lineTo(150,124);p.lineTo(228,84);p.lineTo(221,140);p.lineTo(164,221);});
+    stems.forEach((f,i) => {
+      const [x,y]=positions[i];
+      ctx.beginPath();ctx.moveTo(159,218);ctx.quadraticCurveTo(150+(x-150)*.27,144,x,y);
+      ctx.strokeStyle=i%2?'#57765a':'#71835d';ctx.lineWidth=2.2;ctx.stroke();
+      const direction=i%2?1:-1;
+      oval(x+direction*7,y+32,13,4,direction*.62,'#748b64');
+      oval(x-direction*7,y+45,10,3,-direction*.63,'#617d5c');
+    });
+    stems.forEach((f,i) => {
+      const [x,y]=positions[i];
+      ctx.save();ctx.translate(x,y);ctx.rotate((i%5-2)*.14);
+      if (f.type==='tulip') {
+        path(f.shade,p=>{p.moveTo(-14,-12);p.bezierCurveTo(-21,7,-11,17,0,17);p.bezierCurveTo(14,16,19,3,14,-13);p.quadraticCurveTo(1,-4,-14,-12);});
+        oval(-3,1,9,14,-.35,f.color);oval(5,3,7,12,.34,'#f09bac');
+        oval(-3,-4,2,7,-.29,'#f4a9b5');
+      } else if (f.type==='baby') {
+        [[-12,-6],[-7,4],[0,-12],[5,1],[12,-5],[13,8],[-3,-2]].forEach(([a,b])=>{oval(a,b,4,3,.3,f.shade);oval(a-1,b-1,3.5,2.6,.3,f.color);});
+      } else if (f.type==='leaf') {
+        for(let j=0;j<4;j++) oval(j%2?6:-5,j*7-10,9,4,j%2?-.55:.55,j%2?f.shade:f.color);
+      } else {
+        const petals=f.type==='daisy'?9:7;
+        for(let j=0;j<petals;j++){const a=j*2*Math.PI/petals;oval(Math.cos(a)*9,Math.sin(a)*9,9,5,a,j%2?f.color:f.shade);}
+        oval(0,0,8,7,0,f.color);oval(1,0,4,3,.2,f.shade);
+        if(f.type==='rose') oval(-2,-1,4,2,-.45,'#f7bdc7');
+      }
+      ctx.restore();
+    });
+    path(wrap.color,p=>{p.moveTo(67,127);p.lineTo(110,143);p.lineTo(154,165);p.lineTo(226,126);p.lineTo(175,210);p.lineTo(172,230);p.lineTo(140,230);p.lineTo(142,208);});
+    path(wrap.shade,p=>{p.moveTo(67,127);p.lineTo(152,177);p.lineTo(175,210);p.lineTo(159,211);});
+    path('#fff4de55',p=>{p.moveTo(226,126);p.lineTo(189,174);p.lineTo(163,194);p.lineTo(178,156);});
+    ctx.save();ctx.translate(156,208);ctx.rotate(-.1);oval(-9,0,12,4,.35,'#9a4c59');oval(10,0,12,4,-.4,'#9a4c59');oval(0,1,4,4,0,'#b35d6b');ctx.restore();
+    ctx.save();ctx.translate(183,165);ctx.rotate(.3);ctx.fillStyle=o.cardStyle?'#f7e4e3':'#fff4d8';ctx.fillRect(-12,-8,24,15);ctx.strokeStyle='#ad7978';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-7,-2);ctx.lineTo(7,-2);ctx.moveTo(-7,2);ctx.lineTo(3,2);ctx.stroke();ctx.restore();
+  }
+
+  function morning() {
+    const shortages = missingText(missing());
+    return `<div class="mast"><div><p class="eyebrow">Ngày 01 · Trước giờ bán</p><h1>Chuẩn bị mở cửa</h1><p class="sub">Kiểm tra đơn đã hẹn và nguyên liệu trước khi đón khách.</p></div><small>${opened?'08:00 · ĐÃ MỞ CỬA':'07:00 · CHƯA MỞ CỬA'}</small></div>
+    <div class="morning-band"><div><p class="eyebrow">Tiền mặt của tiệm</p><strong>${money(cash)}</strong></div><span>${booked.length} đơn đã hẹn hôm nay</span></div>
+    <div class="morning-grid"><section class="panel"><div class="heading"><h2>Sổ đơn đặt trước</h2></div>
+    ${booked.map((o,i)=>`<div class="plan-row"><div class="split"><h3>${o.name}</h3><small>${o.time}</small></div><p class="sub">${o.brief}</p><p class="sub">${missingText(bookingPlans[i]).join(' · ')}</p><p class="sub">Ngân sách của khách <strong>${money(o.budget)}</strong></p></div>`).join('')}</section>
+    <section class="panel"><div class="heading"><h2>${opened?'Tiệm đã mở cửa':'Cần mua thêm'}</h2></div>
+    ${opened?'<p class="good">Nguyên liệu đã được phân cho các đơn hẹn lúc mở cửa.</p>':shortages.length?shortages.map(line=>`<p class="plan-row need">${line}</p>`).join(''):'<p class="good">Kho đã đủ cho các đơn hẹn.</p>'}
+    ${!opened?'<button class="primary" type="button" data-page="market">Đi chợ hoa</button>':''}
+    <button class="${opened?'primary':'walk-in'}" type="button" data-action="open">${opened?'Vào bàn phối hoa':'Mở cửa tiệm'}</button>${notice?`<p class="purchase-note" role="status">${notice}</p>`:''}</section></div>`;
+  }
+
+  function market() {
+    const cost = cartCost();
+    const plan = missing();
+    const projected = plan.map((n,i)=>Math.max(0,n-offers.reduce((sum,o)=>sum+(o.flower===i?o.count*o.size:0),0)));
+    const missingAfterCart = missingText(projected);
+    const cartLines = offers.filter(o=>o.count);
+    return `<div class="mast"><div><p class="eyebrow">Ngày 01 · Nhập hàng buổi sáng</p><h1>Chợ hoa đầu ngày</h1><p class="sub">So sánh giá nhập, số cành mỗi bó và độ tươi.</p></div><small>07:15 · HAI SẠP HOA</small></div>
+    <div class="market-grid"><section class="panel market-needs"><div class="heading"><h2>Danh sách cần mua</h2></div>
+    ${missingText(plan).map(line=>`<p class="plan-row need">${line}</p>`).join('') || '<p class="good">Kho đủ cho các đơn hẹn.</p>'}
+    <p class="help">${missingAfterCart.length?'Nếu mua giỏ này, còn thiếu '+missingAfterCart.join(', ')+'.':'Sau khi mua, đủ hoa cho các đơn hẹn.'}</p>
+    <button class="walk-in" type="button" data-page="morning">Về màn hình mở tiệm</button></section>
+    <section class="panel"><div class="heading"><h2>Các sạp hoa</h2></div>
+    ${['Sạp Cô Lan · Bán lẻ tulip','Sạp Nhà Vườn · Hoa theo bó'].map((name,stall)=>`<div class="stall"><div class="heading"><h3>${name}</h3></div>
+    ${offers.map((o,i)=>({o,i})).slice(stall*2,stall*2+2).map(({o,i})=>`<div class="item"><div><strong>${flowers[o.flower].name}</strong><small>${money(o.price)} / ${o.size===1?'cành':'bó '+o.size+' cành'} · Còn ${o.remaining} ${o.size===1?'cành':'bó'}</small><small>${o.fresh}</small></div>
+    <div class="stepper"><button type="button" data-buy="${i}:-1" aria-label="Bớt ${flowers[o.flower].name} ở sạp ${stall+1}" ${!o.count?'disabled':''}>−</button><span>${o.count}</span><button type="button" data-buy="${i}:1" aria-label="Thêm ${flowers[o.flower].name} ở sạp ${stall+1}" ${o.count>=o.remaining?'disabled':''}>+</button></div></div>`).join('')}</div>`).join('')}</section>
+    <section class="panel"><div class="heading"><h2>Giỏ đi chợ</h2></div>
+    ${cartLines.length?cartLines.map(o=>`<div class="plan-row"><div class="split"><h3>${flowers[o.flower].name}</h3><strong>${money(o.count*o.price)}</strong></div><small>${o.count*o.size} cành</small></div>`).join(''):'<p class="sub">Chưa có hoa trong giỏ.</p>'}
+    <div class="cart-total" aria-live="polite"><div class="split"><span class="sub">Tiền mặt</span><strong>${money(cash)}</strong></div><div class="split"><span class="sub">Tổng tiền nhập</span><strong>${money(cost)}</strong></div><div class="split ${cost>cash?'bad':'good'}"><span>${cost>cash?'Vượt vốn':'Còn lại sau khi mua'}</span><strong>${money(Math.abs(cash-cost))}</strong></div></div>
+    <button class="primary" type="button" data-action="purchase" ${!cost?'disabled':''}>Mua và về tiệm</button><p class="status ${cost>cash?'error':''}" role="status">${notice}</p></section></div>`;
+  }
+
+  function desk(o) {
+    const cost = total(o), remain=o.budget-cost, locked=o.state>=2;
+    const count=o.qty.reduce((a,b)=>a+b,0);
+    return `<div class="mast"><div><p class="eyebrow">Tiệm hoa theo ngân sách</p><h1>Bàn phối hoa</h1><p class="sub">Phối bó theo yêu cầu, theo dõi giá và tồn kho ngay khi chọn.</p></div><small>NGÀY 01 · ĐANG MỞ CỬA</small></div>
+    <div class="layout">
+      <aside class="panel orders"><div class="heading"><h2>Đơn hàng</h2><small>${orderQueue().length} đơn</small></div><div class="queue">${orderQueue().map(x=>({x,i:orders.indexOf(x)})).map(({x,i})=>`<button class="order" type="button" data-order="${i}" aria-pressed="${current===i}"><span class="orderline"><small>#${x.id}</small><small>${x.time}</small></span><strong>${x.name}</strong><small>${states[x.state]}</small></button>`).join('')}</div>
+      ${!walkIn?'<button class="walk-in" type="button" data-action="walk-in">Tiếp khách ghé tiệm</button>':''}
+      <div class="brief"><h3>Yêu cầu của khách</h3><p>${o.brief}</p><p>Nhận lúc <strong>${o.time}</strong> · Tối đa <strong>${money(o.budget)}</strong></p><blockquote>“${o.card}”</blockquote></div></aside>
+      <section class="panel"><div class="heading"><h2>Xem trước bó hoa</h2><small>#${o.id}</small></div><div class="stage"><span class="folio">MẪU PHỐI</span><canvas width="620" height="524" role="img" aria-label="Minh họa bó hoa gồm ${count} cành"></canvas><span class="count">${count} cành</span></div>
+      <div class="choices"><label>Giấy gói<select data-option="wrap" ${locked?'disabled':''}>${wraps.map((w,i)=>`<option value="${i}" ${i===o.wrap?'selected':''}>${w.name} · ${money(w.price)}</option>`).join('')}</select></label><label>Mẫu thiệp<select data-option="cardStyle" ${locked?'disabled':''}>${cards.map((w,i)=>`<option value="${i}" ${i===o.cardStyle?'selected':''}>${w.name} · ${money(w.price)}</option>`).join('')}</select></label></div>
+      <div class="totals ${remain<0?'bad':''}" aria-live="polite"><div class="split"><span class="sub">Tổng tiền</span><strong class="total">${money(cost)}</strong></div><div class="meter" aria-hidden="true"><span style="width:${Math.min(100,cost/o.budget*100)}%"></span></div><p class="sub">${remain<0?'Vượt ngân sách':'Còn trong ngân sách'} <strong>${money(Math.abs(remain))}</strong></p></div>
+      <button class="primary" type="button" data-action="next" ${o.state===4?'disabled':''}>${['Chốt đơn','Mô phỏng khách đồng ý','Đánh dấu đã chuẩn bị','Bàn giao cho khách','Đã bàn giao'][o.state]}</button><p class="status ${notice&&notice===issue(o)?'error':''}" role="status">${notice || (locked?states[o.state]:o.state===1?'Khách cần xác nhận loại hoa thay thế.':issue(o))}</p>${o.state===4?'<button class="walk-in" type="button" data-page="report">Xem tổng kết ca</button>':''}</section>
+      <section class="panel"><div class="heading"><h2>Chọn nguyên liệu</h2><small>Giá / cành</small></div><div class="inventory">${flowers.map((f,i)=>`<div class="item"><span class="swatch" style="color:${f.shade}" aria-hidden="true">${f.type==='leaf'?'❧':f.type==='tulip'?'♧':'✿'}</span><div><strong>${f.name}</strong><small>${money(f.price)} · Còn ${f.stock}${o.reserved[i]?' · Giữ cho đơn '+o.reserved[i]:''}</small></div><div class="stepper"><button type="button" data-step="${i}:-1" aria-label="Bớt một cành ${f.name}" ${locked||!o.qty[i]?'disabled':''}>−</button><span>${o.qty[i]}</span><button type="button" data-step="${i}:1" aria-label="Thêm một cành ${f.name}" ${locked||o.qty[i]>=available(o,i)?'disabled':''}>+</button></div></div>`).join('')}</div>
+      ${o.alternate!==undefined&&!locked?`<div class="help">Phương án thay thế · ${flowers[o.alternate].name}<br><button type="button" data-action="swap" ${!o.qty[o.preferred]?'disabled':''}>Đổi hoa chính</button></div>`:''}</section></div>`;
+  }
+
+  function render() {
+    const focused = document.activeElement;
+    const focusEntry = root.contains(focused) ? Object.entries(focused.dataset)[0] : null;
+    root.querySelectorAll('.day-path [data-page]').forEach(btn=>{
+      const target=btn.dataset.page;
+      if(target===page) btn.setAttribute('aria-current','step');
+      else btn.removeAttribute('aria-current');
+      btn.disabled=(target==='market'&&opened)||(['desk','report'].includes(target)&&!opened);
+    });
+    root.querySelector('.stock-link').setAttribute('aria-pressed',String(page==='stock'));
+    const o=orders[current];
+    if (page==='morning') {
+      content.innerHTML=morning();
+    } else if (page==='market') {
+      content.innerHTML=market();
+    } else if (page==='desk') {
+      content.innerHTML=desk(o);
+      draw(o);
+    } else {
+      const stock=page==='stock';
+      const delivered=deliveredOrders();
+      content.innerHTML=`<div class="mast"><div><p class="eyebrow">Tiệm hoa theo ngân sách · Ngày 01</p><h1>${stock?'Kho hoa':'Tổng kết ca'}</h1><p class="sub">${stock?'Đối chiếu lượng hoa khả dụng và lượng đang giữ theo đơn.':'Theo dõi các đơn đã bàn giao và khoản tiền phát sinh trong ca.'}</p></div></div>
+      ${stock?'':`<div class="report-metrics" aria-label="Kết quả trong ngày"><div class="panel"><span class="sub">Đơn đã giao</span><strong>${delivered.length} / ${orderQueue().length}</strong></div><div class="panel"><span class="sub">Chi nhập hoa</span><strong>${money(startCash-cash)}</strong></div><div class="panel"><span class="sub">Doanh thu</span><strong>${money(delivered.reduce((sum,x)=>sum+total(x),0))}</strong></div></div>`}
+      <section class="panel"><table class="order-table"><thead><tr>${(stock?['Loại hoa','Đơn giá','Còn khả dụng','Đã giữ']:['Đơn hàng','Ngân sách','Giá đã chốt','Trạng thái']).map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${stock?flowers.map((f,i)=>`<tr><td>${f.name}</td><td>${money(f.price)}</td><td>${f.stock} cành</td><td>${held(i)} cành</td></tr>`).join(''):orderQueue().map(x=>`<tr><td>${x.name}</td><td>${money(x.budget)}</td><td>${x.state>=2?money(total(x)):'—'}</td><td>${states[x.state]}</td></tr>`).join('')}</tbody></table></section>
+      <div class="next-actions"><button type="button" data-page="${opened?'desk':'morning'}">${opened?'Về bàn phối hoa':'Về màn hình mở tiệm'}</button>${!stock?'<button type="button" data-page="stock">Xem kho hoa</button>':''}</div>`;
+    }
+    if(focusEntry && !root.contains(focused)) {
+      const [key,value]=focusEntry;
+      const replacement=Array.from(content.querySelectorAll('button,select')).find(el=>el.dataset[key]===value);
+      if(replacement && !replacement.disabled) replacement.focus({preventScroll:true});
+    }
+  }
+  function edit(o) {o.state=0;o.approved=false;notice='';}
+  root.addEventListener('change',event=>{
+    const key=event.target.dataset.option;
+    const o=orders[current];
+    if (!key || o.state>=2) return;
+    o[key]=Number(event.target.value);
+    edit(o);
+    render();
+  });
+  root.addEventListener('click',event=>{
+    const button=event.target.closest('button');
+    if(!button||button.disabled) return;
+    const o=orders[current];
+    const {page:target,order,step,action,buy}=button.dataset;
+    notice='';
+    if(target==='market'&&opened) return;
+    if(['desk','report'].includes(target)&&!opened) return;
+    if(target) page=target;
+    if(buy&&!opened){
+      const [i,change]=buy.split(':').map(Number);
+      offers[i].count+=change;
+    }
+    if(action==='purchase'&&!opened){
+      const cost=cartCost();
+      if(cost>cash){
+        notice='Giỏ hàng vượt vốn '+money(cost-cash)+'. Hãy giảm số lượng.';
+      }else if(cost){
+        cash-=cost;
+        offers.forEach(offer=>{
+          flowers[offer.flower].stock+=offer.count*offer.size;
+          offer.remaining-=offer.count;
+          offer.count=0;
+        });
+        page='morning';
+        notice='Đã nhập hoa vào kho. Tiền còn lại '+money(cash)+'.';
+      }
+    }
+    if(action==='open'){
+      if(opened){
+        page='desk';
+      }else if(missing().some(Boolean)){
+        notice='Kho còn thiếu hoa cho đơn hẹn. Hãy đi chợ trước khi mở cửa.';
+      }else{
+        booked.forEach((order,i)=>{
+          order.reserved=[...bookingPlans[i]];
+          order.reserved.forEach((q,i)=>{flowers[i].stock-=q;});
+        });
+        opened=true;
+        page='desk';
+      }
+    }
+    if(action==='walk-in'&&opened){
+      walkIn=true;
+      current=1;
+    }
+    if(order!==undefined) current=Number(order);
+    if(step&&o.state<2){
+      const [i,change]=step.split(':').map(Number);
+      o.qty[i]+=change;
+      edit(o);
+    }
+    if(action==='swap'&&o.state<2){
+      o.qty[o.alternate]+=o.qty[o.preferred];
+      o.qty[o.preferred]=0;
+      edit(o);
+      notice='Đã đổi sang '+flowers[o.alternate].name.toLowerCase()+'.';
+    }
+    if(action==='next'){
+      if(o.state===0){
+        notice=issue(o);
+        if(!notice){
+          if(o.approval&&o.qty[o.alternate]&&!o.approved){
+            o.state=1;
+          }else{
+            o.qty.forEach((q,i)=>{flowers[i].stock+=o.reserved[i]-q;});
+            o.reserved.fill(0);
+            o.state=2;
+            notice='Đã chốt đơn và giữ nguyên liệu.';
+          }
+        }
+      }else if(o.state===1){
+        o.approved=true;
+        o.state=0;
+        notice='Khách đã đồng ý đổi hoa. Bạn có thể chốt đơn.';
+      }else if(o.state===2){
+        o.state=3;
+        notice='Bó hoa đã sẵn sàng để bàn giao.';
+      }else if(o.state===3){
+        o.state=4;
+        notice='Đã bàn giao. Xem kết quả trong mục Tổng kết.';
+      }
+    }
+    render();
+  });
+  render();
+})();
+</script>
+
+</body>
+</html>
