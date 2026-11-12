@@ -9,6 +9,7 @@ import {
 import "./flowershop.css";
 
 const GameContext = createContext(null);
+const FLOWER_SHOP_LOGO_URL = `${window.STUDYMATE_BASE_PATH || ""}/public/assets/images/flowershop/flower-shop-logo.png`;
 const FLOWER_ATLAS_URL = `${window.STUDYMATE_BASE_PATH || ""}/public/assets/images/flowershop/flower-states-atlas-v1.png`;
 const FLOWER_ATLAS_CELLS = [
   ["tulip-wilted", 1, 0], ["tulip-damaged", 2, 0], ["tulip", 0, 0],
@@ -62,7 +63,7 @@ function GameLayout({ children }) {
       <section className="fs-app">
         <div className="fs-awning" aria-hidden="true">{Array.from({ length: 14 }, (_, index) => <i key={index} />)}</div>
         <header className="fs-header">
-          <div className="fs-brand"><span aria-hidden="true">✿</span><div><em>EST. 2026 · FLOWER & GIFT</em><strong>Tiệm Hoa Hẹn</strong><small>Hoa tươi cho những lời chưa nói · Ngày {state.day}</small></div></div>
+          <div className="fs-brand"><span className="fs-brand-logo"><img src={FLOWER_SHOP_LOGO_URL} alt="PLT Solutions" /></span><div><em>EST. 2026 · FLOWER & GIFT</em><strong>Tiệm Hoa Hẹn</strong><small>Hoa tươi cho những lời chưa nói · Ngày {state.day}</small></div></div>
           <div className="fs-header-meta"><span className="fs-cash">Phiếu đang có <strong>{money(state.cash)}</strong></span><Clock compact /></div>
         </header>
         <div className="fs-greenery" aria-hidden="true"><span>❧</span><i /><b>✿</b><i /><span>❧</span></div>
